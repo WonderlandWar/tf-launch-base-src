@@ -2,6 +2,6 @@
 
 Team Fortress 2: Launch Base is made for modders who want to create a mod based on the pre-Gold Rush era of TF2 or work with a less bloated code base. Its goals are to remove the bloat added in and after the Gold Rush update, restore the functionality of old features and bug fixes.
 
-The mod has a game repository too, which can be found [here](https://github.com/WonderlandWar/tf_launch_base).
+The mod has a game repository too, which can be found [here](https://github.com/WonderlandWar/tf_launch_base). If you want to play the actual mod, check the [releases](https://github.com/WonderlandWar/tf-launch-base-src/releases).
 
 Feel free to contribute to the repository with pull requests, but don't include leaked code. If you are concerned that this repository has leaked code in it, please contact wonderland_war2 on discord or create an issue.
