@@ -4,4 +4,4 @@ Team Fortress 2: Launch Base is made for modders who want to create a mod based 
 
 The mod has a game repository too, which can be found [here](https://github.com/WonderlandWar/tf_launch_base).
 
-Feel free to contribute to the repository with pull requests, but don't include leaked code. If you are concerned that this repository has leaked code in it, please contact me or create an issue.
+Feel free to contribute to the repository with pull requests, but don't include leaked code. If you are concerned that this repository has leaked code in it, please contact wonderland_war2 on discord or create an issue.
