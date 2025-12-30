@@ -190,27 +190,11 @@ void CBuildingStatusItem::PerformLayout( void )
 		{
 			m_pBuildingPanel->SetVisible( true );
 			m_pRunningPanel->SetVisible( false );
-#if 0
-			m_pUpgradeIcons[0]->SetVisible( false );
-			m_pUpgradeIcons[1]->SetVisible( false );
-			m_pUpgradeIcons[2]->SetVisible( false );
-#endif
 		}
 		else
 		{
 			m_pBuildingPanel->SetVisible( false );
 			m_pRunningPanel->SetVisible( true );
-#if 0
-			int iUpgradeLevel = pObj->GetUpgradeLevel();
-
-			Assert( iUpgradeLevel >= 1 && iUpgradeLevel <= 3 );
-
-			m_pUpgradeIcons[0]->SetVisible( false );
-			m_pUpgradeIcons[1]->SetVisible( false );
-			m_pUpgradeIcons[2]->SetVisible( false );
-
-			m_pUpgradeIcons[iUpgradeLevel-1]->SetVisible( true );
-#endif
 		}
 	}
 	else
@@ -385,7 +369,8 @@ void CBuildingStatusItem::OnTick()
 			// do not show low health for the disposable mini-sentry
 		case BUILDING_HUD_ALERT_LOW_HEALTH:
 		case BUILDING_HUD_ALERT_VERY_LOW_HEALTH:
-			m_pWrenchIcon->SetVisible( bAlertTrayFullyDeployed );
+			bShowAlertTray = true;
+			m_pWrenchIcon->SetVisible( bAlertTrayFullyDeployed && bShowAlertTray );
 			break;
 
 			// always show when being sapped
