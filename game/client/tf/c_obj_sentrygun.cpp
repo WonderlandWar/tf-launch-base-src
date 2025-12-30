@@ -41,11 +41,7 @@ IMPLEMENT_CLIENTCLASS_DT(C_ObjectSentrygun, DT_ObjectSentrygun, CObjectSentrygun
 	RecvPropInt( RECVINFO(m_iAmmoShells) ),
 	RecvPropInt( RECVINFO(m_iAmmoRockets) ),
 	RecvPropInt( RECVINFO(m_iState) ),
-	RecvPropBool( RECVINFO(m_bPlayerControlled) ),
-	RecvPropInt( RECVINFO(m_nShieldLevel) ),
-	RecvPropInt( RECVINFO_NAME(m_nShieldLevel, m_bShielded), 0, RecvProxy_BooleanToShieldLevel ), // for demo compatibility only
 	RecvPropEHandle( RECVINFO( m_hEnemy ) ),
-	RecvPropEHandle( RECVINFO( m_hAutoAimTarget ) ),
 	RecvPropDataTable( "SentrygunLocalData", 0, 0, &REFERENCE_RECV_TABLE( DT_SentrygunLocalData ) ),
 	RecvPropInt( RECVINFO(m_iUpgradeLevel) ),
 	RecvPropInt( RECVINFO(m_iUpgradeMetal) ),
@@ -58,30 +54,11 @@ END_RECV_TABLE()
 C_ObjectSentrygun::C_ObjectSentrygun()
 {
 	m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_1;
-	m_bPlayerControlled = false;
-	m_bOldPlayerControlled = false;
-	m_nShieldLevel = SHIELD_NONE;
-	m_nOldShieldLevel = SHIELD_NONE;
-	m_hLaserBeamEffect = NULL;
-	m_hShieldModel = NULL;
 	m_bNearMiss = false;
 	m_flNextNearMissCheck = 0.f;
 	m_iOldUpgradeLevel = 0;
 
 	m_iOldModelIndex = 0;
-	m_bRecreateShield = false;
-	m_bRecreateLaserBeam = false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_ObjectSentrygun::UpdateOnRemove( void )
-{
-	DestroyLaserBeam();
-	DestroyShield();
-
-	BaseClass::UpdateOnRemove();
 }
 
 
@@ -125,8 +102,6 @@ void C_ObjectSentrygun::UpgradeLevelChanged()
 		}
 	}
 
-	CreateLaserBeam();
-
 	// Because the bounding box size changes when upgrading, force the shadow to be reprojected using the new bounds
 	g_pClientShadowMgr->AddToDirtyShadowList( this, true );
 }
@@ -164,38 +139,10 @@ void C_ObjectSentrygun::OnDataChanged( DataUpdateType_t updateType )
 		m_iOldModelIndex = GetModelIndex();
 	}
 
-	if ( m_bPlayerControlled != m_bOldPlayerControlled || m_bRecreateLaserBeam )
-	{
-		if ( m_bPlayerControlled )
-		{
-			CreateLaserBeam();
-		}
-		else
-		{
-			DestroyLaserBeam();
-		}
-		m_bOldPlayerControlled = m_bPlayerControlled;
-		m_bRecreateLaserBeam = false;
-	}
-	
 	if ( m_iOldUpgradeLevel != m_iUpgradeLevel )
 	{
 		UpgradeLevelChanged();
 		m_iOldUpgradeLevel = m_iUpgradeLevel;
-	}
-
-	if ( m_nShieldLevel != m_nOldShieldLevel || m_bRecreateShield )
-	{
-		if ( m_nShieldLevel > 0 )
-		{
-			CreateShield();
-		}
-		else
-		{
-			DestroyShield();
-		}
-		m_nOldShieldLevel = m_nShieldLevel;
-		m_bRecreateShield = false;
 	}
 }
 
@@ -263,168 +210,6 @@ void C_ObjectSentrygun::GetTargetIDDataString( OUT_Z_BYTECAP(iMaxLenInBytes) wch
 		g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find("#TF_playerid_object_upgrading"),
 			1,
 			wszUpgradeProgress );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_ObjectSentrygun::CreateLaserBeam( void )
-{
-	if ( !m_bPlayerControlled )
-		return;
-
-	DestroyLaserBeam();
-
-	int iAttachment = LookupAttachment( "laser_origin" );
-	m_hLaserBeamEffect = ParticleProp()->Create( "laser_sight_beam", PATTACH_POINT_FOLLOW, iAttachment );
-	if ( m_hLaserBeamEffect )
-	{
-		m_hLaserBeamEffect->SetSortOrigin( m_hLaserBeamEffect->GetRenderOrigin() );
-	}
-
-	SetNextClientThink( CLIENT_THINK_ALWAYS );
-
-	if ( m_hLaserBeamEffect )
-	{
-		if ( GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			m_hLaserBeamEffect->SetControlPoint( 2, Vector( 0, 0, 255 ) );
-		}
-		else
-		{
-			m_hLaserBeamEffect->SetControlPoint( 2, Vector( 255, 0, 0 ) );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_ObjectSentrygun::DestroyLaserBeam( void )
-{
-	if ( m_hLaserBeamEffect )
-	{
-		SetNextClientThink( CLIENT_THINK_NEVER );
-		ParticleProp()->StopEmissionAndDestroyImmediately( m_hLaserBeamEffect );
-		m_hLaserBeamEffect = NULL;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_ObjectSentrygun::SetDormant( bool bDormant )
-{
-	if ( IsDormant() && !bDormant )
-	{
-		// Make sure our shield is where we are. We may have moved since last seen.
-		if ( m_hShieldModel )
-		{
-			m_bRecreateShield = true;
-			m_bRecreateLaserBeam = true;
-		}
-	}
-
-	BaseClass::SetDormant( bDormant );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_ObjectSentrygun::CreateShield( void )
-{
-	DestroyShield();
-
-	m_hShieldModel = C_SentrygunShield::Create( "models/buildables/sentry_shield.mdl" );
-	if ( m_hShieldModel )
-	{
-		m_hShieldModel->FollowEntity( this, false );
-		m_hShieldModel->ChangeTeam( GetTeamNumber() );
-		m_hShieldModel->m_nSkin = ( GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
-	}
-
-	m_hShieldEffect = ParticleProp()->Create( "turret_shield", PATTACH_ABSORIGIN_FOLLOW, 0, Vector( 0,0,30) );
-	if ( !m_hShieldEffect )
-		return;
-	if ( GetTeamNumber() == TF_TEAM_BLUE )
-	{
-		m_hShieldEffect->SetControlPoint( 1, Vector(50,150,255) );
-	}
-	else
-	{
-		m_hShieldEffect->SetControlPoint( 1, Vector(255,50,50) );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_ObjectSentrygun::DestroyShield( void )
-{
-	if ( m_hShieldModel )
-	{
-		m_hShieldModel->StartFadeOut( 1.0f );
-		m_hShieldModel = NULL;
-	}
-
-	if ( m_hShieldEffect )
-	{
-		ParticleProp()->StopEmission( m_hShieldEffect );
-		m_hShieldEffect = NULL;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_ObjectSentrygun::ClientThink( void )
-{
-	if ( m_hLaserBeamEffect && m_hEnemy && GetBuilder() )
-	{
-		QAngle vecAngles;
-		Vector vecMuzzleOrigin;
-		int iAttachment = 0;
-		switch ( GetUpgradeLevel() )
-		{
-		case 1:
-			iAttachment = LookupAttachment( "muzzle" );
-			break;
-		case 2:
-			iAttachment = LookupAttachment( "muzzle_l" );
-			break;
-		case 3:
-			iAttachment = LookupAttachment( "rocket_l" );
-			break;
-		}
-		GetAttachment( iAttachment, vecMuzzleOrigin, vecAngles );
-
-		Vector vForward;
-		AngleVectors( vecAngles, &vForward );
-
-		Vector vEnd = m_hEnemy->WorldSpaceCenter();
-		if ( m_hAutoAimTarget )
-		{
-			vEnd = m_hAutoAimTarget->GetAbsOrigin() + m_hAutoAimTarget->GetClassEyeHeight()*0.75f;
-		}
-
-		trace_t	trace;
-		CTraceFilterIgnoreTeammatesAndTeamObjects filter( GetBuilder(), COLLISION_GROUP_NONE, GetBuilder()->GetTeamNumber() );
-		UTIL_TraceLine( vecMuzzleOrigin, vEnd, MASK_SOLID, &filter, &trace );
-
-		Vector vecInterpBeamPos;
-		InterpolateVector( gpGlobals->frametime * 25.f, m_vecLaserBeamPos, trace.endpos, vecInterpBeamPos );
-
-		m_hLaserBeamEffect->SetControlPoint( 1, vecInterpBeamPos );
-		m_vecLaserBeamPos = vecInterpBeamPos;
-
-		// Perform a near-miss check.
-		// This works pretty well as a threat indicator for the arrow, let's try it for our laser.
-		if ( gpGlobals->curtime > m_flNextNearMissCheck )
-		{
-//			CheckNearMiss( vecMuzzleOrigin, m_hEnemy->GetAbsOrigin() );
-			m_flNextNearMissCheck = gpGlobals->curtime + 0.2f;
-		}
 	}
 }
 
@@ -589,7 +374,6 @@ CStudioHdr *C_ObjectSentrygun::OnNewModel( void )
 	}
 
 	m_iPlacementBodygroup = FindBodygroupByName( "sentry1_range" );
-	m_iPlacementBodygroup_Mini = FindBodygroupByName( "sentry1_range_mini" );
 
 	return hdr;
 }
@@ -647,15 +431,13 @@ void C_ObjectSentrygun::UpdateDamageEffects( BuildingDamageLevel_t damageLevel )
 //-----------------------------------------------------------------------------
 void C_ObjectSentrygun::OnPlacementStateChanged( bool bValidPlacement )
 {
-	if ( bValidPlacement && ( m_iPlacementBodygroup >= 0 ) && ( m_iPlacementBodygroup_Mini >= 0 ) )
+	if ( bValidPlacement && ( m_iPlacementBodygroup >= 0 ) )
 	{
 		SetBodygroup( m_iPlacementBodygroup, 1 );
-		SetBodygroup( m_iPlacementBodygroup_Mini, 0 );
 	}
 	else
 	{
 		SetBodygroup( m_iPlacementBodygroup, 0 );
-		SetBodygroup( m_iPlacementBodygroup_Mini, 0 );
 	}
 
 	BaseClass::OnPlacementStateChanged( bValidPlacement );
@@ -687,51 +469,4 @@ void C_ObjectSentrygun::DebugDamageParticles( void )
 const char* C_ObjectSentrygun::GetStatusName() const
 {
 	return "#TF_Object_Sentry";
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-C_SentrygunShield *C_SentrygunShield::Create( const char *pszModelName )
-{
-	C_SentrygunShield *pShield = new C_SentrygunShield();
-	if ( !pShield )
-		return NULL;
-
-	if ( !pShield->InitializeAsClientEntity( pszModelName, RENDER_GROUP_TRANSLUCENT_ENTITY ) )
-	{
-		pShield->Release();
-		return NULL;
-	}
-
-	pShield->AddEffects( EF_NORECEIVESHADOW | EF_NOSHADOW );
-	return pShield;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void C_SentrygunShield::ClientThink()
-{
-	if ( m_flFadeOutEndTime <= gpGlobals->curtime )
-	{
-		Release();
-		return;
-	}
-
-	float flAlpha = RemapVal( gpGlobals->curtime, m_flFadeOutStartTime, m_flFadeOutEndTime, 255.0f, 0.0f );
-	SetRenderColorA( (byte)flAlpha );
-	SetNextClientThink( CLIENT_THINK_ALWAYS );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void C_SentrygunShield::StartFadeOut( float flDuration )
-{
-	SetRenderMode( kRenderTransTexture );
-
-	m_flFadeOutStartTime = gpGlobals->curtime;
-	m_flFadeOutEndTime = gpGlobals->curtime + flDuration;
-	SetNextClientThink( gpGlobals->curtime );
 }

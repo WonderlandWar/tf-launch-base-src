@@ -92,15 +92,9 @@ public:
 
 	void			ClearTarget( void ) { m_hEnemy = NULL; }
 	CBaseEntity		*GetTarget( void ) { return m_hEnemy.Get(); }
-	void			FireNextFrame( void ) { m_bFireNextFrame = true; }
-	void			FireRocketNextFrame( void ) {m_bFireRocketNextFrame = true; }
-
-	void			SetAutoAimTarget( CTFPlayer* pPlayer );
 
 	int				GetFireAttachment( void );
 
-	void            OnKilledEnemy(CBasePlayer* pVictim);
-	
 	void			EmitSentrySound( const char* soundname );
 	void			EmitSentrySound( IRecipientFilter& filter, int iEntIndex, const char *soundname );
 
@@ -108,13 +102,9 @@ public:
 
 	virtual int		GetBaseHealth( void ) { return SENTRYGUN_MAX_HEALTH; }
 
-	void			SetShieldLevel( int nLevel, float flDuration ) { m_nShieldLevel = nLevel; m_flShieldFadeTime = gpGlobals->curtime + flDuration; }
-
 	void RemoveAllAmmo();
 
 	virtual int		GetMaxHealthForCurrentLevel( void );
-
-	virtual int	GetShieldLevel() { return m_nShieldLevel; }
 	
 public:
 	// Upgrade Level ( 1, 2, 3 )
@@ -186,17 +176,6 @@ private:
 
 	// Target player / object
 	CNetworkHandle( CBaseEntity, m_hEnemy );
-	bool m_bFireNextFrame;
-	bool m_bFireRocketNextFrame;
-	float m_flSentryRange;
-
-	// Player control shield.
-	CNetworkVar( bool, m_bPlayerControlled );
-	CNetworkVar( uint32, m_nShieldLevel );
-	float m_flShieldFadeTime;
-
-	// PDQ Sentry
-	CNetworkVar( bool, m_bPDQSentry );
 
 	//cached attachment indeces
 	int m_iAttachments[4];
@@ -207,12 +186,6 @@ private:
 	float m_flLastAttackedTime;
 
 	float m_flHeavyBulletResist;
-
-	CNetworkHandle( CTFPlayer, m_hAutoAimTarget );
-	float m_flAutoAimStartTime;
-
-	// for achievement: ACHIEVEMENT_TF_ENGINEER_MANUAL_SENTRY_ABSORB_DMG
-	int m_iLifetimeShieldedDamage;
 
 	DECLARE_DATADESC();
 

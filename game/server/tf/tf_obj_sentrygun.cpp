@@ -113,10 +113,7 @@ IMPLEMENT_SERVERCLASS_ST( CObjectSentrygun, DT_ObjectSentrygun )
 	SendPropInt( SENDINFO(m_iAmmoShells), -1, SPROP_VARINT | SPROP_CHANGES_OFTEN ),
 	SendPropInt( SENDINFO(m_iAmmoRockets), -1, SPROP_VARINT | SPROP_CHANGES_OFTEN ),
 	SendPropInt( SENDINFO(m_iState), Q_log2( SENTRY_NUM_STATES ) + 1, SPROP_UNSIGNED ),
-	SendPropBool( SENDINFO( m_bPlayerControlled ) ),
-	SendPropInt( SENDINFO( m_nShieldLevel ), 4, SPROP_UNSIGNED ),
 	SendPropEHandle( SENDINFO( m_hEnemy ) ),
-	SendPropEHandle( SENDINFO( m_hAutoAimTarget ) ),
 	SendPropDataTable( "SentrygunLocalData", 0, &REFERENCE_SEND_TABLE( DT_SentrygunLocalData ), SendProxy_SendLocalObjectDataTable ),
 
 	SendPropInt( SENDINFO(m_iUpgradeLevel), 3 ),
@@ -156,14 +153,7 @@ CObjectSentrygun::CObjectSentrygun()
 	SetHealth( iHealth );
 	SetType( OBJ_SENTRYGUN );
 
-	m_bFireNextFrame = false;
-	m_bFireRocketNextFrame = false;
-	m_flAutoAimStartTime = 0.f;
-	m_bPlayerControlled = false;
-	m_iLifetimeShieldedDamage = 0;
 	m_flFireRate = 1.f;
-	m_flSentryRange = SENTRY_MAX_RANGE;
-	m_nShieldLevel.Set( SHIELD_NONE );
 
 	m_lastTeammateWrenchHit = NULL;
 	m_lastTeammateWrenchHitTimer.Invalidate();
@@ -268,8 +258,6 @@ Vector CObjectSentrygun::GetEnemyAimPosition( CBaseEntity* pEnemy ) const
 
 void CObjectSentrygun::SentryThink( void )
 {
-	m_flSentryRange = SENTRY_MAX_RANGE;
-
 	switch( m_iState )
 	{
 	case SENTRY_STATE_INACTIVE:
@@ -290,12 +278,6 @@ void CObjectSentrygun::SentryThink( void )
 	}
 
 	SetContextThink( &CObjectSentrygun::SentryThink, gpGlobals->curtime + SENTRY_THINK_DELAY, SENTRYGUN_CONTEXT );
-
-	if ( m_nShieldLevel > 0 && (gpGlobals->curtime > m_flShieldFadeTime) )
-	{
-		m_nShieldLevel.Set( SHIELD_NONE );
-		m_vecGoalAngles.x = 0;
-	}
 }
 
 void CObjectSentrygun::StartPlacement( CTFPlayer *pPlayer )
@@ -582,11 +564,6 @@ bool CObjectSentrygun::OnWrenchHit( CTFPlayer *pPlayer, CTFWrench *pWrench, Vect
 		// STAGING_ENGY
 		// Mod repair value by shield value
 		float flRepairAmount = pWrench->GetRepairAmount();
-		if ( m_nShieldLevel == SHIELD_NORMAL )
-		{
-			flRepairAmount *= SHIELD_NORMAL_VALUE;
-		}
-		
 		if ( Command_Repair( pPlayer, flRepairAmount, 1.f ) )
 		{
 			bDidWork = true;
@@ -620,13 +597,6 @@ bool CObjectSentrygun::OnWrenchHit( CTFPlayer *pPlayer, CTFWrench *pWrench, Vect
 			int iAmountToAdd = MIN( SENTRYGUN_ADD_SHELLS, iMaxShellsPlayerCanAfford );
 			iAmountToAdd = MIN( ( m_iMaxAmmoShells - m_iAmmoShells ), iAmountToAdd );
 
-			// STAGING_ENGY
-			// Mod Ammo if shielded
-			if ( m_nShieldLevel == SHIELD_NORMAL )
-			{
-				iAmountToAdd *= SHIELD_NORMAL_VALUE;
-			}
-
 			pPlayer->RemoveAmmo( iAmountToAdd * tf_sentrygun_metal_per_shell.GetInt(), TF_AMMO_METAL );
 			m_iAmmoShells += iAmountToAdd;
 
@@ -646,13 +616,6 @@ bool CObjectSentrygun::OnWrenchHit( CTFPlayer *pPlayer, CTFWrench *pWrench, Vect
 			int iAmountToAdd = MIN( ( SENTRYGUN_ADD_ROCKETS ), iMaxRocketsPlayerCanAfford );
 			iAmountToAdd = MIN( ( m_iMaxAmmoRockets - m_iAmmoRockets ), iAmountToAdd );
 
-			// STAGING_ENGY
-			// Mod Ammo if shielded
-			if ( m_nShieldLevel == SHIELD_NORMAL )
-			{
-				iAmountToAdd *= SHIELD_NORMAL_VALUE;
-			}
-
 			pPlayer->RemoveAmmo( iAmountToAdd * tf_sentrygun_metal_per_rocket.GetFloat(), TF_AMMO_METAL );
 			m_iAmmoRockets += iAmountToAdd;
 
@@ -665,11 +628,6 @@ bool CObjectSentrygun::OnWrenchHit( CTFPlayer *pPlayer, CTFWrench *pWrench, Vect
 
 	if ( GetOwner() != pPlayer )
 	{
-		if ( bDidWork && m_bPlayerControlled )
-		{
-			pPlayer->AwardAchievement( ACHIEVEMENT_TF_ENGINEER_HELP_MANUAL_SENTRY, 1 );
-		}
-
 		// keep track of who last hit us with a wrench for kill assists
 		m_lastTeammateWrenchHit = pPlayer;
 		m_lastTeammateWrenchHitTimer.Start();
@@ -737,7 +695,7 @@ int CObjectSentrygun::Range( CBaseEntity *pTarget )
 		return RANGE_MELEE;
 	if (iDist < 550)
 		return RANGE_NEAR;
-	if (iDist < m_flSentryRange)
+	if (iDist < SENTRY_MAX_RANGE)
 		return RANGE_MID;
 	return RANGE_FAR;
 }
@@ -747,12 +705,6 @@ int CObjectSentrygun::Range( CBaseEntity *pTarget )
 //-----------------------------------------------------------------------------
 bool CObjectSentrygun::FindTarget()
 {
-	if ( m_bPlayerControlled )
-	{
-		m_flShieldFadeTime = gpGlobals->curtime + WRANGLER_DISABLE_TIME;
-	}
-	m_bPlayerControlled = false;
-
 	// Disable the sentry guns for ifm.
 	if ( tf_sentrygun_notarget.GetBool() )
 		return false;
@@ -776,15 +728,10 @@ bool CObjectSentrygun::FindTarget()
 	// If we have an enemy get his minimum distance to check against.
 	Vector vecSegment;
 	Vector vecTargetCenter;
-	float flMinDist2 = m_flSentryRange * m_flSentryRange;
+	float flMinDist2 = SENTRY_MAX_RANGE * SENTRY_MAX_RANGE;
 	CBaseEntity *pTargetCurrent = NULL;
 	CBaseEntity *pTargetOld = m_hEnemy.Get();
 	float flOldTargetDist2 = FLT_MAX;
-
-	// Don't auto track to targets while under the effects of the player shield.
-	// The shield fades 3 seconds after we disengage from player control.
-	if ( m_nShieldLevel == SHIELD_NORMAL )
-		return false;
 		
 	if ( ( pTargetCurrent == NULL ) )
 	{
@@ -1069,16 +1016,7 @@ void CObjectSentrygun::Attack()
 	// Fire on the target if it's within 10 units of being aimed right at it
 	if ( m_flNextAttack <= gpGlobals->curtime && (m_vecGoalAngles - m_vecCurAngles).Length() <= 10 )
 	{
-		if ( !m_bPlayerControlled || m_bFireNextFrame )
-		{
-			m_bFireNextFrame = false;
-			Fire();
-		}
-
-		if ( m_bPlayerControlled )
-		{
-			m_flFireRate *= 0.5f;
-		}
+		Fire();
 
 		if ( m_iUpgradeLevel == 1 )
 		{
@@ -1093,12 +1031,6 @@ void CObjectSentrygun::Attack()
 	else
 	{
 		// SetSentryAnim( TFTURRET_ANIM_SPIN );
-	}
-
-	if ( m_bPlayerControlled && m_bFireRocketNextFrame )
-	{
-		m_bFireRocketNextFrame = false;
-		FireRocket();
 	}
 }
 
@@ -1134,7 +1066,7 @@ bool CObjectSentrygun::FireRocket()
 	CTraceFilterChain traceFilterChain( &traceFilter, pFilterChain );
 	UTIL_TraceLine( vecSrc, vecEnemyPos, MASK_SOLID, &traceFilterChain, &tr);
 
-	if ( m_bPlayerControlled || (tr.m_pEnt && !tr.m_pEnt->IsWorld()) )
+	if ( (tr.m_pEnt && !tr.m_pEnt->IsWorld()) )
 	{
 		// NOTE: vecAng is not actually set by GetAttachment!!!
 		QAngle angDir;
@@ -1151,16 +1083,8 @@ bool CObjectSentrygun::FireRocket()
 		}
 
 		// Setup next rocket shot
-		if ( m_bPlayerControlled )
-		{
-			AddGesture( ACT_RANGE_ATTACK2, 2.25, true );
-			m_flNextRocketAttack = gpGlobals->curtime + 2.25;
-		}
-		else
-		{
-			AddGesture( ACT_RANGE_ATTACK2 );
-			m_flNextRocketAttack = gpGlobals->curtime + 3;
-		}
+		AddGesture( ACT_RANGE_ATTACK2 );
+		m_flNextRocketAttack = gpGlobals->curtime + 3;
 
 		if ( !tf_sentrygun_ammocheat.GetBool() && !HasSpawnFlags( SF_SENTRY_INFINITE_AMMO ) )
 		{
@@ -1195,30 +1119,6 @@ int CObjectSentrygun::GetFireAttachment()
 }
 
 //-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-void CObjectSentrygun::OnKilledEnemy(CBasePlayer* pVictim)
-{
-	if ( !pVictim )
-		return;
-
-	CTFPlayer *pOwner = GetOwner();
-	if ( !pOwner )
-		return;
-
-	if ( m_bPlayerControlled && pVictim->GetAbsOrigin().DistToSqr( GetAbsOrigin() ) > ( m_flSentryRange * m_flSentryRange ) )
-	{
-		pOwner->AwardAchievement( ACHIEVEMENT_TF_ENGINEER_MANUAL_SENTRY_KILLS_BEYOND_RANGE );
-	}
-
-	CTFPlayer *pCTFVictim = static_cast<CTFPlayer *>( pVictim );
-	if ( pCTFVictim->GetControlPointStandingOn() != NULL )
-	{
-		pOwner->AwardAchievement( ACHIEVEMENT_TF_ENGINEER_SENTRY_KILL_CAPS, 1 );
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Fire on our target
 //-----------------------------------------------------------------------------
 bool CObjectSentrygun::Fire()
@@ -1230,8 +1130,7 @@ bool CObjectSentrygun::Fire()
 	// Level 3 Turrets fire rockets every 3 seconds
 	if ( m_iUpgradeLevel == 3 &&
 		 m_iAmmoRockets > 0 &&
-		 m_flNextRocketAttack < gpGlobals->curtime &&
-		 !m_bPlayerControlled )
+		 m_flNextRocketAttack < gpGlobals->curtime )
 	{
 		FireRocket();
 	}
@@ -1301,14 +1200,8 @@ bool CObjectSentrygun::Fire()
 		{
 			info.m_pAttacker = this;
 		}
-		if ( m_bPlayerControlled )
-		{
-			info.m_vecSpread = VECTOR_CONE_3DEGREES;
-		}
-		else
-		{
-			info.m_vecSpread = vec3_origin;
-		}
+
+		info.m_vecSpread = vec3_origin;
 		info.m_flDistance = flDistToTarget + 100;
 		info.m_iAmmoType = m_iAmmoType;
 
@@ -1329,36 +1222,18 @@ bool CObjectSentrygun::Fire()
 		data.m_vOrigin = vecSrc;
 		DispatchEffect( "TF_3rdPersonMuzzleFlash_SentryGun", data );
 
-		if ( !m_bPlayerControlled )
+		switch( m_iUpgradeLevel )
 		{
-			switch( m_iUpgradeLevel )
-			{
-			case 1:
-			default:
-				EmitSentrySound( "Building_Sentrygun.Fire" );
-				break;
-			case 2:
-				EmitSentrySound( "Building_Sentrygun.Fire2" );
-				break;
-			case 3:
-				EmitSentrySound( "Building_Sentrygun.Fire3" );
-				break;
-			}
-		}
-		else
-		{
-			switch ( m_iUpgradeLevel )
-			{
-			case 1:
-				EmitSentrySound( "Building_Sentrygun.ShaftFire" );
-				break;
-			case 2:
-				EmitSentrySound( "Building_Sentrygun.ShaftFire2" );
-				break;
-			case 3:
-				EmitSentrySound( "Building_Sentrygun.ShaftFire3" );
-				break;
-			}
+		case 1:
+		default:
+			EmitSentrySound( "Building_Sentrygun.Fire" );
+			break;
+		case 2:
+			EmitSentrySound( "Building_Sentrygun.Fire2" );
+			break;
+		case 3:
+			EmitSentrySound( "Building_Sentrygun.Fire3" );
+			break;
 		}
 
 		if ( !tf_sentrygun_ammocheat.GetBool() && !HasSpawnFlags( SF_SENTRY_INFINITE_AMMO ) )
@@ -1438,7 +1313,7 @@ void CObjectSentrygun::SentryRotate( void )
 	{
 		// Change direction
 
-		if ( IsDisabled() || m_nShieldLevel == SHIELD_NORMAL )
+		if ( IsDisabled() )
 		{
 			EmitSound( "Building_Sentrygun.Disabled" );
 			m_vecGoalAngles.x = 30;
@@ -1521,14 +1396,7 @@ void CObjectSentrygun::OnEndDisabled( void )
 //-----------------------------------------------------------------------------
 int CObjectSentrygun::GetBaseTurnRate( void )
 {
-	if ( m_bPlayerControlled )
-	{
-		return m_iBaseTurnRate * 100;
-	}
-	else
-	{
-		return m_iBaseTurnRate;
-	}
+	return m_iBaseTurnRate;
 }
 
 //-----------------------------------------------------------------------------
@@ -1674,15 +1542,6 @@ int CObjectSentrygun::OnTakeDamage( const CTakeDamageInfo &info )
 		newInfo.SetDamage( flDamage );
 	}
 
-	// If we are shielded due to player control, we take less damage.
-	bool bFullyShielded = ( m_nShieldLevel > 0 ) && !HasSapper() && !IsPlasmaDisabled();
-	if ( bFullyShielded )
-	{
-		float flDamage = newInfo.GetDamage();
-		flDamage *= ( m_nShieldLevel == SHIELD_NORMAL ) ? SHIELD_NORMAL_VALUE : SHIELD_MAX_VALUE;
-		newInfo.SetDamage( flDamage );
-	}
-
 	// Check to see if we are being sapped.
 	if ( HasSapper() )
 	{
@@ -1702,22 +1561,6 @@ int CObjectSentrygun::OnTakeDamage( const CTakeDamageInfo &info )
 	if ( iDamageTaken > 0 )
 	{
 		m_flLastAttackedTime = gpGlobals->curtime;
-
-		// check for achievement
-		if ( bFullyShielded )
-		{
-			int iPrevLifetimeShieldedDamage = m_iLifetimeShieldedDamage;
-			m_iLifetimeShieldedDamage += iDamageTaken;
-			const int kMaxDamageForAchievement = tf_sentrygun_max_absorbed_damage_while_controlled_for_achievement.GetInt();
-			if ( iPrevLifetimeShieldedDamage <= kMaxDamageForAchievement && m_iLifetimeShieldedDamage > kMaxDamageForAchievement )
-			{
-				CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
-				if ( pOwner && pOwner->IsPlayerClass( TF_CLASS_ENGINEER ) )
-				{
-					pOwner->AwardAchievement( ACHIEVEMENT_TF_ENGINEER_MANUAL_SENTRY_ABSORB_DMG );
-				}
-			}
-		}
 	}
 
 	return iDamageTaken;
@@ -1885,19 +1728,6 @@ CTFPlayer *CObjectSentrygun::GetAssistingTeammate( float maxAssistDuration ) con
 		return NULL;
 
 	return m_lastTeammateWrenchHit;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CObjectSentrygun::SetAutoAimTarget( CTFPlayer* pPlayer )
-{
-	if ( !pPlayer )
-		return;
-
-	m_hAutoAimTarget = pPlayer;
-	m_flAutoAimStartTime = gpGlobals->curtime;
 }
 
 

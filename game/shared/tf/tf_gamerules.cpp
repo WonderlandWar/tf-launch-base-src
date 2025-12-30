@@ -4559,13 +4559,6 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 
 		if ( pObject->ObjectType() == OBJ_SENTRYGUN )
 		{
-			// notify the sentry
-			CObjectSentrygun *pSentrygun = dynamic_cast<CObjectSentrygun *>( pObject );
-			if ( pSentrygun )
-			{
-				pSentrygun->OnKilledEnemy( pVictim );
-			}
-
 			CTFPlayer *pOwner = pObject->GetOwner();
 			if ( pOwner )
 			{

@@ -56,16 +56,6 @@ if ( object_verbose.GetInt() )									\
 
 DECLARE_AUTO_LIST( IBaseObjectAutoList );
 
-enum
-{
-	SHIELD_NONE = 0,
-	SHIELD_NORMAL,	// 33% damage taken, no tracking
-	SHIELD_MAX,		// 10% damage taken, tracking
-};
-
-#define SHIELD_NORMAL_VALUE		0.33f
-#define SHIELD_MAX_VALUE		0.10f
-
 // ------------------------------------------------------------------------ //
 // Resupply object that's built by the player
 // ------------------------------------------------------------------------ //
@@ -301,8 +291,6 @@ public:
 	virtual bool ShouldBlockNav() const OVERRIDE { return false; }
 
 	bool			IsMapPlaced( void ){ return m_bWasMapPlaced; }
-
-	virtual int	GetShieldLevel() { return SHIELD_NONE; }
 
 	Vector GetBuildOrigin() { return m_vecBuildOrigin; }
 	Vector GetBuildCenterOfMass() { return m_vecBuildCenterOfMass; }

@@ -20,33 +20,6 @@
 
 class C_MuzzleFlashModel;
 
-enum
-{
-	SHIELD_NONE = 0,
-	SHIELD_NORMAL,	// 33% damage taken
-	SHIELD_MAX,		// 10% damage taken, no inactive period
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: Wrangler shield
-//-----------------------------------------------------------------------------
-class C_SentrygunShield : public C_BaseAnimating
-{
-	DECLARE_CLASS( C_SentrygunShield, C_BaseAnimating );
-
-public:
-	static C_SentrygunShield *Create( const char *pszModelName );
-
-	virtual void ClientThink();
-
-	void StartFadeOut( float flDuration );
-
-private:
-	float m_flFadeOutStartTime;
-	float m_flFadeOutEndTime;
-};
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Sentry object
 //-----------------------------------------------------------------------------
@@ -57,8 +30,6 @@ public:
 	DECLARE_CLIENTCLASS();
 
 	C_ObjectSentrygun();
-
-	virtual void UpdateOnRemove( void );
 
 	void GetAmmoCount( int &iShells, int &iMaxShells, int &iRockets, int & iMaxRockets );
 
@@ -91,15 +62,6 @@ public:
 	virtual int		GetUpgradeMetalRequired( void ) { return m_iUpgradeMetalRequired; }
 	virtual bool	IsUpgrading( void ) const { return ( m_iState == SENTRY_STATE_UPGRADING ); }
 
-	void			CreateLaserBeam( void );
-	void			DestroyLaserBeam( void );
-
-	virtual void	SetDormant( bool bDormant );
-	void			CreateShield( void );
-	void			DestroyShield( void );
-
-	virtual void	ClientThink( void );
-
 	void			CheckNearMiss( Vector vecStart, Vector vecEnd );
 
 	// ITargetIDProvidesHint
@@ -127,31 +89,15 @@ private:
 	int m_iAssists;
 
 	int m_iPlacementBodygroup;
-	int m_iPlacementBodygroup_Mini;
 
 	int m_iOldBodygroups;
-
-	bool m_bPlayerControlled;
-	bool m_bOldPlayerControlled;
-	uint32 m_nShieldLevel;
-	uint32 m_nOldShieldLevel;
-
-	bool m_bPDQSentry;
 
 	int m_iOldModelIndex;
 
 	bool m_bNearMiss;
-	bool m_bRecreateShield;
-	bool m_bRecreateLaserBeam;
 	float m_flNextNearMissCheck;
 
-	CHandle<C_SentrygunShield> m_hShieldModel;
-
-	HPARTICLEFFECT  m_hSirenEffect;
-	HPARTICLEFFECT  m_hShieldEffect;
-	HPARTICLEFFECT	m_hLaserBeamEffect;
 	CNetworkHandle( CBaseEntity, m_hEnemy );
-	CNetworkHandle( C_TFPlayer, m_hAutoAimTarget );
 
 	Vector	m_vecLaserBeamPos;
 
