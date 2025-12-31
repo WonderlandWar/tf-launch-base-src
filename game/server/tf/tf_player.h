@@ -506,9 +506,6 @@ public:
 
 	static bool m_bTFPlayerNeedsPrecache;
 
-	// IHasAttributes
-	virtual void			ReapplyProvision( void ) { return; }
-
 	CVoteController 		*GetTeamVoteController() OVERRIDE;
 
 public:
