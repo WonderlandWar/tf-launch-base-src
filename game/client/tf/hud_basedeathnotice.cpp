@@ -409,6 +409,12 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 	bool bSpecialScore = FStrEq( pszEventName, "special_score" );
 	bool bTeamLeaderKilled = false;
 
+	if ( bPlayerDeath )
+	{
+		if ( !ShouldShowDeathNotice( event ) )
+			return;
+	}
+
 	// Add a new death message.  Note we always look it up by index rather than create a reference or pointer to it;
 	// additional messages may get added during this function that cause the underlying array to get realloced, so don't
 	// ever keep a pointer to memory here.

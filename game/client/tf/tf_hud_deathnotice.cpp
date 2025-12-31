@@ -60,7 +60,6 @@ public:
 
 	virtual void FireGameEvent( IGameEvent *event );
 	void PlayRivalrySounds( int iKillerIndex, int iVictimIndex, int iType  );
-	virtual bool ShouldShowDeathNotice( IGameEvent *event );
 
 protected:	
 	virtual void OnGameEvent( IGameEvent *event, int iDeathNoticeMsg );
@@ -118,22 +117,6 @@ bool CTFHudDeathNotice::IsVisible( void )
 
 bool CTFHudDeathNotice::ShouldDraw( void )
 {
-	return true;
-}
-
-bool CTFHudDeathNotice::ShouldShowDeathNotice( IGameEvent *event )
-{ 
-	if ( event->GetBool( "silent_kill" ) )
-	{
-		// Don't show a kill event for the team of the silent kill victim.
-		int iVictimID = engine->GetPlayerForUserID( event->GetInt( "userid" ) );
-		C_TFPlayer* pVictim = ToTFPlayer( UTIL_PlayerByIndex( iVictimID ) );
-		if ( pVictim && pVictim->GetTeamNumber() == GetLocalPlayerTeam() && iVictimID != GetLocalPlayerIndex() )
-		{
-			return false;
-		}
-	}
-
 	return true;
 }
 
