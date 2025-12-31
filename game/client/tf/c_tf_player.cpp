@@ -1371,9 +1371,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 
 	RecvPropBool( RECVINFO( m_bUsingVRHeadset ) ),
 
-	RecvPropBool( RECVINFO( m_bForcedSkin ) ),
-	RecvPropInt( RECVINFO( m_nForcedSkin ) ),
-
 	RecvPropDataTable("TFSendHealersDataTable", 0, 0, &REFERENCE_RECV_TABLE( DT_TFSendHealersDataTable ) ),
 	RecvPropEHandle( RECVINFO( m_hSecondaryLastWeapon ) ),
 	RecvPropBool( RECVINFO( m_bUsingActionSlot ) ),
@@ -1479,9 +1476,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_flHandScale = 1.f;
 
 	m_bUsingVRHeadset = false;
-
-	m_bForcedSkin = false;
-	m_nForcedSkin = 0;
 
 	m_flChangeClassTime = 0.f;
 
@@ -4168,10 +4162,6 @@ int C_TFPlayer::GetSkin()
 
 	if ( !pLocalPlayer )
 		return 0;
-
-	// Allow server plugins to override
-	if ( m_bForcedSkin )
-		return m_nForcedSkin;
 
 	int iVisibleTeam = GetTeamNumber();
 

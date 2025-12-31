@@ -1009,9 +1009,6 @@ private:
 
 	CNetworkVar( bool, m_bUsingVRHeadset );
 
-	CNetworkVar( bool, m_bForcedSkin );
-	CNetworkVar( int, m_nForcedSkin );
-
 public:
 	// Send ForcePlayerViewAngles user message. Handled in __MsgFunc_ForcePlayerViewAngles in
 	// clientmode_tf.cpp. Sets Local and Abs angles, along with TauntYaw and VehicleMovingAngles.

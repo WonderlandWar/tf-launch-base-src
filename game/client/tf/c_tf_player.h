@@ -596,9 +596,6 @@ private:
 
 	CNetworkVar( bool, m_bUsingVRHeadset );
 
-	CNetworkVar( bool, m_bForcedSkin );
-	CNetworkVar( int, m_nForcedSkin );
-
 public:
 	void SetShowHudMenuTauntSelection( bool bShow ) { m_bShowHudMenuTauntSelection = bShow; }
 	bool ShouldShowHudMenuTauntSelection() const { return m_bShowHudMenuTauntSelection; }

@@ -596,9 +596,6 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 
 	SendPropBool( SENDINFO( m_bUsingVRHeadset ) ),
 
-	SendPropBool( SENDINFO( m_bForcedSkin ) ),
-	SendPropInt( SENDINFO( m_nForcedSkin ), ANIMATION_SKIN_BITS ),
-
 	SendPropDataTable( "TFSendHealersDataTable", 0, &REFERENCE_SEND_TABLE( DT_TFSendHealersDataTable ), SendProxy_SendHealersDataTable ),
 
 	SendPropEHandle( SENDINFO( m_hSecondaryLastWeapon ) ),
@@ -712,9 +709,6 @@ CTFPlayer::CTFPlayer()
 	m_flSapStartTime = 0.00;
 
 	m_bUsingVRHeadset = false;
-
-	m_bForcedSkin = false;
-	m_nForcedSkin = 0;
 
 	SetRespawnOverride( -1.f, NULL_STRING );
 
