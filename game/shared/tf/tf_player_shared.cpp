@@ -1961,14 +1961,6 @@ void CTFPlayerShared::OnRemoveTaunting( void )
 	m_pOuter->StopTaunt();
 #endif // GAME_DLL
 
-#ifdef CLIENT_DLL
-	if ( m_pOuter->m_pTauntEffect )
-	{
-		m_pOuter->ParticleProp()->StopEmissionAndDestroyImmediately( m_pOuter->m_pTauntEffect );
-		m_pOuter->m_pTauntEffect = NULL;
-	}
-#endif
-
 	m_pOuter->m_PlayerAnimState->ResetGestureSlot( GESTURE_SLOT_VCD );
 
 	// when we stop taunting, make sure active weapon is visible

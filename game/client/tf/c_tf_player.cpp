@@ -1416,20 +1416,11 @@ C_TFPlayer::C_TFPlayer() :
 	m_pTeleporterEffect = NULL;
 	m_pBurningSound = NULL;
 	m_pBurningEffect = NULL;
-	m_pUrineEffect = NULL;
-	m_pMilkEffect = NULL;
-	m_pGasEffect = NULL;
-	m_pSoldierOffensiveBuffEffect = NULL;
-	m_pSoldierDefensiveBuffEffect = NULL;
-	m_pSoldierOffensiveHealthRegenBuffEffect = NULL;
-	m_pSoldierNoHealingDamageBuffEffect = NULL;
-	m_pCritBoostEffect = NULL;
 	m_flBurnEffectStartTime = 0;
 	m_pDisguisingEffect = NULL;
 	m_pSaveMeEffect = NULL;
 	m_hOldObserverTarget = NULL;
 	m_iOldObserverMode = OBS_MODE_NONE;
-	m_pPhaseStandingEffect = NULL;
 
 	m_aGibs.Purge();
 	m_aNormalGibs.PurgeAndDeleteElements();
@@ -5824,16 +5815,6 @@ void C_TFPlayer::UpdateSpyStateChange( void )
 {
 	UpdateOverhealEffect();
 	UpdateRecentlyTeleportedEffect();
-
-	// Remove Speed lines if Stealthed
-	if ( m_Shared.IsStealthed() )
-	{
-		if ( m_pSpeedBoostEffect )
-		{
-			ParticleProp()->StopEmission( m_pSpeedBoostEffect );
-			m_pSpeedBoostEffect = NULL;
-		}
-	}
 
 	// Force Weapon updates
 	if ( GetActiveWeapon() )

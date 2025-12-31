@@ -525,32 +525,7 @@ public:
 	HPARTICLEFFECT      m_pBurningEffect;
 	float				m_flBurnEffectStartTime;
 
-	// Urine
-	HPARTICLEFFECT		m_pUrineEffect;
-
-	// Milk
-	HPARTICLEFFECT		m_pMilkEffect;
-
-	// Gas
-	HPARTICLEFFECT		m_pGasEffect;
-
-	// Soldier Buff
-	HPARTICLEFFECT		m_pSoldierOffensiveBuffEffect;
-	HPARTICLEFFECT		m_pSoldierDefensiveBuffEffect;
-	HPARTICLEFFECT		m_pSoldierOffensiveHealthRegenBuffEffect;
-	HPARTICLEFFECT		m_pSoldierNoHealingDamageBuffEffect;
-
-	// Speed boost
-	HPARTICLEFFECT		m_pSpeedBoostEffect;
-
-	// Taunt effects
-	HPARTICLEFFECT		m_pTauntEffect;
-
-	// Temp HACK for crit boost
-	HPARTICLEFFECT m_pCritBoostEffect;
-
 	HPARTICLEFFECT m_pOverHealedEffect;
-	HPARTICLEFFECT m_pPhaseStandingEffect;
 
 	CNewParticleEffect	*m_pDisguisingEffect;
 	float m_flDisguiseEffectStartTime;
