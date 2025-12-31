@@ -134,30 +134,6 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 		bool bRoundComplete = (bool) event->GetInt( "round_complete" );
 		int iRoundsRemaining = event->GetInt( "rounds_remaining" );
 
-		// non-final rounds of stopwatch mode should say something different
-		CTeamRoundTimer *pTimer = NULL;
-		if ( TFGameRules() && TFGameRules()->IsInTournamentMode() && TFGameRules()->IsInStopWatch() )
-		{
-			int iActiveTimer = ObjectiveResource()->GetStopWatchTimer();
-			pTimer = dynamic_cast< CTeamRoundTimer* >( ClientEntityList().GetEnt( iActiveTimer ) );
-			if ( pTimer )
-			{
-				if ( pTimer->IsWatchingTimeStamps() )
-				{
-					iWinningTeam = TEAM_INVALID;
-					iWinReason = bRoundComplete ? WINREASON_STOPWATCH_WATCHING_FINAL_ROUND : WINREASON_STOPWATCH_WATCHING_ROUNDS;
-				}
-				else
-				{
-					if ( !TFGameRules()->HaveStopWatchWinner() && !bRoundComplete )
-					{
-						iWinningTeam = TEAM_INVALID;
-						iWinReason = WINREASON_STOPWATCH_PLAYING_ROUNDS;
-					}
-				}
-			}
-		}
-
 		LoadControlSettings( "resource/UI/WinPanel.res" );		
 		InvalidateLayout( false, true );
 
@@ -322,70 +298,6 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 		case WINREASON_WINDIFFLIMIT:
 			g_pVGuiLocalize->ConstructString_safe( wzWinReason, g_pVGuiLocalize->Find( "#Winreason_WinDiffLimit" ), 1, pLocalizedTeamName );
 			break;
-		case WINREASON_RD_REACTOR_CAPTURED:
-			g_pVGuiLocalize->ConstructString_safe( wzWinReason, g_pVGuiLocalize->Find( "#Winreason_ReactorCaptured" ), 1, pLocalizedTeamName );
-			break;
-		case WINREASON_RD_CORES_COLLECTED:
-			g_pVGuiLocalize->ConstructString_safe( wzWinReason, g_pVGuiLocalize->Find( "#Winreason_CoresCollected" ), 1, pLocalizedTeamName );
-			break;
-		case WINREASON_RD_REACTOR_RETURNED:
-			g_pVGuiLocalize->ConstructString_safe( wzWinReason, g_pVGuiLocalize->Find( "#Winreason_ReactorReturned" ), 1, pLocalizedTeamName );
-			break;
-		case WINREASON_PD_POINTS:
-			g_pVGuiLocalize->ConstructString_safe( wzWinReason, g_pVGuiLocalize->Find( "#Winreason_PlayerDestructionPoints" ), 1, pLocalizedTeamName );
-			break;
-		case WINREASON_SCORED:
-			{
-				wchar_t wzScoreLimit[16];
-				_snwprintf( wzScoreLimit, ARRAYSIZE( wzScoreLimit ), L"%i", iFlagCapLimit );
-
-				const wchar_t *wpszFormatString = NULL;
-				if ( iFlagCapLimit == 1 )
-				{
-					wpszFormatString = g_pVGuiLocalize->Find( "#Winreason_ScoreLimit_One" );
-				}
-				if ( !wpszFormatString )
-				{
-					wpszFormatString = g_pVGuiLocalize->Find( "#Winreason_ScoreLimit" );
-				}
-
-				g_pVGuiLocalize->ConstructString_safe( wzWinReason, wpszFormatString, 2,
-					pLocalizedTeamName, wzScoreLimit );
-			}			
-			break;
-		case WINREASON_STOPWATCH_WATCHING_ROUNDS:
-			if ( pBlueTeam && pBlueTeamName && pRedTeamName )
-			{
-				bool bBlueAttackers = ( pBlueTeam->GetRole() == TEAM_ROLE_ATTACKERS );
-				g_pVGuiLocalize->ConstructString_safe( wzWinReason,
-					g_pVGuiLocalize->Find( "#Winreason_Stopwatch_Watching_Rounds" ),
-					2,
-					bBlueAttackers ? pBlueTeamName : pRedTeamName,
-					bBlueAttackers ? pRedTeamName : pBlueTeamName );
-			}
-			break;
-		case WINREASON_STOPWATCH_WATCHING_FINAL_ROUND:
-			if ( pBlueTeam && pBlueTeamName && pRedTeamName )
-			{
-				bool bBlueAttackers = ( pBlueTeam->GetRole() == TEAM_ROLE_ATTACKERS );
-				g_pVGuiLocalize->ConstructString_safe( wzWinReason,
-					g_pVGuiLocalize->Find( "#Winreason_Stopwatch_SwitchSides" ),
-					2,
-					bBlueAttackers ? pRedTeamName : pBlueTeamName,
-					bBlueAttackers ? pBlueTeamName : pRedTeamName );
-			}
-			break;
-		case WINREASON_STOPWATCH_PLAYING_ROUNDS:
-			if ( pBlueTeam && pBlueTeamName && pRedTeamName )
-			{
-				bool bBlueAttackers = ( pBlueTeam->GetRole() == TEAM_ROLE_ATTACKERS );
-				g_pVGuiLocalize->ConstructString_safe( wzWinReason,
-					g_pVGuiLocalize->Find( "#Winreason_Stopwatch_Playing_Rounds" ),
-					2,
-					bBlueAttackers ? pBlueTeamName : pRedTeamName,
-					bBlueAttackers ? pRedTeamName : pBlueTeamName );
-			}
-			break;
 		default:
 			// This happens at the end of the Soldier training mission, FYI
 			Assert( false );
@@ -393,7 +305,7 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 		}
 		SetDialogVariable( "WinReasonLabel", wzWinReason );
 
-		if ( !bRoundComplete && ( WINREASON_STALEMATE != iWinReason ) && ( WINREASON_STOPWATCH_WATCHING_ROUNDS != iWinReason ) && ( WINREASON_STOPWATCH_WATCHING_FINAL_ROUND != iWinReason ) && ( WINREASON_STOPWATCH_PLAYING_ROUNDS != iWinReason ) )
+		if ( !bRoundComplete && ( WINREASON_STALEMATE != iWinReason ) )
 		{			
 			// if this was a mini-round, show # of capture points remaining
 			wchar_t wzNumCapturesRemaining[16];
