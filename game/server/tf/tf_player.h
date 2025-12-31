@@ -1005,8 +1005,6 @@ private:
 	float				m_flRespawnTimeOverride;
 	string_t			m_strRespawnLocationOverride;
 
-	CountdownTimer		m_booTimer;
-
 	CNetworkVar( bool, m_bUsingVRHeadset );
 
 public:
