@@ -427,7 +427,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( ApplyAbsVelocityImpulse, "" )
 	DEFINE_SCRIPTFUNC( ApplyPunchImpulseX, "" )
 	DEFINE_SCRIPTFUNC( IsAllowedToTaunt, "" )
-	DEFINE_SCRIPTFUNC( IsViewingCYOAPDA, "" )
 	DEFINE_SCRIPTFUNC( IsRegenerating, "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptAddCond, "AddCond", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptAddCondEx, "AddCondEx", "" )
@@ -606,7 +605,6 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 
 	SendPropEHandle( SENDINFO( m_hSecondaryLastWeapon ) ),
 	SendPropFloat( SENDINFO( m_flHelpmeButtonPressTime ) ),
-	SendPropBool( SENDINFO( m_bViewingCYOAPDA ) ),
 	SendPropBool( SENDINFO( m_bRegenerating ) ),
 END_SEND_TABLE()
 
@@ -731,8 +729,6 @@ CTFPlayer::CTFPlayer()
 	SetDefLessFunc( m_PlayersExtinguished );
 
 	m_flLastAutobalanceTime = 0.f;
-
-	m_bViewingCYOAPDA = false;
 
 	m_bRegenerating = false;
 	m_bRespawning = false;
@@ -4055,7 +4051,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 		}
 		else
 		{
-			m_bViewingCYOAPDA.Set( bOpen );
 			TeamFortress_SetSpeed();
 		}
 		return true;

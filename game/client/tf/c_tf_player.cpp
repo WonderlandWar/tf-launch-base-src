@@ -1378,7 +1378,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 	RecvPropEHandle( RECVINFO( m_hSecondaryLastWeapon ) ),
 	RecvPropBool( RECVINFO( m_bUsingActionSlot ) ),
 	RecvPropFloat( RECVINFO( m_flHelpmeButtonPressTime ) ),
-	RecvPropBool( RECVINFO( m_bViewingCYOAPDA ) ),
 	RecvPropBool( RECVINFO( m_bRegenerating ) ),
 END_RECV_TABLE()
 
@@ -1505,7 +1504,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_bUsingActionSlot = false;
 
 	m_flHelpmeButtonPressTime = 0.f;
-	m_bViewingCYOAPDA = false;
 	m_bRegenerating = false;
 
 	ListenForGameEvent( "player_hurt" );

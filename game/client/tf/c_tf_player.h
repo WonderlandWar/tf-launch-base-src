@@ -175,7 +175,6 @@ public:
 	void			TurnOffTauntCam_Finish( void );
 	bool			IsTaunting( void ) const { return m_Shared.InCond( TF_COND_TAUNTING ); }
 
-	bool			IsViewingCYOAPDA( void ) const { return m_bViewingCYOAPDA; }
 	bool			IsRegenerating( void ) const { return m_bRegenerating; }
 
 	virtual void	InitPhonemeMappings();
@@ -661,7 +660,6 @@ private:
 	CNetworkHandle( CBaseCombatWeapon, m_hSecondaryLastWeapon );
 	CNetworkVar( bool, m_bUsingActionSlot );
 	CNetworkVar( float, m_flHelpmeButtonPressTime );
-	CNetworkVar( bool, m_bViewingCYOAPDA );
 	CNetworkVar( bool, m_bRegenerating );
 
 	CUtlMap< const char *, HPARTICLEFFECT > m_mapOverheadEffects;

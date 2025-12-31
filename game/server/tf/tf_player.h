@@ -563,7 +563,6 @@ public:
 	void				HandleTauntCommand( void );
 	QAngle				m_angTauntCamera;
 
-	bool				IsViewingCYOAPDA( void ) const { return m_bViewingCYOAPDA; }
 	bool				IsRegenerating( void ) const { return m_bRegenerating; }
 
 	HSCRIPT				ScriptGetActiveWeapon( void ) { return ToHScript( GetActiveTFWeapon() ); }
@@ -1061,8 +1060,6 @@ private:
 	CNetworkHandle( CBaseCombatWeapon, m_hSecondaryLastWeapon );
 
 	CNetworkVar( float, m_flHelpmeButtonPressTime );
-
-	CNetworkVar( bool, m_bViewingCYOAPDA );
 
 	CUtlVector< CHandle< CTFWeaponBase > > m_hDisguiseWeaponList; // copy disguise target weapons to this list
 

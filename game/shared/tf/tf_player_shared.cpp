@@ -4154,9 +4154,6 @@ bool CTFPlayer::CanPlayerMove() const
 	if ( TFGameRules() && TFGameRules()->BInMatchStartCountdown() )
 		return false;
 
-	if ( IsViewingCYOAPDA() )
-		return false;
-
 	bool bFreezeOnRestart = tf_player_movement_restart_freeze.GetBool();
 	if ( bFreezeOnRestart )
 	{
@@ -4722,9 +4719,6 @@ bool CTFPlayer::CanAttack( int iCanAttackFlags )
 
 	Assert( pRules );
 
-	if ( IsViewingCYOAPDA() )
-		return false;
-
 	if ( ( m_Shared.GetStealthNoAttackExpireTime() > gpGlobals->curtime ) || m_Shared.InCond( TF_COND_STEALTHED ) )
 	{
 		if ( !( iCanAttackFlags & TF_CAN_ATTACK_FLAG_GRAPPLINGHOOK ) )
@@ -5164,9 +5158,6 @@ bool CTFPlayer::ShouldStopTaunting()
 {
 	// stop taunt if we're under water
 	if ( GetWaterLevel() > WL_Waist )
-		return true;
-
-	if ( IsViewingCYOAPDA() )
 		return true;
 
 	return false;
