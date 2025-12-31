@@ -441,8 +441,6 @@ public:
 	void  SetChargeEffectOffTime( float flTime ) { m_flChargeEffectOffTime = flTime; }
 #endif
 
-	int GetTauntConcept( void ) const { return m_iTauntConcept; }
-
 	int	GetItemFindBonus( void ) //{ return m_iItemFindBonus; }
 	{
 #ifdef GAME_DLL
@@ -587,8 +585,6 @@ private:
 	float					m_flFlameBurnTime;
 	float					m_flAfterburnDuration;
 #endif // GAME_DLL
-
-	CNetworkVar( int, m_iTauntConcept );
 
 	float					m_flDisguiseCompleteTime;
 

@@ -1271,35 +1271,12 @@ typedef enum
 #define TF_DEATH_REVENGE				0x0004	// killer got revenge on victim
 #define TF_DEATH_ASSISTER_REVENGE		0x0008	// assister got revenge on victim
 #define TF_DEATH_FIRST_BLOOD			0x0010  // death triggered a first blood
-#define TF_DEATH_FEIGN_DEATH			0x0020  // feign death
-#define TF_DEATH_INTERRUPTED			0x0040	// interrupted a player doing an important game event (like capping or carrying flag)
-#define TF_DEATH_GIBBED					0x0080	// player was gibbed
 
 extern const char *TranslateWeaponEntForClass( const char *pszName, int iClass );
 
 // Item Giveaways
 #define PLAYER_ROLL_MIN			1
 #define PLAYER_ROLL_MAX			500
-
-enum taunts_t
-{
-	TAUNT_BASE_WEAPON,		// The standard taunt we shipped with. Taunts based on your currently held weapon
-	//
-	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
-	//
-};
-
-#define TF_HIGHFIVE_HINT_MASK			( 0x10100 ) // annotations have id ( TF_HIGHFIVE_HINT_MASK | entindex )
-
-enum BombDeployingState_t
-{
-	TF_BOMB_DEPLOYING_NONE,
-	TF_BOMB_DEPLOYING_DELAY,
-	TF_BOMB_DEPLOYING_ANIMATING,
-	TF_BOMB_DEPLOYING_COMPLETE,
-
-	TF_BOMB_DEPLOYING_NOT_COUNT,
-};
 
 enum EHorriblePyroVisionHack
 {

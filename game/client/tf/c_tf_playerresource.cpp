@@ -32,7 +32,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_TF_PlayerResource, DT_TFPlayerResource, CTFPlayerRes
 	RecvPropArray3( RECVINFO_ARRAY( m_iDamageBlocked ), RecvPropInt( RECVINFO( m_iDamageBlocked[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iCurrencyCollected ), RecvPropInt( RECVINFO( m_iCurrencyCollected[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iBonusPoints ), RecvPropInt( RECVINFO( m_iBonusPoints[0] ) ) ),
-	RecvPropArray3( RECVINFO_ARRAY( m_iPlayerLevel ), RecvPropInt( RECVINFO( m_iPlayerLevel[0] ) ) ),
 	RecvPropInt( RECVINFO( m_iPartyLeaderRedTeamIndex ) ),
 	RecvPropInt( RECVINFO( m_iPartyLeaderBlueTeamIndex ) ),
 	RecvPropInt( RECVINFO( m_iEventTeamStatus ) ),

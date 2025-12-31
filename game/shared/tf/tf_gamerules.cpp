@@ -5101,18 +5101,6 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 		pAssister = NULL;
 	}
 
-	// Determine whether it's a feign death fake death notice
-	bool bFeignDeath = pTFPlayerVictim->IsGoingFeignDeath();
-	if ( bFeignDeath )
-	{
-		CTFPlayer *pDisguiseTarget = pTFPlayerVictim->m_Shared.GetDisguiseTarget();
-		if ( pDisguiseTarget && (pTFPlayerVictim->GetTeamNumber() == pDisguiseTarget->GetTeamNumber()) )
-		{
-			// We're disguised as a team mate. Pretend to die as that player instead of us.
-			pVictim = pTFPlayerVictim = pDisguiseTarget;
-		}
-	}
-
 	// Work out what killed the player, and send a message to all clients about it
 	int iWeaponID;
 	const char *killer_weapon_name = GetKillingWeaponName( info, pTFPlayerVictim, &iWeaponID );
@@ -5146,16 +5134,6 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 		event->SetBool( "silent_kill", false );
 
 		int iDeathFlags = pTFPlayerVictim->GetDeathFlags();
-
-		if ( bFeignDeath )
-		{
-			iDeathFlags |= TF_DEATH_FEIGN_DEATH;
-		}
-
-		if ( pTFPlayerVictim->WasGibbedOnLastDeath() )
-		{
-			iDeathFlags |= TF_DEATH_GIBBED;
-		}
 
 		event->SetInt( "death_flags", iDeathFlags );
 

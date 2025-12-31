@@ -409,32 +409,6 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 	bool bSpecialScore = FStrEq( pszEventName, "special_score" );
 	bool bTeamLeaderKilled = false;
 
-	bool bIsFeignDeath = event->GetInt( "death_flags" ) & TF_DEATH_FEIGN_DEATH;
-	if ( bPlayerDeath )
-	{
-		if ( !ShouldShowDeathNotice( event ) )
-			return;
-
-		if ( bIsFeignDeath )
-		{
-			// Only display fake death messages to the enemy team.
-			int victimid = event->GetInt( "userid" );
-			int victim = engine->GetPlayerForUserID( victimid );
-			CBasePlayer *pVictim = UTIL_PlayerByIndex( victim );
-			CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
-			if ( pVictim && pLocalPlayer &&
-			     !BAreTeamsEnemies( pLocalPlayer->GetTeamNumber(), pVictim->GetTeamNumber() ) )
-			{
-				return;
-			}
-
-			if ( iLocalPlayerIndex == victim )
-			{
-				return;
-			}
-		}
-	}
-
 	// Add a new death message.  Note we always look it up by index rather than create a reference or pointer to it;
 	// additional messages may get added during this function that cause the underlying array to get realloced, so don't
 	// ever keep a pointer to memory here.

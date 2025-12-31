@@ -115,12 +115,6 @@ protected:
  				default:
  					break;
  				}
-
-				// is the spy feigning death?
-				if ( event->GetInt( "death_flags" ) & TF_DEATH_FEIGN_DEATH )
-				{
-					pszCustom = "feign_death";
-				}
  
  				if ( pszCustom )
  				{

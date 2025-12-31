@@ -711,12 +711,6 @@ bool CTFGameMovement::CheckWater( void )
 	{
 		m_flWaterEntryTime = gpGlobals->curtime;
 	}
-#ifdef GAME_DLL
-	else if ( ( WL_NotInWater == wl ) && ( m_nOldWaterLevel > WL_NotInWater ) )
-	{
-		m_pTFPlayer->SetWaterExitTime( gpGlobals->curtime );
-	}
-#endif
 
 	if ( m_nOldWaterLevel != wl )
 	{

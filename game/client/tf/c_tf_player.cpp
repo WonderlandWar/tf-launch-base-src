@@ -1322,10 +1322,6 @@ BEGIN_RECV_TABLE_NOBASE( C_TFPlayer, DT_TFLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 
-	RecvPropInt( RECVINFO( m_nExperienceLevel ) ),
-	RecvPropInt( RECVINFO( m_nExperienceLevelProgress ) ),
-	RecvPropInt( RECVINFO( m_bMatchSafeToLeave ) ),
-
 END_RECV_TABLE()
 
 // all players except the local player
@@ -1341,10 +1337,6 @@ END_RECV_TABLE()
 //-----------------------------------------------------------------------------
 // Purpose: Data that gets sent to attached medics
 //-----------------------------------------------------------------------------
-BEGIN_RECV_TABLE_NOBASE( C_TFPlayer, DT_TFSendHealersDataTable )
-	RecvPropInt( RECVINFO( m_nActiveWpnClip ) ),
-END_RECV_TABLE()
-
 IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 
 	RecvPropBool(RECVINFO(m_bSaveMeParity)),
@@ -1371,7 +1363,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 
 	RecvPropBool( RECVINFO( m_bUsingVRHeadset ) ),
 
-	RecvPropDataTable("TFSendHealersDataTable", 0, 0, &REFERENCE_RECV_TABLE( DT_TFSendHealersDataTable ) ),
 	RecvPropEHandle( RECVINFO( m_hSecondaryLastWeapon ) ),
 	RecvPropBool( RECVINFO( m_bUsingActionSlot ) ),
 	RecvPropFloat( RECVINFO( m_flHelpmeButtonPressTime ) ),
@@ -1459,12 +1450,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_nOldMaxHealth = -1;
 
 	m_bBodygroupsDirty = false;
-
-	m_nExperienceLevel = 0;
-	m_nExperienceLevelProgress = 0;
-	m_nPrevExperienceLevel = 0;
-
-	m_bMatchSafeToLeave = true;
 
 	for( int i=0; i<kBonusEffect_Count; ++i )
 	{

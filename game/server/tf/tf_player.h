@@ -179,10 +179,6 @@ public:
 	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	virtual void		DamageEffect(float flDamage, int fDamageType);
 
-	void				OnDealtDamage( CBaseCombatCharacter *pVictim, const CTakeDamageInfo &info );		// invoked when we deal damage to another victim
-	int					GetDamagePerSecond( void ) const;
-	void				ResetDamagePerSecond( void );
-
 	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void				ApplyPushFromDamage( const CTakeDamageInfo &info, Vector vecDir );
 
@@ -379,8 +375,6 @@ public:
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
 	virtual bool ShouldGib( const CTakeDamageInfo &info ) OVERRIDE;
 	void StopRagdollDeathAnim( void );
-	void SetGibbedOnLastDeath( bool bGibbed ) { m_bGibbedOnLastDeath = bGibbed; }
-	bool WasGibbedOnLastDeath( void ) { return m_bGibbedOnLastDeath; }
 
 	// Dropping Ammo
 	bool ShouldDropAmmoPack( void );
@@ -544,18 +538,16 @@ public:
 	void				SetTauntYaw( float flTauntYaw );
 	bool				CanMoveDuringTaunt();
 	bool				ShouldStopTaunting();
-	virtual int			GetAllowedTauntPartnerTeam() const;
 	
-	void				OnTauntSucceeded( const char* pszSceneName, int iTauntIndex = 0, int iTauntConcept = 0 );
-	void				Taunt( taunts_t iTauntIndex = TAUNT_BASE_WEAPON, int iTauntConcept = 0 );
-	void				ScriptTaunt( int iTauntIndex, int iTauntConcept ) { Taunt((taunts_t)iTauntIndex, iTauntConcept); }
+	void				OnTauntSucceeded( const char* pszSceneName );
+	void				Taunt();
+	void				ScriptTaunt() { Taunt(); }
 	bool				IsTaunting( void ) const { return m_Shared.InCond( TF_COND_TAUNTING ); }
 	bool				IsAllowedToTaunt( void );
 	void				CancelTaunt( void );
 	void				StopTaunt( void );
 	float				GetTauntRemoveTime( void ) const { return m_flTauntRemoveTime; }
 	void				HandleTauntCommand( void );
-	QAngle				m_angTauntCamera;
 
 	bool				IsRegenerating( void ) const { return m_bRegenerating; }
 
@@ -637,7 +629,6 @@ private:
 	float				m_flTauntStartTime;
 	float				m_flTauntNextStartTime;
 	float				m_flTauntRemoveTime;
-	Vector				m_vecTauntStartPosition;
 
 	float				m_flNextReflectZap;
 
@@ -688,7 +679,6 @@ public:
 
 	void				SetTargetDummy( void ){ m_bIsTargetDummy = true; }
 
-	bool				ShouldCollideWithSentry( void ){ return m_bCollideWithSentry; }
 	bool				IsAnyEnemySentryAbleToAttackMe( void ) const;		// return true if any enemy sentry has LOS and is facing me and is in range to attack
 
 	int					GetHealthBefore( void ) { return m_iHealthBefore; }
@@ -699,37 +689,11 @@ public:
 	int					GetTeamChangeCount( void ) { return m_iTeamChanges; }
 	int					GetClassChangeCount( void ) { return m_iClassChanges; }
 
-	void				ForceItemRemovalOnRespawn( void ) { m_bForceItemRemovalOnRespawn = true; }
-
 public:
-	bool				IsMissionEnemy( void ){ return m_bIsMissionEnemy; }
-	void 				MarkAsMissionEnemy( void ){ m_bIsMissionEnemy = true; }
-	bool				IsSupportEnemy( void ){ return m_bIsSupportEnemy; }
-	void 				MarkAsSupportEnemy( void ){ m_bIsSupportEnemy = true; }
-	void 				MarkAsLimitedSupportEnemy( void ){ m_bIsLimitedSupportEnemy = true; }
-
-	// Bounty Mode
-	int					GetExperienceLevel( void ) { return m_nExperienceLevel; }
-	void				SetExperienceLevel( int nValue ) { m_nExperienceLevel.Set( MAX( nValue, 1 ) ); }
-	int					GetExperiencePoints( void ) { return m_nExperiencePoints; }
-	void				SetExperiencePoints( int nValue ) { m_nExperiencePoints = MAX( nValue, 0 ); }
-	void				CalculateExperienceLevel( bool bAnnounce = true );
-	void				RefundExperiencePoints( void );
 
 	void				PlayReadySound( void );
 
-	void				AccumulateSentryGunDamageDealt( float damage );
-	void				ResetAccumulatedSentryGunDamageDealt();
-	float				GetAccumulatedSentryGunDamageDealt();
-
-	void				IncrementSentryGunKillCount( void );
-	void				ResetAccumulatedSentryGunKillCount();
-	int					GetAccumulatedSentryGunKillCount();
-
 	bool				PlaySpecificSequence( const char *pSequenceName );
-
-	void				SetWaterExitTime( float flTime ){ m_flWaterExitTime = flTime; }
-	float				GetWaterExitTime( void ){ return m_flWaterExitTime; }
 
 
 	//---------------------------------
@@ -743,9 +707,6 @@ public:
 	const char			*GetRespawnLocationOverride( void ) const { return ( m_strRespawnLocationOverride == NULL_STRING ) ? NULL : m_strRespawnLocationOverride.ToCStr(); }
 	void				SetRespawnOverride( float flRespawnTime, string_t respawnLocation ) { m_flRespawnTimeOverride = flRespawnTime; m_strRespawnLocationOverride = respawnLocation; }
 	void				ResetIdleCheck( void ) { m_flLastAction = gpGlobals->curtime; }
-
-	// Matchmaking
-	void				SetMatchSafeToLeave( bool bMatchSafeToLeave ) { m_bMatchSafeToLeave = bMatchSafeToLeave; }
 
 	void				SetPrevRoundTeamNum( int nTeamNum ){ m_nPrevRoundTeamNum = nTeamNum; }
 	int					GetPrevRoundTeamNum( void ){ return m_nPrevRoundTeamNum; }
@@ -906,15 +867,7 @@ private:
 	bool 				m_bMedigunAutoHeal;
 	bool				m_bAutoRezoom;	// does the player want to re-zoom after each shot for sniper rifles
 
-	bool				m_bForceItemRemovalOnRespawn;
-
 	int					m_nPrevRoundTeamNum;
-
-public:
-	bool				IsGoingFeignDeath( void ) { return m_bGoingFeignDeath; }
-
-	void					SetDeployingBombState( BombDeployingState_t nDeployingBombState ) { m_nDeployingBombState = nDeployingBombState; }
-	BombDeployingState_t	GetDeployingBombState( void ) const { return m_nDeployingBombState; }
 
 private:
 	// Achievement data
@@ -923,47 +876,17 @@ private:
 	int					m_iLeftGroundHealth;	// health we were at the last time we left the ground
 
 	float				m_flTeamJoinTime;
-	bool				m_bGibbedOnLastDeath;
 	CUtlMap<int, float> m_Cappers;		
 	float				m_fMaxHealthTime;
 
-	// Feign death.
-	bool				m_bGoingFeignDeath;
-	CHandle<CBaseEntity> m_hFeignRagdoll;	// Don't use the normal ragdoll.
-	Vector				m_vecFeignDeathVelocity;
-
-	bool				m_bArenaIsAFK; // used to detect when players are AFK during an Arena-mode round
 	bool				m_bIsAFK;
-
-	BombDeployingState_t	m_nDeployingBombState;
-
-	bool				m_bIsMissionEnemy;
-	bool				m_bIsSupportEnemy;
-	bool				m_bIsLimitedSupportEnemy;
-
-	// Bounty Mode
-	CNetworkVar( uint32, m_nExperienceLevel );
-	CNetworkVar( uint32, m_nExperienceLevelProgress );	// Networked progress bar
-	uint32				m_nExperiencePoints;			// Raw player-only value
-
-	// Matchmaking
-	// is this player bound to the match on penalty of abandon. Sync'd via local-player-only DT
-	CNetworkVar( bool, m_bMatchSafeToLeave );
 
 	float				m_flLastReadySoundTime;
 
-
-public:
-
-	// Marking for death.
-	CHandle<CTFPlayer>	m_pMarkedForDeathTarget;
-
-	CountdownTimer m_playerMovementStuckTimer;			// for destroying stuck bots in MvM
 private:
 	
 	bool				m_bIsTargetDummy;
 
-	bool				m_bCollideWithSentry;
 	IntervalTimer		m_calledForMedicTimer;
 	CountdownTimer		m_placedSapperTimer;
 
@@ -974,23 +897,6 @@ public:
 	QAngle				GetAnimRenderAngles( void ) { return m_PlayerAnimState->GetRenderAngles(); }
 
 private:
-
-	//CountdownTimer		m_fireproofTimer;		// if active, we're fireproof
-
-	float				m_accumulatedSentryGunDamageDealt;	// for Sentry Buster missions in MvM
-	int					m_accumulatedSentryGunKillCount;	// for Sentry Buster missions in MvM
-
-	static const int	DPS_Period = 90;					// The duration of the sliding window for calculating DPS, in seconds
-	int					*m_damageRateArray;					// One array element per second, for accumulating damage done during that time
-	int					m_lastDamageRateIndex;
-	int					m_peakDamagePerSecond;
-
-	CNetworkVar( uint16, m_nActiveWpnClip );
-	uint16				m_nActiveWpnClipPrev;
-	float				m_flNextClipSendTime;
-
-	float				m_flWaterExitTime;
-	float				m_fLastBombHeadTimestamp;
 
 	bool				m_bIsSapping;
 	int					m_iSappingEvent;
@@ -1143,52 +1049,6 @@ inline float CTFPlayer::GetTimeSinceCalledForMedic() const
 inline void CTFPlayer::NoteMedicCall( void )
 {
 	m_calledForMedicTimer.Start();
-}
-
-inline void CTFPlayer::AccumulateSentryGunDamageDealt( float damage )
-{
-	m_accumulatedSentryGunDamageDealt += damage;
-}
-
-inline void	CTFPlayer::ResetAccumulatedSentryGunDamageDealt()
-{
-	m_accumulatedSentryGunDamageDealt = 0.0f;
-}
-
-inline float CTFPlayer::GetAccumulatedSentryGunDamageDealt()
-{
-	return m_accumulatedSentryGunDamageDealt;
-}
-
-inline void CTFPlayer::IncrementSentryGunKillCount( void )
-{
-	++m_accumulatedSentryGunKillCount;
-}
-
-inline void	CTFPlayer::ResetAccumulatedSentryGunKillCount()
-{
-	m_accumulatedSentryGunKillCount = 0;
-}
-
-inline int CTFPlayer::GetAccumulatedSentryGunKillCount()
-{
-	return m_accumulatedSentryGunKillCount;
-}
-
-inline int CTFPlayer::GetDamagePerSecond( void ) const
-{
-	return m_peakDamagePerSecond;
-}
-
-inline void CTFPlayer::ResetDamagePerSecond( void )
-{
-	for( int i=0; i<DPS_Period; ++i )
-	{
-		m_damageRateArray[i] = 0;
-	}
-
-	m_lastDamageRateIndex = -1;
-	m_peakDamagePerSecond = 0;
 }
 
 

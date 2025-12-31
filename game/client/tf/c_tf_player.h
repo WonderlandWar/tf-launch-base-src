@@ -369,13 +369,6 @@ public:
 	// Spy Cigarette
 	bool CanLightCigarette( void );
 
-	// Bounty Mode
-	int	 GetExperienceLevel( void ) { return m_nExperienceLevel; }
-
-	// Matchmaking
-	bool	GetMatchSafeToLeave() { return m_bMatchSafeToLeave; }
-
-
 	bool	IsUsingVRHeadset( void ){ return m_bUsingVRHeadset; }
 
 	bool	ShouldPlayerDrawParticles( void );
@@ -574,18 +567,6 @@ private:
 	CUtlVector<breakmodel_t>	m_aGibs;
 
 	C_TFPlayer( const C_TFPlayer & );
-
-	// Bounty Mode
-	int m_nExperienceLevel;
-	int m_nExperienceLevelProgress;
-	int m_nPrevExperienceLevel;
-
-	// Matchmaking
-	// is this player bound to the match on penalty of abandon. Sync'd via local-player-only DT
-	bool m_bMatchSafeToLeave;
-
-	// Medic healtarget active weapon ammo/clip count
-	uint16	m_nActiveWpnClip;
 
 	CNetworkVar( float, m_flHeadScale );
 	CNetworkVar( float, m_flTorsoScale );

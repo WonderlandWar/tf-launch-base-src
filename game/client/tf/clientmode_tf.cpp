@@ -98,7 +98,6 @@ ConVar tf_highfive_hintcount( "tf_highfive_hintcount", "0", FCVAR_CLIENTDLL | FC
 ConVar tf_delete_temp_files( "tf_delete_temp_files", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Delete custom player sprays and other temp files during shutdown" );
 
 ConVar tf_taunt_always_show_hint( "tf_taunt_always_show_hint", "1", FCVAR_CLIENTDLL );
-extern ConVar tf_allow_all_team_partner_taunt;
 extern ConVar tf_autobalance_ask_candidates_maxtime;
 extern ConVar tf_autobalance_dead_candidates_maxtime;
 extern ConVar cl_notifications_show_ingame;
@@ -579,59 +578,55 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 	}
 	else if ( FStrEq( "player_death", eventname ) )
 	{
-		// Make sure they're not doing a dead ringer fake death
-		if ( ( event->GetInt( "death_flags" ) & TF_DEATH_FEIGN_DEATH ) == 0 )
+		if ( TFGameRules() && ( TFGameRules()->State_Get() == GR_STATE_RND_RUNNING ) && ( TFGameRules()->IsCompetitiveMode() ) )
 		{
-			if ( TFGameRules() && ( TFGameRules()->State_Get() == GR_STATE_RND_RUNNING ) && ( TFGameRules()->IsCompetitiveMode() ) )
+			C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
+			if ( pLocalPlayer )
 			{
-				C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-				if ( pLocalPlayer )
+				int nVictimIndex = event->GetInt( "victim_entindex" );
+				int nVictimTeam = g_TF_PR->GetTeam( nVictimIndex );
+
+				// See if there are any other players still alive
+				bool bSomeAlive = false;
+				for ( int playerIndex = 1; playerIndex <= MAX_PLAYERS; playerIndex++ )
 				{
-					int nVictimIndex = event->GetInt( "victim_entindex" );
-					int nVictimTeam = g_TF_PR->GetTeam( nVictimIndex );
+					if ( !g_TF_PR->IsConnected( playerIndex ) )
+						continue;
 
-					// See if there are any other players still alive
-					bool bSomeAlive = false;
-					for ( int playerIndex = 1; playerIndex <= MAX_PLAYERS; playerIndex++ )
+					if ( nVictimIndex == playerIndex )
+						continue;
+
+					if ( nVictimTeam != g_TF_PR->GetTeam( playerIndex ) )
+						continue;
+
+					if ( g_TF_PR->IsAlive( playerIndex ) )
 					{
-						if ( !g_TF_PR->IsConnected( playerIndex ) )
-							continue;
+						// Found one
+						bSomeAlive = true;
+						break;
+					}
+				}
 
-						if ( nVictimIndex == playerIndex )
-							continue;
+				if ( !bSomeAlive )
+				{
+					const char *pszSound = NULL;
 
-						if ( nVictimTeam != g_TF_PR->GetTeam( playerIndex ) )
-							continue;
-
-						if ( g_TF_PR->IsAlive( playerIndex ) )
-						{
-							// Found one
-							bSomeAlive = true;
-							break;
-						}
+					if ( ( RandomInt( 1, 100 ) <= 20 ) || ( pLocalPlayer->GetTeamNumber() < FIRST_GAME_TEAM ) )
+					{
+						pszSound = ( nVictimTeam == TF_TEAM_RED ) ? "Announcer.TeamWipeRed" : "Announcer.TeamWipeBlu";
+					}
+					else if ( pLocalPlayer->GetTeamNumber() == nVictimTeam )
+					{
+						pszSound = "Announcer.YourTeamWiped";
+					}
+					else
+					{
+						pszSound = "Announcer.TheirTeamWiped";
 					}
 
-					if ( !bSomeAlive )
+					if ( pszSound )
 					{
-						const char *pszSound = NULL;
-
-						if ( ( RandomInt( 1, 100 ) <= 20 ) || ( pLocalPlayer->GetTeamNumber() < FIRST_GAME_TEAM ) )
-						{
-							pszSound = ( nVictimTeam == TF_TEAM_RED ) ? "Announcer.TeamWipeRed" : "Announcer.TeamWipeBlu";
-						}
-						else if ( pLocalPlayer->GetTeamNumber() == nVictimTeam )
-						{
-							pszSound = "Announcer.YourTeamWiped";
-						}
-						else
-						{
-							pszSound = "Announcer.TheirTeamWiped";
-						}
-
-						if ( pszSound )
-						{
-							pLocalPlayer->EmitSound( pszSound );
-						}
+						pLocalPlayer->EmitSound( pszSound );
 					}
 				}
 			}

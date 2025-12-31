@@ -524,10 +524,6 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayer, DT_TFLocalPlayerExclusive )
 	SendPropFloat( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 8, SPROP_CHANGES_OFTEN, -90.0f, 90.0f ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
 
-	SendPropInt( SENDINFO( m_nExperienceLevel ), 7, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_nExperienceLevelProgress ), 7, SPROP_UNSIGNED ),
-	SendPropBool( SENDINFO( m_bMatchSafeToLeave ) ),
-
 END_SEND_TABLE()
 
 // all players except the local player
@@ -540,15 +536,6 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayer, DT_TFNonLocalPlayerExclusive )
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
 
 END_SEND_TABLE()
-
-//-----------------------------------------------------------------------------
-// Purpose: Sent to attached medics
-//-----------------------------------------------------------------------------
-BEGIN_SEND_TABLE_NOBASE( CTFPlayer, DT_TFSendHealersDataTable )
-	SendPropInt( SENDINFO( m_nActiveWpnClip ), -1, SPROP_VARINT | SPROP_UNSIGNED ),
-END_SEND_TABLE()
-
-//============
 
 LINK_ENTITY_TO_CLASS( player, CTFPlayer );
 PRECACHE_REGISTER(player);
@@ -596,8 +583,6 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 
 	SendPropBool( SENDINFO( m_bUsingVRHeadset ) ),
 
-	SendPropDataTable( "TFSendHealersDataTable", 0, &REFERENCE_SEND_TABLE( DT_TFSendHealersDataTable ), SendProxy_SendHealersDataTable ),
-
 	SendPropEHandle( SENDINFO( m_hSecondaryLastWeapon ) ),
 	SendPropFloat( SENDINFO( m_flHelpmeButtonPressTime ) ),
 	SendPropBool( SENDINFO( m_bRegenerating ) ),
@@ -635,8 +620,6 @@ CTFPlayer::CTFPlayer()
 	m_flNextTimeCheck = gpGlobals->curtime;
 	m_flSpawnTime = 0;
 
-	m_flWaterExitTime = 0;
-
 	SetViewOffset( TF_PLAYER_VIEW_OFFSET );
 
 	m_Shared.Init( this );
@@ -659,10 +642,7 @@ CTFPlayer::CTFPlayer()
 
 	m_bSpeakingConceptAsDisguisedSpy = false;
 
-	m_bArenaIsAFK = false;
 	m_bIsAFK = false;
-
-	m_nDeployingBombState = TF_BOMB_DEPLOYING_NONE;
 
 	m_flNextChangeClassTime = 0.0f;
 	m_flNextChangeTeamTime = 0.0f;
@@ -676,31 +656,15 @@ CTFPlayer::CTFPlayer()
 	m_iTeamChanges = 0;
 	m_iClassChanges = 0;
 
-	// Bounty Mode
-	m_nExperienceLevel = 1;
-	m_nExperiencePoints = 0;
-	m_nExperienceLevelProgress = 0;
-
 	SetDefLessFunc( m_Cappers );		// Tracks victims for demo achievement
 
 	m_bIsTargetDummy = false;
 	
-	m_bCollideWithSentry = false;
-
 	m_nForceTauntCam = 0;
 
 	m_flLastThinkTime = -1.f;
 
 	m_flLastReadySoundTime = 0.f;
-
-	m_damageRateArray = new int[ DPS_Period ];
-	ResetDamagePerSecond();
-
-	m_nActiveWpnClip.Set( 0 );
-	m_nActiveWpnClipPrev = 0;
-	m_flNextClipSendTime = 0;
-
-	m_fLastBombHeadTimestamp = 0.0f;
 
 	m_bIsSapping = false;
 	m_iSappingEvent = TF_SAPEVENT_NONE;
@@ -799,63 +763,6 @@ void CTFPlayer::TFPlayerThink()
 		if ( bStopTaunt )
 		{
 			CancelTaunt();
-		}
-	}
-
-	if ( !m_bCollideWithSentry )
-	{
-		if ( IsPlayerClass( TF_CLASS_ENGINEER ) )
-		{
-			CBaseObject	*pSentry = GetObjectOfType( OBJ_SENTRYGUN );
-			if ( !pSentry )
-			{
-				m_bCollideWithSentry = true;
-			}
-			else
-			{
-				if ( ( pSentry->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr() > 2500 )
-				{
-					m_bCollideWithSentry = true;
-				}
-			}
-		}
-		else
-		{
-			m_bCollideWithSentry = true;
-		}
-	}
-
-	// Send active weapon's clip state to attached medics
-	bool bSendClipInfo = gpGlobals->curtime > m_flNextClipSendTime &&
-						 m_Shared.GetNumHealers() &&
-						 IsAlive();
-	if ( bSendClipInfo )
-	{
-		CTFWeaponBase *pTFWeapon = GetActiveTFWeapon();
-		if ( pTFWeapon )
-		{
-			int nClip = 0;
-
-			if ( m_Shared.InCond( TF_COND_DISGUISED ) )
-			{
-				nClip = m_Shared.GetDisguiseAmmoCount();
-			}
-			else
-			{
-				nClip = pTFWeapon->UsesClipsForAmmo1() ? pTFWeapon->Clip1() : GetAmmoCount( pTFWeapon->GetPrimaryAmmoType() );
-			}
-
-			if ( nClip >= 0 && nClip != m_nActiveWpnClipPrev )
-			{
-				if ( nClip > 500 )
-				{
-					Warning( "Heal Target: ClipSize Data Limit Exceeded: %d (max 500)\n", nClip );
-					nClip = MIN( nClip, 500 );
-				}
-				m_nActiveWpnClip.Set( nClip );
-				m_nActiveWpnClipPrev = m_nActiveWpnClip;
-				m_flNextClipSendTime = gpGlobals->curtime + 0.25f;
-			}
 		}
 	}
 
@@ -967,8 +874,6 @@ void CTFPlayer::RegenAmmoInternal( int iIndex, float flRegen )
 //-----------------------------------------------------------------------------
 CTFPlayer::~CTFPlayer()
 {
-	delete [] m_damageRateArray;
-
 	DestroyRagdoll();
 	m_PlayerAnimState->Release();
 }
@@ -1079,33 +984,16 @@ void CTFPlayer::CheckForIdle( void )
 		else
 			m_flTimeInSpawn = 0;
 
-		if ( TFGameRules()->IsInArenaMode() && tf_arena_use_queue.GetBool() == true )
+		// Cannot possibly get out of the spawn room in 0 seconds--so if the ConVar says 0, let's assume 30 seconds.
+		float flIdleTime = Max( mp_idlemaxtime.GetFloat() * 60, 30.0f );
+
+		if ( TFGameRules()->InStalemate() )
 		{
-			if ( GetTeamNumber() == TEAM_SPECTATOR )
-				return;
-
-			if ( TFGameRules()->State_Get() == GR_STATE_TEAM_WIN && TFGameRules()->GetWinningTeam() != GetTeamNumber() )
-			{
-				if ( m_bArenaIsAFK )
-				{
-					m_bIsAFK = true;
-					m_bArenaIsAFK = false;
-				}
-			}
+			flIdleTime = mp_stalemate_timelimit.GetInt() * 0.5f;
 		}
-		else
-		{
-			// Cannot possibly get out of the spawn room in 0 seconds--so if the ConVar says 0, let's assume 30 seconds.
-			float flIdleTime = Max( mp_idlemaxtime.GetFloat() * 60, 30.0f );
 
-			if ( TFGameRules()->InStalemate() )
-			{
-				flIdleTime = mp_stalemate_timelimit.GetInt() * 0.5f;
-			}
-
-			m_bIsAFK = ( gpGlobals->curtime - m_flLastAction ) > flIdleTime
-			        || ( m_flTimeInSpawn > flIdleTime ); 
-		}
+		m_bIsAFK = ( gpGlobals->curtime - m_flLastAction ) > flIdleTime
+		        || ( m_flTimeInSpawn > flIdleTime ); 
 		
 		if ( m_bIsAFK == true )
 		{
@@ -1509,10 +1397,6 @@ void CTFPlayer::InitialSpawn( void )
 	ResetScores();
 	StateEnter( TF_STATE_WELCOME );
 
-	ResetAccumulatedSentryGunDamageDealt();
-	ResetAccumulatedSentryGunKillCount();
-	ResetDamagePerSecond();
-
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_initial_spawn" );
 	if ( event )
 	{
@@ -1739,9 +1623,6 @@ void CTFPlayer::Spawn()
 	CollisionProp()->SetSurroundingBoundsType( USE_SPECIFIED_BOUNDS, &mins, &maxs );
 
 	m_iLeftGroundHealth = -1;
-	m_bGoingFeignDeath = false;
-
-	m_bArenaIsAFK = false;
 
 	m_flAccumulatedHealthRegen = 0;
 	memset( m_flAccumulatedAmmoRegens, 0, sizeof(m_flAccumulatedAmmoRegens) );
@@ -1756,19 +1637,12 @@ void CTFPlayer::Spawn()
 		gameeventmanager->FireEvent( event );
 	}
 
-	m_bIsMissionEnemy = false;
-	m_bIsSupportEnemy = false;
-	m_bIsLimitedSupportEnemy = false;
-
 	m_Shared.Spawn();
 
-	m_bCollideWithSentry = false;
 	m_calledForMedicTimer.Invalidate();
 	m_placedSapperTimer.Invalidate();
 
 	m_nForceTauntCam = 0;
-
-	m_playerMovementStuckTimer.Invalidate();
 
 	m_flHelpmeButtonPressTime = 0.f;
 
@@ -3908,30 +3782,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 				return true;
 		}
 	}
-	else if ( FStrEq( pcmd, "spec_next" ) ) // chase next player
-	{
-// 		if ( !ShouldRunRateLimitedCommand( args ) )
-// 			return true;
-
-		// intentionally falling through to the bottom so the baseclass version is called
-		m_bArenaIsAFK = false;
-	}
-	else if ( FStrEq( pcmd, "spec_prev" ) ) // chase prev player
-	{
-// 		if ( !ShouldRunRateLimitedCommand( args ) )
-// 			return true;
-
-		// intentionally falling through to the bottom so the baseclass version is called
-		m_bArenaIsAFK = false;
-	}
-	else if ( FStrEq( pcmd, "spec_mode" ) ) // set obs mode
-	{
-// 		if ( !ShouldRunRateLimitedCommand( args ) )
-// 			return true;
-
-		// intentionally falling through to the bottom so the baseclass version is called
-		m_bArenaIsAFK = false;
-	}
 	else if ( FStrEq( pcmd, "showroundinfo" ) )
 	{
 		if ( ShouldRunRateLimitedCommand( args ) )
@@ -4755,51 +4605,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
-	// Let attacker react to the damage they dealt
-	if ( pTFAttacker )
-	{
-		pTFAttacker->OnDealtDamage( this, info );
-	}
-
 	return info.GetDamage();
-}
-
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Invoked when we deal damage to another victim
-//-----------------------------------------------------------------------------
-void CTFPlayer::OnDealtDamage( CBaseCombatCharacter *pVictim, const CTakeDamageInfo &info )
-{
-	float flDamage = info.GetDamage();
-
-	if ( pVictim )
-	{
-		// which second of the window are we in
-		int i = (int)gpGlobals->curtime;
-		i %= DPS_Period;
-
-		if ( i != m_lastDamageRateIndex )
-		{
-			// a second has ticked over, start a new accumulation
-			m_damageRateArray[ i ] = flDamage;
-			m_lastDamageRateIndex = i;
-
-			// track peak DPS for this player
-			m_peakDamagePerSecond = 0;
-			for( i=0; i<DPS_Period; ++i )
-			{
-				if ( m_damageRateArray[i] > m_peakDamagePerSecond )
-				{
-					m_peakDamagePerSecond = m_damageRateArray[i];
-				}
-			}
-		}
-		else
-		{
-			m_damageRateArray[ i ] += flDamage;
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -5075,23 +4881,7 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( m_takedamage != DAMAGE_EVENTS_ONLY )
 	{
 		// Take damage - round to the nearest integer.
-		int iOldHealth = m_iHealth;
 		m_iHealth -= ( realDamage + 0.5f );
-
-		// track accumulated sentry gun damage dealt by players
-		if ( pTFAttacker )
-		{
-			// track amount of damage dealt by defender's sentry guns
-			CObjectSentrygun *sentry = dynamic_cast< CObjectSentrygun * >( info.GetInflictor() );
-			CTFProjectile_SentryRocket *sentryRocket = dynamic_cast< CTFProjectile_SentryRocket * >( info.GetInflictor() );
-
-			if ( ( sentry ) || sentryRocket )
-			{
-				int flooredHealth = clamp( m_iHealth, 0, m_iHealth );
-
-				pTFAttacker->AccumulateSentryGunDamageDealt( iOldHealth - flooredHealth );
-			}
-		}
 	}
 
 	m_flLastDamageTime = gpGlobals->curtime; // not networked
@@ -5199,8 +4989,6 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		TakeHealth( ( iPrevHealth - m_iHealth ), DMG_GENERIC );
 	}
 
-	m_vecFeignDeathVelocity = GetAbsVelocity();
-
 	if ( pTFAttacker )
 	{
 		// If we're invuln, give whomever provided it rewards/credit
@@ -5258,14 +5046,6 @@ bool CTFPlayer::ShouldGib( const CTakeDamageInfo &info )
 	// Hard hits also gib.
 	if ( GetHealth() <= -10 )
 		return true;
-	
-	if ( m_bGoingFeignDeath )
-	{
-		// The player won't actually have negative health,
-		// but spies often gib from explosive damage so we should make that likely here.
-		float frand = (float) rand() / VALVE_RAND_MAX;
-		return (frand>0.15f) ? true : false;
-	}
 
 	return false;
 }
@@ -5513,15 +5293,6 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 					}
 				}
 			}
-		}
-
-		// track accumulated sentry gun kills on owning player for Sentry Busters in MvM (so they can't clear this by rebuilding their sentry)
-		CObjectSentrygun *sentry = dynamic_cast< CObjectSentrygun * >( info.GetInflictor() );
-		CTFProjectile_SentryRocket *sentryRocket = dynamic_cast< CTFProjectile_SentryRocket * >( info.GetInflictor() );
-
-		if ( ( sentry ) || sentryRocket )
-		{
-			IncrementSentryGunKillCount();
 		}
 
 		if ( pTFVictim )
@@ -5869,8 +5640,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		EmitSound( "TFPlayer.MedicChargedDeath" );
 	}
 	
-	SetGibbedOnLastDeath( bGib );
-
 	// show killer in death cam mode
 	// chopped down version of SetObserverTarget without the team check
 	if( pPlayerAttacker )
@@ -6756,10 +6525,7 @@ bool CTFPlayer::SetObserverMode(int mode)
 
 	m_iObserverMode = mode;
 
-	if ( !m_bArenaIsAFK )
-	{
-		m_flLastAction = gpGlobals->curtime;
-	}
+	m_flLastAction = gpGlobals->curtime;
 
 	// this is the old behavior, still supported for community servers
 	bool bAllowSpecModeChange = TFGameRules()->IsInTournamentMode() ? false : true;
@@ -6889,17 +6655,6 @@ void CTFPlayer::StateEnterDYING( void )
 
 	m_bPlayedFreezeCamSound = false;
 	m_bAbortFreezeCam = false;
-
-	if ( TFGameRules() && TFGameRules()->IsInArenaMode() )
-	{
-		float flLastActionTime =  gpGlobals->curtime - m_flLastAction;
-		float flAliveThisRoundTime = gpGlobals->curtime - TFGameRules()->GetRoundStart();
-
-		if ( flAliveThisRoundTime - flLastActionTime < 0 )
-		{
-			m_bArenaIsAFK = true;
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -7729,18 +7484,6 @@ void CTFPlayer::DeathSound( const CTakeDamageInfo &info )
 	if ( !pData )
 		return;
 
-	if ( m_bGoingFeignDeath  )
-	{
-		bool bDisguised = m_Shared.InCond( TF_COND_DISGUISED ) && (m_Shared.GetDisguiseTeam() == GetTeamNumber());
-		if ( bDisguised )
-		{
-			// Use our disguise class, if we have one and will drop a disguise class corpse.
-			pData = g_pTFPlayerClassDataMgr->Get( m_Shared.GetDisguiseClass() );
-			if ( !pData )
-				return;
-		}
-	}
-
 	int nDeathSoundOffset = DEATH_SOUND_FIRST;
 
 	if ( m_LastDamageType & DMG_FALL ) // Did we die from falling?
@@ -8018,13 +7761,6 @@ void CTFPlayer::CreateRagdollEntity( bool bGib, bool bBurning, bool bOnGround, i
 void CTFPlayer::DestroyRagdoll( void )
 {
 	CTFRagdoll *pRagdoll = dynamic_cast<CTFRagdoll*>( m_hRagdoll.Get() );	
-	if( pRagdoll )
-	{
-		UTIL_Remove( pRagdoll );
-	}
-
-	// Remove the feign death ragdoll at the same time.
-	pRagdoll = dynamic_cast<CTFRagdoll*>( m_hFeignRagdoll.Get() );	
 	if( pRagdoll )
 	{
 		UTIL_Remove( pRagdoll );
@@ -8459,10 +8195,7 @@ bool CTFPlayer::SetObserverTarget(CBaseEntity *target)
 		SetFOV( pObsPoint, pObsPoint->m_flFOV );
 	}
 
-	if ( !m_bArenaIsAFK )
-	{
-		m_flLastAction = gpGlobals->curtime;
-	}
+	m_flLastAction = gpGlobals->curtime;
 
 	return true;
 }
@@ -8853,12 +8586,11 @@ void CTFPlayer::CheckUncoveringSpies( CTFPlayer *pTouchedPlayer )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::OnTauntSucceeded( const char* pszSceneName, int iTauntIndex /*= 0*/, int iTauntConcept /*= 0*/ )
+void CTFPlayer::OnTauntSucceeded( const char* pszSceneName )
 {
 	float flDuration = GetSceneDuration( pszSceneName ) + 0.2f;
 
 	// Set player state as taunting.
-	m_Shared.m_iTauntConcept.Set( iTauntConcept );
 	m_flTauntStartTime = gpGlobals->curtime;
 	m_flTauntNextStartTime = m_flTauntStartTime + flDuration;
 
@@ -8866,21 +8598,17 @@ void CTFPlayer::OnTauntSucceeded( const char* pszSceneName, int iTauntIndex /*= 
 
 	m_flTauntRemoveTime = gpGlobals->curtime + flDuration;
 
-	m_angTauntCamera = EyeAngles();
-
 	// Slam velocity to zero.
 	SetAbsVelocity( vec3_origin );
 
 	// set initial taunt yaw to make sure that the client anim not off because of lag
 	SetTauntYaw( GetAbsAngles()[YAW] );
-
-	m_vecTauntStartPosition = GetAbsOrigin();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
+void CTFPlayer::Taunt()
 {
 	if ( !IsAllowedToTaunt() )
 		return;
@@ -8892,11 +8620,10 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 
 	m_bInitTaunt = true;
 	char szResponse[AI_Response::MAX_RESPONSE_NAME];
-	iTauntConcept = MP_CONCEPT_PLAYER_TAUNT;
 
-	if ( SpeakConceptIfAllowed( iTauntConcept, NULL, szResponse, AI_Response::MAX_RESPONSE_NAME ) )
+	if ( SpeakConceptIfAllowed( MP_CONCEPT_PLAYER_TAUNT, NULL, szResponse, AI_Response::MAX_RESPONSE_NAME ) )
 	{
-		OnTauntSucceeded( szResponse, iTauntIndex, iTauntConcept );
+		OnTauntSucceeded( szResponse );
 	}
 	else
 	{
@@ -8935,7 +8662,7 @@ void CTFPlayer::HandleTauntCommand( void )
 	if ( !IsAllowedToTaunt() )
 		return;
 
-	Taunt( TAUNT_BASE_WEAPON );
+	Taunt();
 }
 
 //-----------------------------------------------------------------------------
@@ -10378,15 +10105,6 @@ EntityHistory_t* CAchievementData::IsSentryDamagerInHistory( CBaseEntity *pDamag
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-extern ConVar tf_allow_all_team_partner_taunt;
-int CTFPlayer::GetAllowedTauntPartnerTeam() const
-{
-	return tf_allow_all_team_partner_taunt.GetBool() ? TEAM_ANY : GetTeamNumber();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Return true if any enemy sentry has LOS and is facing me and is in range to attack
 //-----------------------------------------------------------------------------
 bool CTFPlayer::IsAnyEnemySentryAbleToAttackMe( void ) const
@@ -10434,63 +10152,6 @@ bool CTFPlayer::IsAnyEnemySentryAbleToAttackMe( void ) const
 	}
 
 	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::RefundExperiencePoints( void )
-{
-	SetExperienceLevel( 1 );
-
-	int nAmount = 0;
-	PlayerStats_t *pPlayerStats = CTF_GameStats.FindPlayerStats( this );
-	if ( pPlayerStats ) 
-	{
-		nAmount = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_CURRENCY_COLLECTED];
-	}
-	
-	if ( nAmount > 0 )
-	{
-		SetExperiencePoints(nAmount);
-	}
-
-	CalculateExperienceLevel(false);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::CalculateExperienceLevel( bool bAnnounce /*= true*/ )
-{
-	int nMyLevel = GetExperienceLevel();
-
-	int nPrevLevel = nMyLevel;
-	float flLevel = ( (float)m_nExperiencePoints / 400.f ) + 1.f;
-	flLevel = Min( flLevel, 20.f );
-
-	// Ding?
-	if ( bAnnounce )
-	{
-		if ( flLevel > 1 && nPrevLevel != (int)flLevel )
-		{
-			const char *pszTeamName = GetTeamNumber() == TF_TEAM_RED ? "RED" : "BLU";
-			UTIL_ClientPrintAll( HUD_PRINTCENTER, "#TF_PlayerLeveled", pszTeamName, GetPlayerName(), CFmtStr( "%d", (int)flLevel ) );
-			UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "#TF_PlayerLeveled", pszTeamName, GetPlayerName(), CFmtStr( "%d", (int)flLevel ) );
-			DispatchParticleEffect( "mvm_levelup1", PATTACH_POINT_FOLLOW, this, "head" );
-			EmitSound( "Achievement.Earned" );
-		}
-	}
-
-	flLevel = floor( flLevel );
-	SetExperienceLevel( Max( flLevel, 1.f ) );
-
-	// Update level progress percentage - networked
-	float flLevelPerc = ( flLevel - floor( flLevel ) ) * 100.f;
-	if ( m_nExperienceLevelProgress != flLevelPerc )
-	{
-		m_nExperienceLevelProgress.Set( (int)flLevelPerc );
-	}
 }
 
 

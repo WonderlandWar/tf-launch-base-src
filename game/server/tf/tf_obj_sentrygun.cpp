@@ -1603,21 +1603,6 @@ void CObjectSentrygun::Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	// Tell our owner's shotgun the sentry died.
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
-
-	// Engineers destroying their own sentry don't escape the buster.
-	// Destroying disposable sentries doesn't reset the buster.
-	if ( info.GetAttacker() != this )
-	{
-		// Sentry Buster mission accomplished
-		if ( pOwner )
-		{
-			pOwner->ResetAccumulatedSentryGunDamageDealt();
-			pOwner->ResetAccumulatedSentryGunKillCount();
-		}
-	}
-
 	// do normal handling
 	BaseClass::Killed( info );
 }

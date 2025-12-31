@@ -59,7 +59,6 @@ protected:
 	CNetworkArray( int, m_iDamageBlocked, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iCurrencyCollected, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iBonusPoints, MAX_PLAYERS_ARRAY_SAFE );
-	CNetworkArray( int, m_iPlayerLevel, MAX_PLAYERS_ARRAY_SAFE );
 
 	CNetworkVar( int, m_iPartyLeaderRedTeamIndex );
 	CNetworkVar( int, m_iPartyLeaderBlueTeamIndex );
