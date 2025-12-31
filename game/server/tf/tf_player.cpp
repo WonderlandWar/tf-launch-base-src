@@ -422,8 +422,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( FiringTalk, "Makes eg. a heavy go AAAAAAAAAAaAaa like they are firing their minigun." )
 	DEFINE_SCRIPTFUNC( CanAirDash, "" )
 	DEFINE_SCRIPTFUNC( CanBreatheUnderwater, "" )
-	DEFINE_SCRIPTFUNC( InAirDueToExplosion, "" )
-	DEFINE_SCRIPTFUNC( InAirDueToKnockback, "" )
 	DEFINE_SCRIPTFUNC( ApplyAbsVelocityImpulse, "" )
 	DEFINE_SCRIPTFUNC( ApplyPunchImpulseX, "" )
 	DEFINE_SCRIPTFUNC( IsAllowedToTaunt, "" )
@@ -677,8 +675,6 @@ CTFPlayer::CTFPlayer()
 	m_iLastWeaponSlot = 1;
 	m_iNumberofDominations = 0;
 	m_bFlipViewModels = false;
-	m_iBlastJumpState = 0;
-	m_flBlastJumpLandTime = 0;
 	m_fMaxHealthTime = -1;
 	m_iHealthBefore = 0;
 
@@ -791,32 +787,6 @@ void CTFPlayer::TFPlayerThink()
 	else
 	{
 		m_iLeftGroundHealth = -1;
-
-		if ( m_iBlastJumpState )
-		{
-			const char *pszEvent = NULL;
-
-			if ( StickyJumped() )
-			{
-				pszEvent = "sticky_jump_landed";
-			}
-			else if ( RocketJumped() )
-			{
-				pszEvent = "rocket_jump_landed";
-			}
-
-			ClearBlastJumpState();
-
-			if ( pszEvent )
-			{
-				IGameEvent * event = gameeventmanager->CreateEvent( pszEvent );
-				if ( event )
-				{
-					event->SetInt( "userid", GetUserID() );
-					gameeventmanager->FireEvent( event );
-				}
-			}
-		}
 	}
 
 	if( IsTaunting() )
@@ -838,14 +808,6 @@ void CTFPlayer::TFPlayerThink()
 		{
 			CancelTaunt();
 		}
-	}
-
-	if ( ( RocketJumped() || StickyJumped() ) && IsAlive() && m_bCreatedRocketJumpParticles == false )
-	{
-		const char *pEffectName = "rocketjump_smoke";
-		DispatchParticleEffect( pEffectName, PATTACH_POINT_FOLLOW, this, "foot_L" );
-		DispatchParticleEffect( pEffectName, PATTACH_POINT_FOLLOW, this, "foot_R" );
-		m_bCreatedRocketJumpParticles = true;
 	}
 
 	if ( !m_bCollideWithSentry )
@@ -1785,9 +1747,7 @@ void CTFPlayer::Spawn()
 	CollisionProp()->SetSurroundingBoundsType( USE_SPECIFIED_BOUNDS, &mins, &maxs );
 
 	m_iLeftGroundHealth = -1;
-	m_iBlastJumpState = 0;
 	m_bGoingFeignDeath = false;
-	m_bTakenBlastDamageSinceLastMovement = false;
 
 	m_bArenaIsAFK = false;
 
@@ -4468,45 +4428,6 @@ float DamageForce( const Vector &size, float damage, float scale )
 	return force;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::SetBlastJumpState( int iState )
-{
-	m_iBlastJumpState |= iState;
-
-	const char *pszEvent = NULL;
-	if ( iState == TF_PLAYER_STICKY_JUMPED )
-	{
-		pszEvent = "sticky_jump";
-	}
-	else if ( iState == TF_PLAYER_ROCKET_JUMPED )
-	{
-		pszEvent = "rocket_jump";
-	}
-
-	if ( pszEvent )
-	{
-		IGameEvent * event = gameeventmanager->CreateEvent( pszEvent );
-		if ( event )
-		{
-			event->SetInt( "userid", GetUserID() );
-			event->SetBool( "playsound", false );
-			gameeventmanager->FireEvent( event );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::ClearBlastJumpState( void )
-{
-	m_bCreatedRocketJumpParticles = false;
-	m_iBlastJumpState = 0;
-	m_flBlastJumpLandTime = gpGlobals->curtime;
-}
-
 // we want to ship this...do not remove
 ConVar tf_debug_damage( "tf_debug_damage", "0", FCVAR_CHEAT );
 
@@ -4568,9 +4489,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	m_iHealthBefore = GetHealth();
 
-	bool bIsSoldierRocketJumping = ( IsPlayerClass( TF_CLASS_SOLDIER ) && (pAttacker == this) && !(GetFlags() & FL_ONGROUND) && !(GetFlags() & FL_INWATER)) && (inputInfo.GetDamageType() & DMG_BLAST);
-	bool bIsDemomanPipeJumping = ( IsPlayerClass( TF_CLASS_DEMOMAN) && (pAttacker == this) && !(GetFlags() & FL_ONGROUND) && !(GetFlags() & FL_INWATER)) && (inputInfo.GetDamageType() & DMG_BLAST);
-	
 	if ( bDebug )
 	{
 		Warning( "%s taking damage from %s, via %s. Damage: %.2f\n", GetDebugName(), info.GetInflictor() ? info.GetInflictor()->GetDebugName() : "Unknown Inflictor", pAttacker ? pAttacker->GetDebugName() : "Unknown Attacker", info.GetDamage() );
@@ -4644,32 +4562,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					}
 				}
 			}
-		}
-	}
-
-	if ( bIsSoldierRocketJumping || bIsDemomanPipeJumping )
-	{
-		int nJumpType = 0;
-
-		// If this is our own rocket, scale down the damage if we're rocket jumping
-		if ( bIsSoldierRocketJumping ) 
-		{
-			float flDamage = info.GetDamage() * tf_damagescale_self_soldier.GetFloat();
-			info.SetDamage( flDamage );
-
-			if ( m_iHealthBefore - flDamage > 0 )
-			{
-				nJumpType = TF_PLAYER_ROCKET_JUMPED;
-			}
-		}
-		else if ( bIsDemomanPipeJumping )
-		{
-			nJumpType = TF_PLAYER_STICKY_JUMPED;
-		}
-
-		if ( nJumpType )
-		{
-			SetBlastJumpState( nJumpType );
 		}
 	}
 
@@ -5095,8 +4987,6 @@ void CTFPlayer::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector vecDir 
 					vecForce = vecDir * -DamageForce( vecSize, flDamageForForce, tf_damageforcescale_self_soldier_rj.GetFloat() );
 				}
 
-				SetBlastJumpState( TF_PLAYER_ROCKET_JUMPED );
-
 				// Reset duck in air on self rocket impulse.
 				m_Shared.SetAirDucked( 0 );
 			}
@@ -5150,13 +5040,6 @@ void CTFPlayer::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector vecDir 
 	}
 
 	ApplyAbsVelocityImpulse( vecForce );
-
-	// If we were pushed by an enemy explosion, we're now marked as being blasted by an enemy.
-	// If we stay on the ground, next frame our player think will remove this flag.
-	if ( info.GetAttacker() != this && info.GetDamageType() & DMG_BLAST )
-	{
-		m_bTakenBlastDamageSinceLastMovement = true;
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -7939,15 +7822,6 @@ void CTFPlayer::OnBurnOther( CTFPlayer *pTFPlayerVictim, CTFWeaponBase *pWeapon 
 		if ( pSapper )
 		{
 			AwardAchievement( ACHIEVEMENT_TF_PYRO_KILL_SPIES );
-		}
-	}
-
-	// ACHIEVEMENT_TF_PYRO_BURN_RJ_SOLDIER - Pyro ignited a rocket jumping soldier in mid-air
-	if ( pTFPlayerVictim->IsPlayerClass(TF_CLASS_SOLDIER) )
-	{
-		if ( pTFPlayerVictim->RocketJumped() && !pTFPlayerVictim->GetGroundEntity() )
-		{
-			AwardAchievement( ACHIEVEMENT_TF_PYRO_BURN_RJ_SOLDIER );
 		}
 	}
 

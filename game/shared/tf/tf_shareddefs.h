@@ -1281,11 +1281,6 @@ extern const char *TranslateWeaponEntForClass( const char *pszName, int iClass )
 #define PLAYER_ROLL_MIN			1
 #define PLAYER_ROLL_MAX			500
 
-// Generalized Jump State
-#define TF_PLAYER_ROCKET_JUMPED		( 1 << 0 )
-#define TF_PLAYER_STICKY_JUMPED		( 1 << 1 )
-#define TF_PLAYER_ENEMY_BLASTED_ME	( 1 << 2 )
-
 enum taunts_t
 {
 	TAUNT_BASE_WEAPON,		// The standard taunt we shipped with. Taunts based on your currently held weapon

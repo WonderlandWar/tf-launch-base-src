@@ -1471,11 +1471,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_nOldMaxHealth = -1;
 
 	m_bBodygroupsDirty = false;
-	
-	m_pBlastJumpLoop = NULL;
-	m_flBlastJumpLaunchTime = 0.f;
-
-	m_pFallingSoundLoop = NULL;
 
 	m_nExperienceLevel = 0;
 	m_nExperienceLevelProgress = 0;
@@ -1509,15 +1504,7 @@ C_TFPlayer::C_TFPlayer() :
 	ListenForGameEvent( "player_hurt" );
 	ListenForGameEvent( "hltv_changed_mode" );
 	ListenForGameEvent( "hltv_changed_target" );
-	ListenForGameEvent( "post_inventory_application" );
-	ListenForGameEvent( "rocket_jump" );
-	ListenForGameEvent( "rocket_jump_landed" );
-	ListenForGameEvent( "sticky_jump" );
-	ListenForGameEvent( "sticky_jump_landed" );
 	ListenForGameEvent( "player_spawn" );
-	ListenForGameEvent( "damage_resisted" );
-	ListenForGameEvent( "revive_player_notify" );
-	ListenForGameEvent( "revive_player_stopped" );
 	ListenForGameEvent( "player_changeclass" );
 
 	//AddPhonemeFile
@@ -1530,19 +1517,6 @@ C_TFPlayer::~C_TFPlayer()
 {
 	ShowNemesisIcon( false );
 	m_PlayerAnimState->Release();
-
-	CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-	if ( m_pBlastJumpLoop )
-	{
-		controller.SoundDestroy( m_pBlastJumpLoop );
-		m_pBlastJumpLoop = NULL;
-	}
-
-	if ( m_pFallingSoundLoop )
-	{
-		controller.SoundDestroy( m_pFallingSoundLoop );
-		m_pFallingSoundLoop = NULL;
-	}
 
 	StopTauntSoundLoop();
 }
@@ -2203,22 +2177,6 @@ void C_TFPlayer::StopBurningSound( void )
 	{
 		CSoundEnvelopeController::GetController().SoundDestroy( m_pBurningSound );
 		m_pBurningSound = NULL;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_TFPlayer::StopBlastJumpLoopSound( int iUserID )
-{
-	if ( m_pBlastJumpLoop )
-	{
-		if ( GetUserID() == iUserID )
-		{
-			CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-			controller.SoundDestroy( m_pBlastJumpLoop );
-			m_pBlastJumpLoop = NULL;
-		}
 	}
 }
 
@@ -2912,31 +2870,6 @@ void C_TFPlayer::ClientThink()
 		( m_Shared.InCond( TF_COND_DISGUISED ) && IsEnemyPlayer() && ( GetPercentInvisible() > 0 ) ) )
 	{
 		StopSaveMeEffect( true );
-	}
-
-	if ( m_pBlastJumpLoop )
-	{
-		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		if ( !IsAlive() )
-		{
-			controller.SoundDestroy( m_pBlastJumpLoop );
-			m_pBlastJumpLoop = NULL;
-		}
-		else
-		{
-			float flTimeAloft = gpGlobals->curtime - m_flBlastJumpLaunchTime;
-			float flPitch = RemapValClamped( flTimeAloft, 0.1f, 3.f, 200.f, 100.f );
-			float flVolume = RemapValClamped( flTimeAloft, 0.1f, 2.f, 0.25f, 0.95f );
-			controller.SoundChangePitch( m_pBlastJumpLoop, flPitch, 0.1f );
-			controller.SoundChangeVolume( m_pBlastJumpLoop, flVolume, 0.1f );
-		}
-	}
-
-	if ( m_pFallingSoundLoop && ( m_Local.m_flFallVelocity < PLAYER_MAX_SAFE_FALL_SPEED ) )
-	{
-		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		controller.SoundDestroy( m_pFallingSoundLoop );
-		m_pFallingSoundLoop = NULL;
 	}
 
 /*
@@ -6294,48 +6227,6 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 		{
 			// Update visibility of any worn items.
 			SetBodygroupsDirty();
-		}
-	}
-	else if ( FStrEq( event->GetName(), "post_inventory_application" ) )
-	{
-		const int iPlayer = engine->GetPlayerForUserID( event->GetInt( "userid" ) );
-		C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayer ) );
-		if ( pPlayer )
-		{
-			pPlayer->SetBodygroupsDirty();
-		}
-	}
-	else if ( FStrEq( event->GetName(), "rocket_jump" ) 
-			  || FStrEq( event->GetName(), "sticky_jump" )
-			  || FStrEq( event->GetName(), "rocketpack_launch" ) )
-	{
-		// Play a special sound when blast jumping with weapons that don't hurt the player
-		const int iUserID = event->GetInt( "userid" );
-		bool bWhistle = event->GetBool( "playsound" );
-		if ( bWhistle && GetUserID() == iUserID )
-		{
-			if ( !m_pBlastJumpLoop )
-			{
-				CBroadcastRecipientFilter filter;
-				CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-				m_pBlastJumpLoop = controller.SoundCreate( filter, entindex(), "BlastJump.Whistle" );
-				controller.Play( m_pBlastJumpLoop, 0.25, 200 );
-				m_flBlastJumpLaunchTime = gpGlobals->curtime;
-			}
-		}
-	}
-	else if ( FStrEq( event->GetName(), "player_spawn" ) )
-	{
-		StopBlastJumpLoopSound( event->GetInt( "userid" ) );
-	}
-	else if ( FStrEq( event->GetName(), "rocket_jump_landed" ) 
-			  || FStrEq( event->GetName(), "sticky_jump_landed" )
-			  || FStrEq( event->GetName(), "rocketpack_landed" ) )
-	{
-		const int iUserID = event->GetInt( "userid" );
-		if ( iUserID == GetUserID() )
-		{
-			StopBlastJumpLoopSound( iUserID );
 		}
 	}
 	else if ( FStrEq( event->GetName(), "player_changeclass" ) )

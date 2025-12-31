@@ -496,9 +496,6 @@ public:
 	void InputSetForcedTauntCam( inputdata_t &inputdata );
 	void InputRoundSpawn( inputdata_t &inputdata );
 
-	bool InAirDueToExplosion( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) ) ); }
-	bool InAirDueToKnockback( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) ) ); }
-
 	//Base entity overrides
 	// Functions that intercept Base Calls for Attribute Checking
 	void ApplyAbsVelocityImpulse ( const Vector &vecImpulse );
@@ -683,11 +680,6 @@ public:
 	void				ClearPunchVictims( void ) { m_aPunchVictims.RemoveAll(); }
 	void				ClearBurnFromBehindAttackers( void ) { m_aBurnFromBackAttackers.RemoveAll(); }
 
-	int					RocketJumped( void ) { return m_iBlastJumpState & TF_PLAYER_ROCKET_JUMPED; }
-	int					StickyJumped( void ) { return m_iBlastJumpState & TF_PLAYER_STICKY_JUMPED; }
-	void				SetBlastJumpState( int iState );
-	void				ClearBlastJumpState( void );
-
 	int					GetPreviousTeam( void ) { return m_iPreviousteam; }
 
 	float				GetTeamJoinTime( void ) { return m_flTeamJoinTime; }
@@ -700,9 +692,6 @@ public:
 	bool				m_bSuicideExplode;
 
 	CNetworkVar( bool, m_bFlipViewModels );
-	int					m_iBlastJumpState;
-	float				m_flBlastJumpLandTime;
-	bool				m_bTakenBlastDamageSinceLastMovement;
 
 	void				SetTargetDummy( void ){ m_bIsTargetDummy = true; }
 
@@ -941,7 +930,6 @@ private:
 	int					m_iLeftGroundHealth;	// health we were at the last time we left the ground
 
 	float				m_flTeamJoinTime;
-	bool				m_bCreatedRocketJumpParticles;
 	bool				m_bJustPlayed;
 	int					m_iPreviousteam;
 	bool				m_bGibbedOnLastDeath;

@@ -226,8 +226,6 @@ public:
 	void			StartBurningSound( void );
 	void			StopBurningSound( void );
 
-	void			StopBlastJumpLoopSound( int iUserID );
-	
 	void			UpdateSpyStateChange( void );
 
 	void			UpdateRecentlyTeleportedEffect( void );
@@ -613,13 +611,6 @@ private:
 
 	// Medic healtarget active weapon ammo/clip count
 	uint16	m_nActiveWpnClip;
-	
-	// Blast jump whistle
-	CSoundPatch		*m_pBlastJumpLoop;
-	float			m_flBlastJumpLaunchTime;
-
-	// falling sound that plays when player reaches fall speed that will apply fall damage
-	CSoundPatch		*m_pFallingSoundLoop;
 
 	CNetworkVar( float, m_flHeadScale );
 	CNetworkVar( float, m_flTorsoScale );

@@ -5157,12 +5157,6 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 			iDeathFlags |= TF_DEATH_GIBBED;
 		}
 
-		// We call this directly since we need more information than provided in the event alone.
-		if ( FStrEq( eventName, "player_death" ) )
-		{
-			event->SetBool( "rocket_jump", ( pTFPlayerVictim->RocketJumped() == 1 ) );
-		}
-
 		event->SetInt( "death_flags", iDeathFlags );
 
 		gameeventmanager->FireEvent( event );

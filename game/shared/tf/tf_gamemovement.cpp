@@ -267,10 +267,6 @@ void CTFGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMov
 
 
 	FinishMove();
-
-#if defined(GAME_DLL)
-	m_pTFPlayer->m_bTakenBlastDamageSinceLastMovement = false;
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1276,13 +1272,6 @@ void CTFGameMovement::CategorizePosition( void )
 	// Check for a jump.
 	if ( mv->m_vecVelocity.z > 250.0f )
 	{
-#if defined(GAME_DLL)
-		if ( m_pTFPlayer->m_bTakenBlastDamageSinceLastMovement )
-		{
-			m_pTFPlayer->SetBlastJumpState( TF_PLAYER_ENEMY_BLASTED_ME );
-		}
-#endif
-
 		SetGroundEntity( NULL );
 		return;
 	}
