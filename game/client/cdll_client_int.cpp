@@ -271,7 +271,6 @@ INetworkStringTable *g_pStringTableServerMapCycle = NULL;
 
 #ifdef TF_CLIENT_DLL
 INetworkStringTable *g_pStringTableServerPopFiles = NULL;
-INetworkStringTable *g_pStringTableServerMapCycleMvM = NULL;
 #endif
 
 static CGlobalVarsBase dummyvars( true );
@@ -1680,7 +1679,6 @@ void CHLClient::ResetStringTablePointers()
 
 #ifdef TF_CLIENT_DLL
 	g_pStringTableServerPopFiles = NULL;
-	g_pStringTableServerMapCycleMvM = NULL;
 #endif
 }
 
@@ -1912,10 +1910,6 @@ void CHLClient::InstallStringTableCallback( const char *tableName )
 	else if ( !Q_strcasecmp( tableName, "ServerPopFiles" ) )
 	{
 		g_pStringTableServerPopFiles = networkstringtable->FindTable( tableName );
-	}
-	else if ( !Q_strcasecmp( tableName, "ServerMapCycleMvM" ) )
-	{
-		g_pStringTableServerMapCycleMvM = networkstringtable->FindTable( tableName );
 	}
 #endif
 

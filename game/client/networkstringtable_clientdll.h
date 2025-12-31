@@ -26,7 +26,6 @@ extern INetworkStringTable *g_pStringTableServerMapCycle;
 
 #ifdef TF_CLIENT_DLL
 extern INetworkStringTable *g_pStringTableServerPopFiles;
-extern INetworkStringTable *g_pStringTableServerMapCycleMvM;
 #endif
 
 #endif // NETWORKSTRINGTABLE_CLIENTDLL_H
