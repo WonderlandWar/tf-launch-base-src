@@ -659,8 +659,6 @@ CTFPlayer::CTFPlayer()
 
 	m_bSpeakingConceptAsDisguisedSpy = false;
 
-	m_iPreviousteam = TEAM_UNASSIGNED;
-
 	m_bArenaIsAFK = false;
 	m_bIsAFK = false;
 
@@ -2977,8 +2975,6 @@ void CTFPlayer::ForceChangeTeam( int iTeamNum, bool bFullTeamSwitch )
 
 	RemoveAllOwnedEntitiesFromWorld( true );
 	
-	m_iPreviousteam = iOldTeam;
-	
 	BaseClass::ChangeTeam( iNewTeam, false, true );
 
 	if ( !bFullTeamSwitch )
@@ -3051,8 +3047,6 @@ void CTFPlayer::ChangeTeam( int iTeamNum, bool bAutoTeam, bool bSilent, bool bAu
 		return;
 
 	RemoveAllOwnedEntitiesFromWorld( true );
-
-	m_iPreviousteam = iOldTeam;
 
 	CTF_GameStats.Event_TeamChange( this, iOldTeam, iTeamNum );
 

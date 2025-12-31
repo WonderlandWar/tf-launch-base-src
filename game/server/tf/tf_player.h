@@ -677,12 +677,8 @@ public:
 	void				ClearPunchVictims( void ) { m_aPunchVictims.RemoveAll(); }
 	void				ClearBurnFromBehindAttackers( void ) { m_aBurnFromBackAttackers.RemoveAll(); }
 
-	int					GetPreviousTeam( void ) { return m_iPreviousteam; }
-
 	float				GetTeamJoinTime( void ) { return m_flTeamJoinTime; }
 	void				MarkTeamJoinTime( void ) { m_flTeamJoinTime = gpGlobals->curtime; }
-	void				PlayerJustPlayed( bool bPlayed ) { m_bJustPlayed = bPlayed; }
-	bool				DidPlayerJustPlay( void ) { return m_bJustPlayed; }
 
 	bool				IsCapturingPoint( void );
 
@@ -927,8 +923,6 @@ private:
 	int					m_iLeftGroundHealth;	// health we were at the last time we left the ground
 
 	float				m_flTeamJoinTime;
-	bool				m_bJustPlayed;
-	int					m_iPreviousteam;
 	bool				m_bGibbedOnLastDeath;
 	CUtlMap<int, float> m_Cappers;		
 	float				m_fMaxHealthTime;
