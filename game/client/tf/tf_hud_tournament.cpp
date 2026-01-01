@@ -79,7 +79,6 @@ CHudTournament::CHudTournament( const char *pElementName ) : CHudElement( pEleme
 	}
 
 	m_bReadyStatusMode = false;
-	m_bCompetitiveMode = false;
 	m_bReadyTextBlinking = false;
 	m_bCountDownVisible = false;
 
@@ -136,30 +135,20 @@ void CHudTournament::PlaySounds( int nTime )
 	if ( !pLocalPlayer )
 		return;
 
-	bool bCompetitiveMode = TFGameRules() && TFGameRules()->IsCompetitiveMode();
-
 	switch( nTime )
 	{
 		case 60:
 		{
-			if ( bCompetitiveMode )
-			{
-				pLocalPlayer->EmitSound( "Announcer.CompGame1Begins60Seconds" );
-			}
 			break;
 		}
 		case 30:
 		{
-			if ( bCompetitiveMode )
-			{
-				pLocalPlayer->EmitSound( "Announcer.CompGame1Begins30Seconds" );
-			}
 			break;
 		}
 		case 10:
 		{
 			{
-				pLocalPlayer->EmitSound( bCompetitiveMode ? "Announcer.CompGame1Begins10Seconds" : "Announcer.RoundBegins10Seconds" );
+				pLocalPlayer->EmitSound( "Announcer.RoundBegins10Seconds" );
 			}
 			break;
 		}
@@ -169,27 +158,27 @@ void CHudTournament::PlaySounds( int nTime )
 		}
 		case 5:
 		{
-			pLocalPlayer->EmitSound( bCompetitiveMode ? "Announcer.CompGameBegins05Seconds" : "Announcer.RoundBegins5Seconds" );
+			pLocalPlayer->EmitSound( "Announcer.RoundBegins5Seconds" );
 			break;
 		}
 		case 4:
 		{
-			pLocalPlayer->EmitSound( bCompetitiveMode ? "Announcer.CompGameBegins04Seconds" : "Announcer.RoundBegins4Seconds" );
+			pLocalPlayer->EmitSound( "Announcer.RoundBegins4Seconds" );
 			break;
 		}
 		case 3:
 		{
-			pLocalPlayer->EmitSound( bCompetitiveMode ? "Announcer.CompGameBegins03Seconds" : "Announcer.RoundBegins3Seconds" );
+			pLocalPlayer->EmitSound( "Announcer.RoundBegins3Seconds" );
 			break;
 		}
 		case 2:
 		{
-			pLocalPlayer->EmitSound( bCompetitiveMode ? "Announcer.CompGameBegins02Seconds" : "Announcer.RoundBegins2Seconds" );
+			pLocalPlayer->EmitSound( "Announcer.RoundBegins2Seconds" );
 			break;
 		}
 		case 1:
 		{
-			pLocalPlayer->EmitSound( bCompetitiveMode ? "Announcer.CompGameBegins01Seconds" : "Announcer.RoundBegins1Seconds" );
+			pLocalPlayer->EmitSound( "Announcer.RoundBegins1Seconds" );
 			break;
 		}
 	}
@@ -238,7 +227,7 @@ void CHudTournament::PreparePanel( void )
 				SetDialogVariable( "readylabel", g_pVGuiLocalize->Find( pszLabelText ) );
 				SetDialogVariable( "tournamentstatelabel", g_pVGuiLocalize->Find( "Tournament_WaitingForTeam" ) );
 				SetPlayerPanelsVisible( true );
-				m_pModeImage->SetVisible( m_bCompetitiveMode );
+				m_pModeImage->SetVisible( false );
 			}
 			else
 			{
@@ -308,7 +297,7 @@ void CHudTournament::PreparePanel( void )
 
 			if ( m_bCountDownVisible )
 			{
-				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence(this, m_bCompetitiveMode ? "HudTournament_ShowTimerCompetitive" : "HudTournament_ShowTimerDefault", false);
+				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence(this, "HudTournament_ShowTimerDefault", false);
 			}
 			else
 			{
@@ -457,15 +446,6 @@ void CHudTournament::FireGameEvent( IGameEvent * event )
 	else if ( FStrEq( "restart_timer_time", pEventName ) )
 	{
 		PlaySounds( event->GetInt( "time" ) );
-
-		if ( TFGameRules()->GetRoundsPlayed() == 0 && m_bCompetitiveMode )
-		{
-			if ( event->GetInt( "time" ) == 10 )
-			{
-				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( this, "HudTournament_MoveTimerDown", false );
-				//g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HudTournament_MoveChatWindow", false );
-			}
-		}
 	}
 	else if ( FStrEq( "competitive_victory", pEventName ) )
 	{
@@ -517,20 +497,6 @@ void CHudTournament::OnTick( void )
 			else if ( m_bReadyStatusMode )
 			{
 				m_bReadyStatusMode = false;
-				InvalidateLayout( false, true );
-			}
-
-			if ( TFGameRules()->IsCompetitiveMode() )
-			{
-				if ( !m_bCompetitiveMode )
-				{
-					m_bCompetitiveMode = true;
-					InvalidateLayout( false, true );
-				}
-			}
-			else if ( m_bCompetitiveMode )
-			{
-				m_bCompetitiveMode = false;
 				InvalidateLayout( false, true );
 			}
 		}
@@ -611,12 +577,7 @@ void CHudTournament::ApplySchemeSettings( IScheme *pScheme )
 	m_bReapplyPlayerPanelKVs = true;
 
 	KeyValues *pConditions = NULL;
-	if ( m_bCompetitiveMode )
-	{
-		pConditions = new KeyValues( "conditions" );
-		AddSubKeyNamed( pConditions, "if_competitive" );
-	}
-	else if ( m_bReadyStatusMode )
+	if ( m_bReadyStatusMode )
 	{
 		pConditions = new KeyValues( "conditions" );
 		AddSubKeyNamed( pConditions, "if_readymode" );
@@ -671,18 +632,16 @@ void CHudTournament::PerformLayout( void )
 		}
 	}
 
-	bool bShowTournamentConditions = !m_bCompetitiveMode;
-
 	// Hide some elements when in competitive mode
 	if ( m_pTournamentConditionLabel )
 	{
-		m_pTournamentConditionLabel->SetVisible( bShowTournamentConditions );
+		m_pTournamentConditionLabel->SetVisible( true );
 	}
 
 	Panel* pTournamentBG = FindChildByName( "HudTournamentBG" );
 	if ( pTournamentBG )
 	{
-		pTournamentBG->SetVisible( bShowTournamentConditions );
+		pTournamentBG->SetVisible(true);
 	}
 
 	UpdatePlayerPanels();
@@ -805,7 +764,7 @@ void CHudTournament::UpdatePlayerPanels( void )
 	int iTeam1 = TF_TEAM_BLUE;
 	int iTeam2 = TF_TEAM_RED;
 	int iLocalTeam = g_TF_PR->GetTeam( pPlayer->entindex() );
-	if ( ( iLocalTeam == TF_TEAM_RED || iLocalTeam == TF_TEAM_BLUE ) && !TFGameRules()->IsCompetitiveMode() )	// Blue always on left in comp
+	if ( ( iLocalTeam == TF_TEAM_RED || iLocalTeam == TF_TEAM_BLUE ) )	// Blue always on left in comp
 	{
 		iTeam1 = iLocalTeam;
 		iTeam2 = ( iTeam1 == TF_TEAM_BLUE ) ? TF_TEAM_RED : TF_TEAM_BLUE;
@@ -823,9 +782,9 @@ void CHudTournament::UpdatePlayerPanels( void )
 		if ( !m_PlayerPanels[i]->GetPlayerIndex() && iTeam == TEAM_INVALID )
 			continue;
 
-		int iXPos = ( m_bCompetitiveMode ) ? -XRES( 30 ) : 0;	// Hack to make space for the season image
+		int iXPos = 0;	// Hack to make space for the season image
 		int iYPos = ( m_iTeam1PlayerBaseY + m_iTeam1PlayerDeltaY );
-		int nOffset = ( m_bCompetitiveMode ) ? m_iTeamsPlayerDeltaXComp : m_iTeam2PlayerDeltaX;
+		int nOffset = m_iTeam2PlayerDeltaX;
 
 		if ( iTeam == iTeam1 )
 		{
@@ -848,7 +807,6 @@ void CHudTournament::UpdatePlayerPanels( void )
 		{
 			// Two teams.  Second team right of center.
 			iXPos = ( iCenter + ( iTeam2Processed * nOffset ) );
-			iXPos += ( m_bCompetitiveMode ) ? XRES( 30 ) : 0;	// Hack to make space for the season image
 			m_PlayerPanels[i]->SetSpecIndex( 7 + iTeam2Processed );
 			++iTeam2Processed;
 		}
@@ -1239,7 +1197,7 @@ void CHudStopWatch::OnTick( void )
 
 	bool bInFreezeCam = ( pPlayer && pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM );
 
-	bool bProperMatch = TFGameRules()->IsInTournamentMode() || TFGameRules()->IsCompetitiveMode();
+	bool bProperMatch = TFGameRules()->IsInTournamentMode();
 	if ( !bProperMatch || TFGameRules()->IsInPreMatch() || !TFGameRules()->IsInStopWatch() || bInFreezeCam || TFGameRules()->State_Get() == GR_STATE_GAME_OVER  )
 	{
 		m_bShouldBeVisible = false;

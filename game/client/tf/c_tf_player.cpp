@@ -1475,7 +1475,6 @@ C_TFPlayer::C_TFPlayer() :
 	ListenForGameEvent( "hltv_changed_mode" );
 	ListenForGameEvent( "hltv_changed_target" );
 	ListenForGameEvent( "player_spawn" );
-	ListenForGameEvent( "player_changeclass" );
 
 	//AddPhonemeFile
 	engine->AddPhonemeFile( "scripts/game_sounds_vo_phonemes.txt" );
@@ -4974,20 +4973,6 @@ bool C_TFPlayer::CanShowClassMenu( void )
 {
 	if ( IsHLTV() )
 		return false;
-		
-	if( TFGameRules()  )
-	{
-		// Dont allow the change class menu to come up when we're doing the doors and things.  There's really weird
-		// sorting issues that go on even though the class menu is supposed to draw under the match status panel.
-		if ( TFGameRules()->IsCompetitiveMode() )
-		{
-			float flRestartTime = TFGameRules()->GetRoundRestartTime() - gpGlobals->curtime;
-			if ( flRestartTime > 0.f && flRestartTime < 10.f )
-			{
-				return false;
-			}
-		}
-	}
 	
 	return ( GetTeamNumber() > LAST_SHARED_TEAM );
 }
@@ -4998,10 +4983,6 @@ bool C_TFPlayer::CanShowClassMenu( void )
 bool C_TFPlayer::CanShowTeamMenu( void )
 {
 	if ( IsHLTV() )
-		return false;
-
-	if ( TFGameRules() && ( TFGameRules()->IsCompetitiveMode() ) )
-	
 		return false;
 
 	return ( GetTeamNumber() != TEAM_UNASSIGNED );
@@ -6237,59 +6218,8 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 			SetBodygroupsDirty();
 		}
 	}
-	else if ( FStrEq( event->GetName(), "player_changeclass" ) )
-	{
-		if ( TFGameRules() && TFGameRules()->IsMatchTypeCompetitive() )
-		{
-			if ( g_PR &&
-				pLocalPlayer &&
-				pLocalPlayer == this &&
-				TFGameRules() &&
-				TFGameRules()->IsCompetitiveMode() &&
-				TFGameRules()->State_Get() == GR_STATE_RND_RUNNING )
-			{
-				CBaseHudChat *pHudChat = (CBaseHudChat*)GET_HUDELEMENT( CHudChat );
-				if ( pHudChat )
-				{
-					C_BasePlayer *pEventPlayer = UTIL_PlayerByUserId( event->GetInt( "userid" ) );
-					if ( pEventPlayer && pLocalPlayer->GetTeamNumber() == g_PR->GetTeam( pEventPlayer->entindex() ) )
-					{
-						int nClassID = event->GetInt( "class" );
-						if ( nClassID >= 0 && nClassID < ARRAYSIZE( g_aPlayerClassNames ) )
-						{
-							wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-							g_pVGuiLocalize->ConvertANSIToUnicode( g_PR->GetPlayerName( pEventPlayer->entindex() ), wszPlayerName, sizeof( wszPlayerName ) );
 
-							wchar_t wszLocalized[100];
-							g_pVGuiLocalize->ConstructString_safe( wszLocalized, g_pVGuiLocalize->Find( "#TF_Class_Change" ), 2, wszPlayerName, g_pVGuiLocalize->Find( g_aPlayerClassNames[nClassID] ) );
-
-							char szLocalized[100];
-							g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof( szLocalized ) );
-
-							pHudChat->ChatPrintf( pLocalPlayer->entindex(), CHAT_FILTER_NAMECHANGE, "%s", szLocalized );
-						}
-					}
-				}
-			}
-		}
-	}
 	BaseClass::FireGameEvent( event );
-}
-
-const char* C_TFPlayer::ModifyEventParticles( const char* token )
-{
-	if ( GetPlayerClass()->IsClass( TF_CLASS_SCOUT ) )
-	{
-		if ( !Q_strcmp( token, "doublejump_puff" ) )
-		{
-			if ( m_Shared.GetAirDash() > 1 )
-			{
-				return "doublejump_puff_alt";
-			}
-		}
-	}
-
-	return BaseClass::ModifyEventParticles( token );
 }
 
 void C_TFPlayer::SetTauntCameraTargets( float back, float up )

@@ -113,19 +113,6 @@ void CHudTFCrosshair::Init()
 //-----------------------------------------------------------------------------
 void CHudTFCrosshair::FireGameEvent( IGameEvent * event )
 {
-	if ( FStrEq( "restart_timer_time", event->GetName() ) )
-	{
-		if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-		{
-			int nTime = event->GetInt( "time" );
-			if ( ( nTime <= 10 ) && ( nTime > 0 ) )
-			{
-				m_flTimeToHideUntil = gpGlobals->curtime + nTime;
-				return;
-			}
-		}
-	}
-
 	m_flTimeToHideUntil = -1.f;
 }
 

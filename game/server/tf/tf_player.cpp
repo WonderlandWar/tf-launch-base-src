@@ -2583,9 +2583,6 @@ bool CTFPlayer::ShouldForceAutoTeam( void )
 	if ( mp_forceautoteam.GetBool() )
 		return true;
 
-	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-		return true;
-
 	return false;
 }
 
@@ -2962,24 +2959,6 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName, bool bAllowSpaw
 // 		ClientPrint( this, HUD_PRINTCENTER, "#TF_CantChangeClassNow" );
 // 		return;
 // 	}
-
-	if ( TFGameRules()->IsCompetitiveMode() )
-	{
-		if ( !tf_tournament_classchange_allowed.GetBool() && 
-			 TFGameRules()->State_Get() == GR_STATE_RND_RUNNING )
-		{
-			ClientPrint( this, HUD_PRINTCENTER, "#TF_Ladder_NoClassChangeRound" );
-			return;
-		}
-
-		if ( !tf_tournament_classchange_ready_allowed.GetBool() && 
-			 TFGameRules()->State_Get() == GR_STATE_BETWEEN_RNDS && 
-			 TFGameRules()->IsPlayerReady( entindex() ) )
-		{
-			ClientPrint( this, HUD_PRINTCENTER, "#TF_Ladder_NoClassChangeReady" );
-			return;
-		}
-	}
 
 	if ( GetTeamNumber() == TEAM_UNASSIGNED )
 		return;
@@ -10098,11 +10077,6 @@ void CTFPlayer::PlayReadySound( void )
 		{
 			int iTeam = GetTeamNumber();
 			const char *pszFormat = "%s.Ready";
-
-			if ( TFGameRules()->IsCompetitiveMode() )
-			{
-				pszFormat = "%s.ReadyComp";
-			}
 
 			CFmtStr goYell( pszFormat, g_aPlayerClassNames_NonLocalized[ m_Shared.GetDesiredPlayerClassIndex() ] );
 			TFGameRules()->BroadcastSound( iTeam, goYell, 0, this );

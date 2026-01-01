@@ -1070,13 +1070,6 @@ void CTeamplayRoundBasedRules::CheckRestartRound( void )
 	{
 		int iDelayMax = 60;
 
-#ifdef TF_DLL
-		if ( TFGameRules() && ( TFGameRules()->IsCompetitiveMode() ) )
-		{
-			iDelayMax = 180;
-		}
-#endif // #if defined(TF_CLIENT_DLL) || defined(TF_DLL)
-
 		if ( iRestartDelay > iDelayMax )
 		{
 			iRestartDelay = iDelayMax;
@@ -1552,33 +1545,6 @@ void CTeamplayRoundBasedRules::State_Enter_PREROUND( void )
 	else
 	{
 		float flTransitionTime = 5 * mp_enableroundwaittime.GetFloat();
-#ifdef TF_DLL
-		if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-		{
-			flTransitionTime = tf_competitive_preround_duration.GetFloat();
-			m_flCountdownTime = -1.f;
-			if ( ( TFGameRules()->GetRoundsPlayed() > 0 ) && !( GetActiveRoundTimer() && ( GetActiveRoundTimer()->GetSetupTimeLength() > 0 ) ) )
-			{
-				// we do a countdown after the first round, so we need some extra pre-round time
-				flTransitionTime += tf_competitive_preround_countdown_duration.GetFloat();
-				m_flCountdownTime = gpGlobals->curtime + tf_competitive_preround_countdown_duration.GetFloat();
-
-				CTFPlayer *pPlayer;
-				for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-				{
-					pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-
-					if ( !pPlayer )
-						continue;
-
-					if ( pPlayer->GetTeamNumber() < FIRST_GAME_TEAM )
-						continue;
-
-					pPlayer->TeamFortress_SetSpeed();
-				}
-			}
-		}
-#endif // TF_DLL
 		m_flStateTransitionTime = gpGlobals->curtime + flTransitionTime;
 	}
 
@@ -1625,33 +1591,6 @@ void CTeamplayRoundBasedRules::State_Think_PREROUND( void )
 			State_Transition( GR_STATE_RND_RUNNING );
 		}
 	}
-#ifdef TF_DLL
-	else
-	{
-		if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() ) 
-		{
-			if ( ( TFGameRules()->GetRoundsPlayed() > 0 ) && ( m_flCountdownTime > 0 ) )
-			{
-				if ( gpGlobals->curtime > m_flCountdownTime )
-				{
-					CTFPlayer *pPlayer;
-					for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-					{
-						pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-
-						if ( !pPlayer )
-							continue;
-
-						if ( pPlayer->GetTeamNumber() < FIRST_GAME_TEAM )
-							continue;
-
-						pPlayer->TeamFortress_SetSpeed();
-					}
-				}
-			}
-		}
-	}
-#endif 
 
 	CheckRespawnWaves();
 }
@@ -1820,22 +1759,6 @@ void CTeamplayRoundBasedRules::State_Enter_TEAM_WIN( void )
 
 	bool bGameOver = IsGameOver();
 
-#ifdef TF_DLL
-	if ( bGameOver && TFGameRules() && TFGameRules()->IsCompetitiveMode() && TFGameRules()->IsCommunityGameMode() )
-	{
-		extern ConVar tf_gamemode_community;
-		extern ConVar tf_gamemode_misc;
-		extern ConVar mp_tournament_readymode;
-		// reset these so other things play nice
-		mp_bonusroundtime.SetValue( mp_bonusroundtime.GetDefault() );
-		tf_gamemode_community.SetValue( 0 );
-		tf_gamemode_misc.SetValue( 0 );
-		mp_tournament.SetValue( true );
-		mp_tournament_readymode.SetValue( true );
-		SetAllowBetweenRounds( true );
-	}
-#endif
-
 	m_flStateTransitionTime = gpGlobals->curtime + GetBonusRoundTime( bGameOver );
 	InternalHandleTeamWin( m_iWinningTeam );
 	SendWinPanelInfo( bGameOver );
@@ -1875,13 +1798,6 @@ void CTeamplayRoundBasedRules::State_Think_TEAM_WIN( void )
 		else if ( IsInTournamentMode() )
 		{
 			bool bShowScorboard = true;
-#ifdef TF_DLL
-			if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-			{
-				bShowScorboard = false;
-			}
-#endif // TF_DLL
-
 			for ( int i = 1; i <= MAX_PLAYERS; i++ )
 			{
 				CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
@@ -1909,29 +1825,6 @@ void CTeamplayRoundBasedRules::State_Think_TEAM_WIN( void )
 
 				State_Transition( GR_STATE_PREROUND );
 			}
-#ifdef TF_DLL
-			else if ( TFGameRules() && TFGameRules()->UsePlayerReadyStatusMode() )
-			{
-				for ( int i = 1; i <= MAX_PLAYERS; i++ )
-				{
-					CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-					if ( !pPlayer )
-						continue;
-
-					pPlayer->AddFlag( FL_FROZEN );
-				}
-
-				g_fGameOver = true;
-				State_Enter( GR_STATE_GAME_OVER );
-				m_flStateTransitionTime = gpGlobals->curtime + GetPostMatchPeriod();
-
-				if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-				{
-					TFGameRules()->MatchSummaryStart();
-				}
-				return;
-			}
-#endif // TF_DLL
 			else
 			{
 				State_Transition( GR_STATE_RND_RUNNING );
@@ -2501,11 +2394,6 @@ void CC_CH_TournamentRestart( void )
 		if ( !UTIL_IsCommandIssuedByServerAdmin() )
 			return;
 	}
-
-#ifdef TF_DLL
-	if ( TFGameRules() && ( TFGameRules()->IsCompetitiveMode() ) )
-		return;
-#endif // TF_DLL
 
 	CTeamplayRoundBasedRules *pRules = dynamic_cast<CTeamplayRoundBasedRules*>( GameRules() );
 	if ( pRules )
@@ -3513,11 +3401,6 @@ bool CTeamplayRoundBasedRules::ShouldBalanceTeams( void )
 	if ( mp_teams_unbalance_limit.GetInt() <= 0 )
 		return false;
 
-#if defined( TF_DLL ) || defined( TF_CLIENT_DLL )
-	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-		return false;
-#endif // TF_DLL
-
 	return true;
 }
 
@@ -3542,11 +3425,6 @@ bool CTeamplayRoundBasedRules::WouldChangeUnbalanceTeams( int iNewTeam, int iCur
 	// if they are joining a non-playing team, allow
 	if ( iNewTeam < FIRST_GAME_TEAM )
 		return false;
-
-#if defined( TF_DLL ) || defined( TF_CLIENT_DLL )
-	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-		return false;
-#endif // TF_DLL
 
 	CTeam *pNewTeam = GetGlobalTeam( iNewTeam );
 
@@ -3600,11 +3478,6 @@ bool CTeamplayRoundBasedRules::AreTeamsUnbalanced( int &iHeaviestTeam, int &iLig
 	if ( IsInCommentaryMode() )
 		return false;
 #endif
-
-#if defined( TF_DLL ) || defined( TF_CLIENT_DLL )
-	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-		return false;
-#endif // TF_DLL
 
 	int iMostPlayers = 0;
 	int iLeastPlayers = MAX_PLAYERS + 1;

@@ -408,9 +408,6 @@ void CTFGameStats::ResetRoundStats()
 //-----------------------------------------------------------------------------
 void CTFGameStats::IncrementStat( CTFPlayer *pPlayer, TFStatType_t statType, int iValue )
 {
-	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() && TFGameRules()->State_Get() != GR_STATE_RND_RUNNING )
-		return;
-
 	PlayerStats_t &stats = m_aPlayerStats[pPlayer->entindex()];
 	stats.statsCurrentLife.m_iStat[statType] += iValue;
 	stats.statsCurrentRound.m_iStat[statType] += iValue;

@@ -284,10 +284,7 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 			g_pVGuiLocalize->ConstructString_safe( wzWinReason, g_pVGuiLocalize->Find( "#Winreason_DefendedUntilTimeLimit" ), 1, pLocalizedTeamName );
 			break;
 		case WINREASON_STALEMATE:
-			if ( !TFGameRules() || !TFGameRules()->IsCompetitiveMode() )
-			{
-				g_pVGuiLocalize->ConstructString_safe( wzWinReason, g_pVGuiLocalize->Find( "#Winreason_Stalemate" ), 0 );
-			}
+			g_pVGuiLocalize->ConstructString_safe( wzWinReason, g_pVGuiLocalize->Find( "#Winreason_Stalemate" ), 0 );
 			break;	
 		case WINREASON_TIMELIMIT:
 			g_pVGuiLocalize->ConstructString_safe( wzWinReason, g_pVGuiLocalize->Find( "#Winreason_TimeLimit" ), 1, pLocalizedTeamName );

@@ -83,17 +83,8 @@ extern ConVar cl_steamscreenshots;
 
 extern ISoundEmitterSystemBase *soundemitterbase;
 
-static Color colorEyeballBossText( 134, 80, 172, 255 );
-static Color colorMerasmusText( 112, 176, 74, 255 );
-
 ConVar default_fov( "default_fov", "75", FCVAR_CHEAT );
 ConVar fov_desired( "fov_desired", "75", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets the base field-of-view.", true, 20.0, true, MAX_FOV );
-
-
-#define TF_HIGHFIVE_HINT_MAXDIST		512.0f
-#define TF_HIGHFIVE_HINT_MAXHINTS		3
-#define TF_HIGHFIVE_HINT_MINTIMEBETWEEN	10.0f
-ConVar tf_highfive_hintcount( "tf_highfive_hintcount", "0", FCVAR_CLIENTDLL | FCVAR_DONTRECORD | FCVAR_ARCHIVE, "Counts the number of times the high five hint has been displayed", true, 0, false, 0 );
 
 ConVar tf_delete_temp_files( "tf_delete_temp_files", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Delete custom player sprays and other temp files during shutdown" );
 
@@ -293,8 +284,6 @@ void ClientModeTFNormal::Init()
 	m_lastServerName = NULL;
 	m_lastServerConnectTime = 0;
 
-	m_flNextAllowedHighFiveHintTime = 0.0f;
-
 	m_bInfoPanelShown = false;
 	m_bRestrictInfoPanel = false;
 
@@ -320,32 +309,8 @@ void ClientModeTFNormal::Init()
 
 	ListenForGameEvent( "localplayer_changeclass" );
 	
-	ListenForGameEvent( "player_upgraded" );
-	ListenForGameEvent( "player_buyback" );
-	ListenForGameEvent( "player_death" );
-	ListenForGameEvent( "player_used_powerup_bottle" );
-
-	ListenForGameEvent( "pve_win_panel" );
-
-	ListenForGameEvent( "arena_win_panel" );
 	ListenForGameEvent( "teamplay_win_panel" );
 	ListenForGameEvent( "server_spawn" );
-
-	ListenForGameEvent( "eyeball_boss_summoned" );
-	ListenForGameEvent( "eyeball_boss_stunned" );
-	ListenForGameEvent( "eyeball_boss_killed" );
-	ListenForGameEvent( "eyeball_boss_killer" );
-	ListenForGameEvent( "eyeball_boss_escape_imminent" );
-	ListenForGameEvent( "eyeball_boss_escaped" );
-
-	ListenForGameEvent( "merasmus_summoned" );
-	ListenForGameEvent( "merasmus_killed" );
-	ListenForGameEvent( "merasmus_escape_warning" );
-	ListenForGameEvent( "merasmus_escaped" );
-
-	ListenForGameEvent( "player_highfive_start" );
-	ListenForGameEvent( "player_highfive_cancel" );
-	ListenForGameEvent( "player_highfive_success" );
 
 	ListenForGameEvent( "client_beginconnect" );
 	ListenForGameEvent( "client_disconnect" );
@@ -533,85 +498,7 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 			SteamTimeline()->ClearTimelineStateDescription( 0 );
 #endif
 	}
-	else if ( FStrEq( "player_buyback", eventname ) )
-	{
-		int idxPlayer = event->GetInt( "player" );
-		KeyValuesAD pKeyValues( "data" );
-		if ( g_TF_PR )
-		{
-			const char *pszString = "#TF_PVE_Player_BuyBack";
-
-			pKeyValues->SetString( "player", g_TF_PR->GetPlayerName( idxPlayer ) );
-			pKeyValues->SetInt( "credits", event->GetInt( "cost", 0 ) );
-			PrintTextToChatPlayer( idxPlayer, pszString, pKeyValues );
-
-			C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-			if ( pLocalPlayer )
-			{
-				pLocalPlayer->EmitSound( "MVM.PlayerBoughtIn" );
-			}
-		}
-	}
-	else if ( FStrEq( "player_death", eventname ) )
-	{
-		if ( TFGameRules() && ( TFGameRules()->State_Get() == GR_STATE_RND_RUNNING ) && ( TFGameRules()->IsCompetitiveMode() ) )
-		{
-			C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-			if ( pLocalPlayer )
-			{
-				int nVictimIndex = event->GetInt( "victim_entindex" );
-				int nVictimTeam = g_TF_PR->GetTeam( nVictimIndex );
-
-				// See if there are any other players still alive
-				bool bSomeAlive = false;
-				for ( int playerIndex = 1; playerIndex <= MAX_PLAYERS; playerIndex++ )
-				{
-					if ( !g_TF_PR->IsConnected( playerIndex ) )
-						continue;
-
-					if ( nVictimIndex == playerIndex )
-						continue;
-
-					if ( nVictimTeam != g_TF_PR->GetTeam( playerIndex ) )
-						continue;
-
-					if ( g_TF_PR->IsAlive( playerIndex ) )
-					{
-						// Found one
-						bSomeAlive = true;
-						break;
-					}
-				}
-
-				if ( !bSomeAlive )
-				{
-					const char *pszSound = NULL;
-
-					if ( ( RandomInt( 1, 100 ) <= 20 ) || ( pLocalPlayer->GetTeamNumber() < FIRST_GAME_TEAM ) )
-					{
-						pszSound = ( nVictimTeam == TF_TEAM_RED ) ? "Announcer.TeamWipeRed" : "Announcer.TeamWipeBlu";
-					}
-					else if ( pLocalPlayer->GetTeamNumber() == nVictimTeam )
-					{
-						pszSound = "Announcer.YourTeamWiped";
-					}
-					else
-					{
-						pszSound = "Announcer.TheirTeamWiped";
-					}
-
-					if ( pszSound )
-					{
-						pLocalPlayer->EmitSound( pszSound );
-					}
-				}
-			}
-		}
-	}
-	else if ( 
-			  FStrEq( "pve_win_panel", eventname ) ||
-			  FStrEq( "arena_win_panel", eventname ) ||
-			  FStrEq( "teamplay_win_panel", eventname )  )
+	else if ( FStrEq( "teamplay_win_panel", eventname )  )
 	{
 #if defined( REPLAY_ENABLED )
 		DisplayReplayReminder();
@@ -666,8 +553,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 
 			m_lastServerConnectTime = GetSteamWorksSGameStatsUploader().GetTimeSinceEpoch();
 		}
-
-		m_flNextAllowedHighFiveHintTime = 0.0f;
 
 		m_bPendingRichPresenceUpdate = true;
 	}
@@ -1328,27 +1213,6 @@ USER_MESSAGE( ForcePlayerViewAngles )
 		pPlayer->SetLocalAngles( viewangles );
 		pPlayer->SetAbsAngles( viewangles );
 		pPlayer->SetTauntYaw( viewangles[YAW] );
-	}
-}
-
-ConVar tf_halloween_bonus_ducks_cooldown( "tf_halloween_bonus_ducks_cooldown", "20", FCVAR_ARCHIVE );
-USER_MESSAGE( BonusDucks )
-{
-	static float sflNextBonusDucks = 0.f;
-
-	int iPlayerEntIndex = (int)msg.ReadByte();
-	int iIgnoreTimer = (int)msg.ReadByte();
-
-	if ( Plat_FloatTime() < sflNextBonusDucks && !iIgnoreTimer )
-		return;
-
-	sflNextBonusDucks = Plat_FloatTime() + tf_halloween_bonus_ducks_cooldown.GetFloat();
-
-	
-	C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayerEntIndex ) );
-	if ( pPlayer )
-	{
-		pPlayer->EmitSound( "sf14.Merasmus.DuckHunt.BonusDucks" );
 	}
 }
 

@@ -125,14 +125,6 @@ bool CTFPlayerPanel::Update( void )
 					if ( iRespawnWait <= 0 )
 						iRespawnWait = -1;
 				}
-
-				// Hide class info from the other team?
-				if ( !bObserver && 
-					 TFGameRules()->IsCompetitiveMode() && 
-					 GetTeam() != g_TF_PR->GetTeam( pLocalPlayer->entindex() ) )
-				{
-					iClass = TF_CLASS_UNDEFINED;
-				}
 			}
 
 			// Update live state

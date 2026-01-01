@@ -90,7 +90,6 @@ void RegisterUserMessages()
 	usermessages->Register( "PlayerTauntSoundLoopEnd", -1 );
 
 	usermessages->Register( "ForcePlayerViewAngles", -1 );
-	usermessages->Register( "BonusDucks", 2 );	// ent index, ignoretimer
 
 	usermessages->Register( "SdkRequestEquipment", -1 );
 

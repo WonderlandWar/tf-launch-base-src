@@ -4136,10 +4136,6 @@ bool CTFPlayer::CanPlayerMove() const
 	if ( GetMoveType() == MOVETYPE_NOCLIP )
 		return true;
 
-	// No one can move when in a final countdown transition.
-	if ( TFGameRules() && TFGameRules()->BInMatchStartCountdown() )
-		return false;
-
 	bool bFreezeOnRestart = tf_player_movement_restart_freeze.GetBool();
 	if ( bFreezeOnRestart )
 	{
@@ -4153,20 +4149,6 @@ bool CTFPlayer::CanPlayerMove() const
 	}
 
 	bool bInRoundRestart = TFGameRules() && TFGameRules()->InRoundRestart();
-	if ( bInRoundRestart && TFGameRules()->IsCompetitiveMode() )
-	{
-		if ( TFGameRules()->GetRoundsPlayed() > 0 )
-		{
-			if ( gpGlobals->curtime < TFGameRules()->GetPreroundCountdownTime() )
-			{
-				bFreezeOnRestart = true;
-			}
-		}
-		else
-		{
-			bFreezeOnRestart = false;
-		}
-	}
 
 	bool bNoMovement = bInRoundRestart && bFreezeOnRestart;
 
@@ -5113,16 +5095,6 @@ int CTFPlayer::GetNumActivePipebombs( void )
 //-----------------------------------------------------------------------------
 bool CTFPlayer::CanMoveDuringTaunt()
 {
-
-	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-	{
-		if ( ( TFGameRules()->GetRoundRestartTime() > -1.f ) && ( (int)( TFGameRules()->GetRoundRestartTime() - gpGlobals->curtime ) <= mp_tournament_readymode_countdown.GetInt() ) )
-			return false;
-
-		if ( TFGameRules()->PlayersAreOnMatchSummaryStage() )
-			return false;
-	}
-
 	if ( m_Shared.InCond( TF_COND_TAUNTING ) )
 	{
 #ifdef GAME_DLL

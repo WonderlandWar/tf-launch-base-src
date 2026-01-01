@@ -703,7 +703,7 @@ const char *CTFSpectatorGUI::GetResFile( void )
 //-----------------------------------------------------------------------------
 bool CTFSpectatorGUI::InTournamentGUI( void )
 {
-	return ( TFGameRules()->IsInTournamentMode() && !TFGameRules()->IsCompetitiveMode() && ( cl_use_tournament_specgui.GetBool() ) );
+	return ( TFGameRules()->IsInTournamentMode() && ( cl_use_tournament_specgui.GetBool() ) );
 }
 
 //-----------------------------------------------------------------------------

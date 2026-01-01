@@ -130,8 +130,6 @@ private:
 	// This is the base name of a map, and doesn't include workshop decorations/path/etc.
 	char					m_szMapBaseName[MAX_MAP_NAME] = { 0 };
 
-	float					m_flNextAllowedHighFiveHintTime;
-
 	// When game events should trigger updates, we want to let all other systems think first (e.g. partyclient) as their
 	// state is looked at by the update loop.  Setting this triggers an update on next think.
 	bool					m_bPendingRichPresenceUpdate = false;

@@ -109,7 +109,6 @@ public:
 	void	InputPlayVORed( inputdata_t &inputdata );
 	void	InputPlayVOBlue( inputdata_t &inputdata );
 	void	InputPlayVO( inputdata_t &inputdata );
-	void	InputHandleMapEvent( inputdata_t &inputdata );
 	void	InputSetRoundRespawnFreezeEnabled( inputdata_t &inputdata );
 
 	void	TeamPlayerCountChanged( CTFTeam *pTeam );
@@ -117,7 +116,6 @@ public:
 	void	StateEnterBetweenRounds( void );
 	void	StateEnterPreRound( void );
 	void	StateExitPreRound( void );
-	void	MatchSummaryStart( void );
 
 	COutputEvent m_OnWonByTeam1;
 	COutputEvent m_OnWonByTeam2;
@@ -127,7 +125,6 @@ public:
 	COutputEvent m_OnStateEnterBetweenRounds;
 	COutputEvent m_OnStateEnterPreRound;
 	COutputEvent m_OnStateExitPreRound;
-	COutputEvent m_OnMatchSummaryStart;
 
 	virtual void Activate();
 
@@ -328,8 +325,6 @@ public:
 		return false;
 	}
 
-	void			HandleMapEvent( inputdata_t &inputdata );
-
 	virtual bool	ShouldWaitToStartRecording( void );
 
 	void			SetGravityMultiplier( float flValue ){ m_flGravityMultiplier.Set( flValue ); }
@@ -343,8 +338,6 @@ public:
 	void			RegisterScriptFunctions() override;
 
 	int				GetRoundState() { return (int)State_Get(); }
-
-	bool			InMatchStartCountdown() { return BInMatchStartCountdown(); }
 
 protected:
 
@@ -364,8 +357,6 @@ protected:
 
 	virtual bool CanChangelevelBecauseOfTimeLimit( void );
 	virtual bool CanGoToStalemate( void );
-
-	void BroadcastDrawLine( CTFPlayer *pTFPlayer, KeyValues *pKeyValues );
 
 #endif // GAME_DLL
 
@@ -395,28 +386,6 @@ public:
 	void	RunPlayerConditionThink ( void );
 
 	const char *GetTeamGoalString( int iTeam );
-
-	// TF2007: This should all be removed eventually
-	 
-	// Competitive games
-	bool IsCommunityGameMode( void ) const;
-	bool IsCompetitiveMode( void ) const;			// means we're using competitive/casual matchmaking
-	bool IsMatchTypeCasual( void ) const;
-	bool IsMatchTypeCompetitive( void ) const;
-	// Are we showing the match-start-countdown doors right now
-	bool BInMatchStartCountdown() const;
-#ifdef GAME_DLL
-	void SyncMatchSettings();
-	// ! Check return
-	bool StartManagedMatch();
-	void SetCompetitiveMode( bool bValue );
-#endif
-	void EndCompetitiveMatch( void );
-	void ManageCompetitiveMode( void );
-	bool MatchmakingShouldUseStopwatchMode( void );
-	bool IsAttackDefenseMode( void );
-
-	bool IsManagedMatchEnded() const;
 
 	bool UsePlayerReadyStatusMode( void );
 	bool PlayerReadyStatus_HaveMinPlayersToEnable( void );
@@ -578,9 +547,6 @@ public:
 
 	void PushAllPlayersAway( const Vector& vFromThisPoint, float flRange, float flForce, int nTeam, CUtlVector< CTFPlayer* > *pPushedPlayers = NULL );
 	
-	void MatchSummaryStart( void );
-	void MatchSummaryEnd( void );
-
 	int GetTeamAssignmentOverride( CTFPlayer *pTFPlayer, int iDesiredTeam, bool bAutoBalance = false );
 private:
 
@@ -647,9 +613,7 @@ private:
 
 	CNetworkVar( bool, m_bHaveMinPlayersToEnableReady );
 
-	CNetworkVar( bool, m_bBountyModeEnabled );
 	CNetworkVar( float, m_flGravityMultiplier );
-	CNetworkVar( bool, m_bMatchEnded );
 
 	CNetworkVar( bool, m_bTeamsSwitched );
 

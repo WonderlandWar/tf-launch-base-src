@@ -64,7 +64,6 @@ private:
 	bool			m_bTeamReady[MAX_TEAMS];
 
 	bool			m_bReadyStatusMode;
-	bool			m_bCompetitiveMode;
 	bool			m_bReadyTextBlinking;
 	bool			m_bCountDownVisible;
 
@@ -92,7 +91,6 @@ private:
 	CPanelAnimationVarAliasType( int, m_iTeam1PlayerDeltaY, "team1_player_delta_y", "0", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iTeam2PlayerDeltaX, "team2_player_delta_x", "0", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iTeam2PlayerDeltaY, "team2_player_delta_y", "0", "proportional_int" );
-	CPanelAnimationVarAliasType( int, m_iTeamsPlayerDeltaXComp, "teams_player_delta_x_comp", "0", "proportional_int" );
 };
 
 class CHudTournamentSetup : public CHudElement, public EditablePanel

@@ -458,8 +458,6 @@ ConVar tf_competitive_required_late_join_confirm_timeout( "tf_competitive_requir
                                                           "How long to wait for the GC to confirm we're in the late join pool before canceling the match" );
 #endif // GAME_DLL
 
-ConVar tf_gamemode_community ( "tf_gamemode_community", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-
 ConVar tf_voice_command_suspension_mode( "tf_voice_command_suspension_mode", "2", FCVAR_REPLICATED, "0 = None | 1 = No Voice Commands | 2 = Rate Limited" );
 
 #ifdef GAME_DLL
@@ -660,9 +658,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 
 	RecvPropBool( RECVINFO( m_bHaveMinPlayersToEnableReady ) ),
 
-	RecvPropBool( RECVINFO( m_bBountyModeEnabled ) ),
-
-	RecvPropBool( RECVINFO( m_bMatchEnded ) ),
 	RecvPropBool( RECVINFO( m_bShowMatchSummary ), 0, RecvProxy_MatchSummary ),
 	RecvPropBool( RECVINFO_NAME( m_bShowMatchSummary, "m_bShowCompetitiveMatchSummary" ), 0, RecvProxy_MatchSummary ),     // Renamed
 	RecvPropBool( RECVINFO( m_bTeamsSwitched ) ),
@@ -677,9 +672,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 
 	SendPropBool( SENDINFO( m_bHaveMinPlayersToEnableReady ) ),
 
-	SendPropBool( SENDINFO( m_bBountyModeEnabled ) ),
-
-	SendPropBool( SENDINFO( m_bMatchEnded ) ),
 	SendPropBool( SENDINFO( m_bShowMatchSummary ) ),
 	SendPropBool( SENDINFO( m_bTeamsSwitched ) ),
 	SendPropBool( SENDINFO( m_bMapHasMatchSummaryStage ) ),
@@ -735,7 +727,6 @@ BEGIN_DATADESC( CTFGameRulesProxy )
 	DEFINE_INPUTFUNC( FIELD_STRING, "PlayVORed", InputPlayVORed ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "PlayVOBlue", InputPlayVOBlue ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "PlayVO", InputPlayVO ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "HandleMapEvent", InputHandleMapEvent ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetRoundRespawnFreezeEnabled", InputSetRoundRespawnFreezeEnabled ),
 
 	DEFINE_OUTPUT( m_OnWonByTeam1,	"OnWonByTeam1" ),
@@ -746,7 +737,6 @@ BEGIN_DATADESC( CTFGameRulesProxy )
 	DEFINE_OUTPUT( m_OnStateEnterBetweenRounds, "OnStateEnterBetweenRounds" ),
 	DEFINE_OUTPUT( m_OnStateEnterPreRound, "OnStateEnterPreRound" ),
 	DEFINE_OUTPUT( m_OnStateExitPreRound, "OnStateExitPreRound" ),
-	DEFINE_OUTPUT( m_OnMatchSummaryStart, "OnMatchSummaryStart" ),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -911,17 +901,6 @@ void CTFGameRulesProxy::InputPlayVO( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFGameRulesProxy::InputHandleMapEvent( inputdata_t &inputdata )
-{
-	if ( TFGameRules() )
-	{
-		TFGameRules()->HandleMapEvent( inputdata );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFGameRulesProxy::InputSetRoundRespawnFreezeEnabled( inputdata_t &inputdata )
 {
 	tf_player_movement_restart_freeze.SetValue( inputdata.value.Bool() );
@@ -993,14 +972,6 @@ void CTFGameRulesProxy::StateEnterPreRound( void )
 void CTFGameRulesProxy::StateExitPreRound( void )
 {
 	m_OnStateExitPreRound.FireOutput( this, this );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRulesProxy::MatchSummaryStart( void )
-{
-	m_OnMatchSummaryStart.FireOutput( this, this );
 }
 #endif
 
@@ -1095,97 +1066,6 @@ int	CTFGameRules::Damage_GetShouldNotBleed( void )
 {
 	return 0;
 }
-
-bool CTFGameRules::IsCommunityGameMode( void ) const
-{
-	return tf_gamemode_community.GetBool();
-}
-
-bool CTFGameRules::IsCompetitiveMode( void ) const
-{
-	return false;
-}
-
-bool CTFGameRules::IsMatchTypeCasual( void ) const
-{
-	return false;
-}
-
-bool CTFGameRules::IsMatchTypeCompetitive( void ) const
-{
-	return false;
-}
-
-bool CTFGameRules::BInMatchStartCountdown() const
-{
-	return false;
-}
-
-bool CTFGameRules::IsManagedMatchEnded() const
-{
-	return false;
-}
-
-#ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-void CTFGameRules::SyncMatchSettings()
-{
-	m_bMatchEnded.Set( IsManagedMatchEnded() );
-}
-
-//-----------------------------------------------------------------------------
-bool CTFGameRules::StartManagedMatch()
-{
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Fully completes the match
-//-----------------------------------------------------------------------------
-void CTFGameRules::EndCompetitiveMatch( void )
-{
-	MatchSummaryEnd();
-
-	Log( "Competitive match ended.  Kicking all players.\n" );
-	engine->ServerCommand( "kickall #TF_Competitive_Disconnect\n" );
-
-	// Prepare for next match
-	g_fGameOver = false;
-	if ( !IsCommunityGameMode() )
-		m_bAllowBetweenRounds = true;
-	State_Transition( GR_STATE_RESTART );
-	SetInWaitingForPlayers( true );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Called during CTFGameRules::Think()
-//-----------------------------------------------------------------------------
-void CTFGameRules::ManageCompetitiveMode( void )
-{
-
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CTFGameRules::MatchmakingShouldUseStopwatchMode( void )
-{
-	return IsAttackDefenseMode();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CTFGameRules::IsAttackDefenseMode( void )
-{
-	CTeamControlPointMaster *pMaster = g_hControlPointMasters.Count() ? g_hControlPointMasters[0] : NULL;
-	bool bRetVal = !HasMultipleTrains() && ( ( pMaster && ( pMaster->PlayingMiniRounds() || pMaster->ShouldSwitchTeamsOnRoundWin() ) ) );
-
-	tf_attack_defend_map.SetValue( bRetVal );
-	return bRetVal;
-}
-
-#endif // STAGING_ONLY
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -1505,8 +1385,6 @@ CTFGameRules::CTFGameRules()
 	// Initialize the game type
 	m_nGameType.Set( TF_GAMETYPE_UNDEFINED );
 
-	m_bBountyModeEnabled.Set( false );
-
 	m_bTeamsSwitched.Set( false );
 
 	m_bIsBirthday = false;
@@ -1539,8 +1417,6 @@ CTFGameRules::CTFGameRules()
 
 	m_bUseMatchHUD = false;
 	m_bUsePreRoundDoors = false;
-
-	m_bMatchEnded.Set( true );
 
 #ifdef GAME_DLL
 	m_flCheckPlayersConnectingTime = 0;
@@ -1645,19 +1521,9 @@ void CTFGameRules::KickPlayersNewMatchIDRequestFailed()
 	// The GC failed to get a new MatchID for us.  Let's clear out and reset.
 	engine->ServerCommand( "kickall #TF_Competitive_Disconnect\n" );
 
-	// Tell the GC System to end the managed match mode -- we skipped this in StopCompetitiveMatch so we could roll the
-	// managed match into a new one.
-	Assert( !IsManagedMatchEnded() );
-	if ( !IsManagedMatchEnded() )
-	{
-		Assert( IsManagedMatchEnded() );
-		m_bMatchEnded.Set( true );
-	}
-
 	// Prepare for next match
 	g_fGameOver = false;
-	if ( !IsCommunityGameMode() )
-		m_bAllowBetweenRounds = true;
+	m_bAllowBetweenRounds = true;
 	State_Transition( GR_STATE_RESTART );
 	SetInWaitingForPlayers( true );
 }
@@ -1811,7 +1677,6 @@ void CTFGameRules::Activate()
 	m_nGameType.Set( TF_GAMETYPE_UNDEFINED );
 
 	tf_gamemode_arena.SetValue( 0 );
-	tf_gamemode_community.SetValue( 0 );
 	tf_gamemode_cp.SetValue( 0 );
 	tf_gamemode_ctf.SetValue( 0 );
 	tf_gamemode_tc.SetValue( 0 );
@@ -1819,8 +1684,6 @@ void CTFGameRules::Activate()
 	tf_gamemode_misc.SetValue( 0 );
 
 	tf_bot_count.SetValue( 0 );
-
-	m_bBountyModeEnabled.Set( false );
 
 	m_CPTimerEnts.RemoveAll();
 
@@ -3386,17 +3249,6 @@ void CTFGameRules::Think()
 					return;
 			}
 		}
-
-		// These network variables mirror the MM system's match state for client's sake. Gamerules should still
-		// be aware of when these change, either because we caused it or via a callback.  This warning will
-		// detect desync. (Ideally we'd have the ability to just share between the client GC system and server
-		// GC system directly without passing things through gamerules)
-		if ( m_bMatchEnded != IsManagedMatchEnded() )
-		{
-			Assert( false );
-			Warning( "Mirrored Match parameters on gamerules don't match MatchInfo\n" );
-			m_bMatchEnded.Set( IsManagedMatchEnded() );
-		}
 	}
 
 	if ( g_bRandomMap == true )
@@ -3425,9 +3277,6 @@ void CTFGameRules::Think()
 	{
 		m_flNextStrangeEventProcessTime = engine->Time() + g_flStrangeEventBatchProcessInterval;
 	}
-
-	ManageCompetitiveMode();
-
 #endif // GAME_DLL
 
 	BaseClass::Think();
@@ -5524,79 +5373,9 @@ void CTFGameRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValu
 		{
 			pTFPlayer->HelpmeButtonReleased();
 		}
-		else if ( FStrEq( pszCommand, "cl_drawline" ) )
-		{
-			BroadcastDrawLine( pTFPlayer, pKeyValues );
-		}
 		else
 		{
 			BaseClass::ClientCommandKeyValues( pEntity, pKeyValues );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::BroadcastDrawLine( CTFPlayer *pTFPlayer, KeyValues *pKeyValues )
-{
-	if ( true || !m_bPlayersAreOnMatchSummaryStage || pTFPlayer->BHaveChatSuspensionInCurrentMatch() )
-		return;
-
-	int paneltype = clamp( pKeyValues->GetInt( "panel", DRAWING_PANEL_TYPE_NONE ), DRAWING_PANEL_TYPE_NONE, DRAWING_PANEL_TYPE_MAX - 1 );
-
-	if ( paneltype >= DRAWING_PANEL_TYPE_MATCH_SUMMARY )
-	{
-		int linetype = clamp( pKeyValues->GetInt( "line", 0 ), 0, 1 );
-		float x = pKeyValues->GetFloat( "x", 0.f );
-		float y = pKeyValues->GetFloat( "y", 0.f );
-
-		IGameEvent *event = gameeventmanager->CreateEvent( "cl_drawline" );
-		if ( event )
-		{
-			event->SetInt( "player", pTFPlayer->entindex() );
-			event->SetInt( "panel",paneltype );
-			event->SetInt( "line", linetype );
-			event->SetFloat( "x", x );
-			event->SetFloat( "y", y );
-
-			gameeventmanager->FireEvent( event );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::HandleMapEvent( inputdata_t &inputdata )
-{
-	if ( FStrEq( "sd_doomsday", STRING( gpGlobals->mapname ) ) )
-	{
-		// find the flag in the map
-		CCaptureFlag *pFlag = NULL;
-		for ( int i=0; i<ICaptureFlagAutoList::AutoList().Count(); ++i )
-		{
-			pFlag = static_cast< CCaptureFlag* >( ICaptureFlagAutoList::AutoList()[i] );
-			if ( !pFlag->IsDisabled() )
-			{
-				break;
-			}
-		}
-
-		// make sure it's being carried by one of the teams
-		if ( pFlag && pFlag->IsStolen() )
-		{
-			CTFPlayer *pFlagCarrier = ToTFPlayer( pFlag->GetOwnerEntity() );
-			if ( pFlagCarrier )
-			{
-				// let everyone know which team has opened the rocket
-				IGameEvent *event = gameeventmanager->CreateEvent( "doomsday_rocket_open" );
-				if ( event )
-				{
-					event->SetInt( "team", pFlagCarrier->GetTeamNumber() );
-					gameeventmanager->FireEvent( event );
-				}
-			}
 		}
 	}
 }
@@ -7830,74 +7609,6 @@ void CTFGameRules::ProcessVerboseLogOutput( void )
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::MatchSummaryStart( void )
-{
-	for ( int i = 1; i <= MAX_PLAYERS; i++ )
-	{
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-		if ( pPlayer )
-		{
-			pPlayer->AddFlag( FL_FROZEN );
-		}
-	}
-
-	IGameEvent *event = gameeventmanager->CreateEvent( "show_match_summary" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
-	}
-
-	m_bShowMatchSummary.Set( true );
-
-	if ( m_hGamerulesProxy )
-	{
-		m_hGamerulesProxy->MatchSummaryStart();
-	}
-
-	CBaseEntity *pLogicCase = NULL;
-	while ( ( pLogicCase = gEntList.FindEntityByName( pLogicCase, "competitive_stage_logic_case" ) ) != NULL )
-	{
-		if ( pLogicCase )
-		{
-			variant_t sVariant;
-			sVariant.SetInt( GetWinningTeam() );
-			pLogicCase->AcceptInput( "InValue", NULL, NULL, sVariant, 0 );
-			break;
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::MatchSummaryEnd( void )
-{
-	m_bShowMatchSummary.Set( false );
-	m_bPlayersAreOnMatchSummaryStage.Set( false );
-
-	SetRequiredObserverTarget( NULL );
-
-	for ( int i = 1; i <= MAX_PLAYERS; i++ )
-	{
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-		if ( !pPlayer )
-			continue;
-
-		pPlayer->RemoveFlag( FL_FROZEN );
-		pPlayer->SetViewEntity( NULL );
-		pPlayer->SetFOV( pPlayer, 0 );
-	}
-
-	// reset bot convars here
-	static ConVarRef tf_bot_quota( "tf_bot_quota" );
-	tf_bot_quota.SetValue( tf_bot_quota.GetDefault() );
-	static ConVarRef tf_bot_quota_mode( "tf_bot_quota_mode" );
-	tf_bot_quota_mode.SetValue( tf_bot_quota_mode.GetDefault() );
-}
-
 void CTFGameRules::PushAllPlayersAway( const Vector& vFromThisPoint, float flRange, float flForce, int nTeam, CUtlVector< CTFPlayer* > *pPushedPlayers /*= NULL*/ )
 {
 	CUtlVector< CTFPlayer * > playerVector;
@@ -7989,11 +7700,6 @@ int		ScriptGetClassLimit( int iClass )							{ return TFGameRules()->GetClassLim
 bool	ScriptFlagsMayBeCapped()									{ return TFGameRules()->FlagsMayBeCapped(); }
 bool	ScriptIsInArenaMode()										{ return TFGameRules()->IsInArenaMode(); }
 bool	ScriptIsInKothMode()										{ return TFGameRules()->IsInKothMode(); }
-bool	ScriptIsMatchTypeCasual()									{ return TFGameRules()->IsMatchTypeCasual(); }
-bool	ScriptIsMatchTypeCompetitive()								{ return TFGameRules()->IsMatchTypeCompetitive(); }
-bool	ScriptInMatchStartCountdown()								{ return TFGameRules()->InMatchStartCountdown(); }
-bool	ScriptMatchmakingShouldUseStopwatchMode()					{ return TFGameRules()->MatchmakingShouldUseStopwatchMode(); }
-bool	ScriptIsAttackDefenseMode()									{ return TFGameRules()->IsAttackDefenseMode(); }
 bool	ScriptUsePlayerReadyStatusMode()							{ return TFGameRules()->UsePlayerReadyStatusMode(); }
 bool	ScriptPlayerReadyStatus_HaveMinPlayersToEnable()			{ return TFGameRules()->PlayerReadyStatus_HaveMinPlayersToEnable(); }
 bool	ScriptPlayerReadyStatus_ArePlayersOnTeamReady(int iTeam)	{ return TFGameRules()->PlayerReadyStatus_ArePlayersOnTeamReady( iTeam ); }
@@ -8019,11 +7725,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( PointsMayBeCaptured,						"Are points able to be captured?" );
 	TF_GAMERULES_SCRIPT_FUNC( GetClassLimit,							"Get class limit for class. See Constants.ETFClass" );
 	TF_GAMERULES_SCRIPT_FUNC( FlagsMayBeCapped,							"May a flag be captured?" );
-	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCasual,						"Playing casual?" );
-	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCompetitive,					"Playing competitive?" );
-	TF_GAMERULES_SCRIPT_FUNC( InMatchStartCountdown,					"Are we in the pre-match state?" );
-	TF_GAMERULES_SCRIPT_FUNC( MatchmakingShouldUseStopwatchMode,		"" );
-	TF_GAMERULES_SCRIPT_FUNC( IsAttackDefenseMode,						"" );
 	TF_GAMERULES_SCRIPT_FUNC( UsePlayerReadyStatusMode,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( PlayerReadyStatus_HaveMinPlayersToEnable,	"" );
 	TF_GAMERULES_SCRIPT_FUNC( PlayerReadyStatus_ArePlayersOnTeamReady,	"" );

@@ -269,8 +269,6 @@ public:
 	bool			ShouldPlayEffect( EBonusEffectFilter_t filter, const C_TFPlayer* pAttacker, const C_TFPlayer* pVictim ) const;
 	virtual void	FireGameEvent( IGameEvent *event );
 
-	virtual const char* ModifyEventParticles( const char* token );
-
 	// Set the distances the camera should use. 
 	void			SetTauntCameraTargets( float back, float up );
 
