@@ -4020,17 +4020,6 @@ void CTFGameRules::SetWinningTeam( int team, int iWinReason, bool bForceMapReset
 		}
 	}
 
-#ifdef TF_RAID_MODE
-	if ( !IsBossBattleMode() )
-	{
-		// Don't do a full reset in Raid mode if the defending team didn't win
-		if ( IsRaidMode() && team != TF_TEAM_PVE_DEFENDERS )
-		{
-			bForceMapReset = false;
-		}
-	}
-#endif // TF_RAID_MODE
-
 	SetBirthdayPlayer( NULL );
 
 #ifdef GAME_DLL
@@ -5609,20 +5598,6 @@ bool CTFGameRules::TimerMayExpire( void )
 		}
 	}
 
-#ifdef TF_RAID_MODE
-	if ( IsRaidMode() && IsBossBattleMode() && tf_raid_allow_overtime.GetBool() )
-	{
-		CUtlVector< CTFPlayer * > alivePlayerVector;
-		CollectPlayers( &alivePlayerVector, TF_TEAM_BLUE, COLLECT_ONLY_LIVING_PLAYERS );
-
-		// if anyone is alive, go into overtime
-		if ( alivePlayerVector.Count() > 0 )
-		{
-			return false;
-		}
-	}
-#endif
-
 	return BaseClass::TimerMayExpire();
 }
 
@@ -6906,35 +6881,6 @@ int CTFGameRules::GetClassLimit( int iClass )
 bool CTFGameRules::CanPlayerChooseClass( CBasePlayer *pPlayer, int iClass )
 {
 	int iClassLimit = GetClassLimit( iClass );
-
-#ifdef TF_RAID_MODE
-	if ( IsRaidMode() && !pPlayer->IsBot() )
-	{
-		// bots are exempt from class limits, to allow for additional support bot "friends"
-		if ( pPlayer->GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			if ( tf_raid_allow_all_classes.GetBool() == false )
-			{
-				if ( iClass == TF_CLASS_SCOUT )
-					return false;
-
-				if ( iClass == TF_CLASS_SPY )
-					return false;
-			}
-
-			if ( tf_raid_enforce_unique_classes.GetBool() )
-			{
-				// only one of each class on the raiding team
-				iClassLimit = 1;
-			}
-		}
-	}
-	else if ( IsBossBattleMode() )
-	{
-		return true;
-	}
-	else
-#endif // TF_RAID_MODE
 
 	if ( iClassLimit == NO_CLASS_LIMIT )
 		return true;

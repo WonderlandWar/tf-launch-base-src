@@ -110,7 +110,6 @@ public:
 	bool			IsFizzle() { return m_bFizzle; }
 
 	virtual void	PipebombTouch( CBaseEntity *pOther );
-	virtual void	StickybombTouch( CBaseEntity *pOther );
 	virtual void	VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
 
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info ) OVERRIDE;

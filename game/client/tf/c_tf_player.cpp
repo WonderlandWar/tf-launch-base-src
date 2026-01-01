@@ -4297,18 +4297,6 @@ void C_TFPlayer::AddDecal( const Vector& rayStart, const Vector& rayEnd,
 		return;
 	}
 
-#ifdef TF_RAID_MODE
-	// no decals for the BLUE team in Raid mode
-	// (temp workaround for decals causing the glows to not draw correctly)
-	if ( TFGameRules() && TFGameRules()->IsRaidMode() )
-	{
-		if ( GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			return;
-		}
-	}
-#endif // TF_RAID_MODE
-
 	// don't decal from inside the player
 	if ( tr.startsolid )
 	{

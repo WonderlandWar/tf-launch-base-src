@@ -32,9 +32,6 @@
 #include "takedamageinfo.h"
 #include "tf_team.h"
 #include "physics_collisionevent.h"
-#ifdef TF_RAID_MODE
-#include "player_vs_environment/boss_alpha/boss_alpha.h"
-#endif // TF_RAID_MODE
 #include "tf_weapon_medigun.h"
 #endif
 
@@ -424,7 +421,6 @@ void CTFGrenadePipebombProjectile::Spawn()
 
 		SetDetonateTimerLength( FLT_MAX );
 		SetContextThink( &CTFGrenadePipebombProjectile::PreArmThink, gpGlobals->curtime + 0.001f, "PRE_ARM_THINK" ); // Next frame.
-		SetTouch( &CTFGrenadePipebombProjectile::StickybombTouch );
 	}
 	else
 	{
@@ -586,28 +582,6 @@ void CTFGrenadePipebombProjectile::CreatePipebombGibs( void )
 void CTFGrenadePipebombProjectile::Fizzle( void )
 {
 	m_bFizzle = true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGrenadePipebombProjectile::StickybombTouch( CBaseEntity *pOther )
-{
-#ifdef GAME_DLL
-#ifdef TF_RAID_MODE
-	if ( TFGameRules()->IsRaidMode() )
-	{
-		if ( dynamic_cast< CBossAlpha * >( pOther ) != NULL )
-		{
-			// stickies stick to the boss
-			m_bTouched = true;
-			VPhysicsGetObject()->EnableMotion( false );
-
-			SetParent( pOther );
-		}
-	}
-#endif
-#endif
 }
 
 //-----------------------------------------------------------------------------

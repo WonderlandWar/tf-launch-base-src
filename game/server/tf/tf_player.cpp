@@ -2284,71 +2284,6 @@ CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 	CBaseEntity *pSpot = g_pLastSpawnPoints[ GetTeamNumber() ];
 	const char *pSpawnPointName = "";
 
-#ifdef TF_RAID_MODE
-	if ( TFGameRules()->IsRaidMode() )
-	{
-		if ( GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			// only spawn next to friends if the round is not restarting
-			if ( TFGameRules()->State_Get() == GR_STATE_RND_RUNNING )
-			{
-				if ( tf_raid_use_rescue_closets.GetBool() )
-				{
-					// find a valid rescue closet to spawn into
-					CBaseEntity *rescueSpawn = g_pRaidLogic->GetRescueRespawn();
-
-					if ( rescueSpawn )
-					{
-						return rescueSpawn;
-					}
-				}
-				else if ( tf_boss_battle_respawn_on_friends.GetBool() )
-				{
-					// the raiders are in the wild - respawn next to them
-					float timeSinceInjured = -1.0f;
-					CBaseEntity *respawnEntity = NULL;
-
-					// if we are observing a friend, spawn into them
-					CBaseEntity *watchEntity = GetObserverTarget();
-					if ( watchEntity && IsValidRaidRespawnTarget( watchEntity ) )
-					{
-						respawnEntity = watchEntity;
-					}
-					else
-					{
-						// spawn on the least recently damaged friend
-						CTeam *raidingTeam = GetGlobalTeam( TF_TEAM_BLUE );
-						for( int i=0; i<raidingTeam->GetNumPlayers(); ++i )
-						{
-							CTFPlayer *buddy = (CTFPlayer *)raidingTeam->GetPlayer(i);
-
-							// we can't use IsAlive(), because that has already been reset since
-							// this code is mid-spawn.  Use m_Shared state instead.
-							if ( buddy != this && buddy->m_Shared.InState( TF_STATE_ACTIVE ) && IsValidRaidRespawnTarget( buddy ) )
-							{
-								// pick the friend who has been hurt least recently
-								if ( buddy->GetTimeSinceLastInjury( TF_TEAM_RED ) > timeSinceInjured )
-								{
-									timeSinceInjured = buddy->GetTimeSinceLastInjury( TF_TEAM_RED );
-									respawnEntity = buddy;
-								}
-							}
-						}
-					}
-
-					if ( respawnEntity )
-					{
-						CPVSFilter filter( respawnEntity->GetAbsOrigin() );
-						TE_TFParticleEffect( filter, 0.0, "teleported_blue", respawnEntity->GetAbsOrigin(), vec3_angle );
-						TE_TFParticleEffect( filter, 0.0, "player_sparkles_blue", respawnEntity->GetAbsOrigin(), vec3_angle, this, PATTACH_POINT );
-						return respawnEntity;
-					}
-				}
-			}
-		}
-	}
-#endif // TF_RAID_MODE
-
 	bool bMatchSummary = TFGameRules() && TFGameRules()->ShowMatchSummary();
 
 	// See if the map is asking to force this player to spawn at a specific location
@@ -3821,9 +3756,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 	else if ( FStrEq( pcmd, "team_ui_setup" ) )
 	{
 		bool bAutoTeam = ShouldForceAutoTeam();
-#ifdef TF_RAID_MODE
-		bAutoTeam |= TFGameRules()->IsBossBattleMode();
-#endif
 		
 		// For autoteam, display the appropriate team's CLASS selection ui
 		if ( bAutoTeam )

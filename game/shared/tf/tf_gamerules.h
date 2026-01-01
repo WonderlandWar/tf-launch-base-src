@@ -62,17 +62,6 @@ extern ConVar	tf_ctf_bonus_time;
 extern ConVar mp_tournament_prevent_team_switch_on_readyup;
 #endif
 
-#ifdef TF_RAID_MODE
-
-class CRaidLogic;
-class CBossBattleLogic;
-
-extern ConVar tf_gamemode_raid;
-extern ConVar tf_gamemode_creep_wave;
-extern ConVar tf_gamemode_boss_battle;
-
-#endif // TF_RAID_MODE
-
 //extern ConVar tf_populator_health_multiplier;
 //extern ConVar tf_populator_damage_multiplier;
 
@@ -661,11 +650,6 @@ private:
 
 	CUtlVector< CHandle< CCPTimerLogic > > m_CPTimerEnts;
 	float	m_flCapInProgressBuffer;
-
-#ifdef TF_RAID_MODE
-	CHandle< CRaidLogic >		m_hRaidLogic;
-	CHandle< CBossBattleLogic > m_hBossBattleLogic;
-#endif // TF_RAID_MODE
 
 	float	m_flCheckPlayersConnectingTime;
 

@@ -319,11 +319,6 @@ void ClientModeTFNormal::Init()
 #endif
 
 	ListenForGameEvent( "localplayer_changeclass" );
-
-#ifdef TF_RAID_MODE
-	ListenForGameEvent( "raid_spawn_mob" );
-	ListenForGameEvent( "raid_spawn_squad" );
-#endif // TF_RAID_MODE
 	
 	ListenForGameEvent( "player_upgraded" );
 	ListenForGameEvent( "player_buyback" );
@@ -528,25 +523,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 			engine->ExecuteClientCmd( szCmd ); 
 		}
 	}
-	
-#ifdef TF_RAID_MODE
-	else if ( FStrEq( "raid_spawn_mob", eventname ) )
-	{
-		C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-		if ( pLocalPlayer )
-		{
-			pLocalPlayer->EmitSound( "Raid.MobSpawn" );
-		}
-	}
-	else if ( FStrEq( "raid_spawn_squad", eventname ) )
-	{
-		C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-		if ( pLocalPlayer )
-		{
-			pLocalPlayer->EmitSound( "Raid.SquadSpawn" );
-		}
-	}
-#endif // TF_RAID_MODE
 	else if ( FStrEq( "client_disconnect", eventname ) )
 	{
 		m_eConnectState = k_eConnectState_Disconnected;
