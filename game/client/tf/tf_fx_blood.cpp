@@ -39,15 +39,9 @@ void TFBloodSprayCallback( Vector vecOrigin, Vector vecNormal, ClientEntityHandl
 		bUnderwater = true;
 	}
 
-	bool bPyroVision = false;
-	 
 	if ( !bUnderwater && TFGameRules() && TFGameRules()->IsBirthday() && RandomFloat(0,1) < 0.2 )
 	{
 		DispatchParticleEffect( "bday_blood", vecOrigin, vecAngles, pPlayer );
-	}
-	else if ( TFGameRules() && bPyroVision )
-	{
-		DispatchParticleEffect( "pyrovision_blood", vecOrigin, vecAngles, pPlayer );
 	}
 	else if ( UTIL_IsLowViolence() )
 	{

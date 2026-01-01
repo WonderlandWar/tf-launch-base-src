@@ -159,62 +159,14 @@ USER_MESSAGE( CheapBreakModel )
 	HandleBreakModel( msg, true );
 }
 
-//-----------------------------------------------------------------------------
-// Receive the BreakModel_Pumpkin user message
-//-----------------------------------------------------------------------------
-USER_MESSAGE( BreakModel_Pumpkin )
+int CTFWearable::DrawModel( int flags )
 {
-	int nModelIndex = (int)msg.ReadShort();
-	CUtlVector<breakmodel_t>	aGibs;
-	BuildGibList( aGibs, nModelIndex, 1.0f, COLLISION_GROUP_NONE );
-	if ( !aGibs.Count() )
-		return;
+	// TF2007: This is rather hacky, even though ShouldDraw returns false, the wearable still draws
+	// I don't know what causes this, but this hack fixes it
+	if ( !CTFWearable::ShouldDraw() )
+		return false;
 
-	// Get the origin & angles
-	Vector vecOrigin;
-	QAngle vecAngles;
-	msg.ReadBitVec3Coord( vecOrigin );
-	msg.ReadBitAngles( vecAngles );
-
-	// Launch it straight up with some random spread
-	Vector vecBreakVelocity = Vector(0,0,0);
-	AngularImpulse angularImpulse( RandomFloat( 0.0f, 120.0f ), RandomFloat( 0.0f, 120.0f ), 0.0 );
-	breakablepropparams_t breakParams( vecOrigin /*+ Vector(0,0,20)*/, vecAngles, vecBreakVelocity, angularImpulse );
-	breakParams.impactEnergyScale = 1.0f;
-
-	for ( int i=0; i<aGibs.Count(); ++i )
-	{
-		aGibs[i].burstScale = 1000.f;
-	}
-
-	CUtlVector<EHANDLE>	hSpawnedGibs;
-	CreateGibsFromList( aGibs, nModelIndex, NULL, breakParams, NULL, -1 , false, true, &hSpawnedGibs );
-
-	// Make the base stay low to the ground.
-	for ( int i=0; i<hSpawnedGibs.Count(); ++i )
-	{
-		CBaseEntity *pGib = hSpawnedGibs[i];
-		if ( pGib )
-		{
-			IPhysicsObject *pPhysObj = pGib->VPhysicsGetObject();
-			if ( pPhysObj )
-			{
-				Vector vecVel;
-				AngularImpulse angImp;
-				pPhysObj->GetVelocity( &vecVel, &angImp );
-				vecVel *= 3.0;
-				if ( i == 3 )
-				{
-					vecVel.z = 300;
-				}
-				else
-				{
-					vecVel.z = 400;
-				}
-				pPhysObj->SetVelocity( &vecVel, &angImp );
-			}
-		}
-	}
+	return BaseClass::DrawModel( flags );
 }
 
 //-----------------------------------------------------------------------------
@@ -250,9 +202,17 @@ bool CTFWearable::ShouldDraw()
 
 	if ( pOwner )
 	{
+		C_TFPlayer* pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
+
 		// don't draw cosmetic while sniper is zoom
-		if ( pOwner == C_TFPlayer::GetLocalTFPlayer() && pOwner->m_Shared.InCond( TF_COND_ZOOMED ) )
-			return false;
+		if ( pOwner == pLocalPlayer )
+		{
+			if ( pLocalPlayer->m_Shared.InCond( TF_COND_ZOOMED ) )
+				return false;
+
+			if ( !pLocalPlayer->ShouldDrawLocalPlayer() )
+				return false;
+		}
 	}
 
 	// Don't draw 3rd person wearables if our owner is disguised.
@@ -266,15 +226,6 @@ bool CTFWearable::ShouldDraw()
 	}
 }
 #endif
-
-int CTFWearable::GetSkin()
-{
-	CTFPlayer *pPlayer = ToTFPlayer( GetOwnerEntity() );
-	if ( !pPlayer )
-		return 0;
-
-	return BaseClass::GetSkin();
-}
 
 #ifdef CLIENT_DLL
 //-----------------------------------------------------------------------------

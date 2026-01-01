@@ -1511,8 +1511,6 @@ void C_TFPlayer::Spawn( void )
 	}
 	*/
 
-	SetShowHudMenuTauntSelection( false );
-
 	CleanUpAnimationOnSpawn();
 }
 
@@ -1574,6 +1572,8 @@ void C_TFPlayer::UpdateOnRemove( void )
 	ParticleProp()->StopParticlesInvolving( this );
 
 	m_Shared.RemoveAllCond();
+
+	UpdatePartyHat(); // Delete the party hat
 
 	BaseClass::UpdateOnRemove();
 }
@@ -1705,6 +1705,8 @@ void C_TFPlayer::SetDormant( bool bDormant )
 
 	// Deliberately skip base combat weapon
 	C_BaseEntity::SetDormant( bDormant );
+
+	UpdatePartyHat();
 }
 
 //-----------------------------------------------------------------------------
@@ -1757,9 +1759,7 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 
 		InitInvulnerableMaterial();
 		
-		// There used to be code here to switch to first person. This breaks thirdperson mode
-		// and karts when we have to get a full client update--don't do it here anymore.
-		// We may need to do something more clever if this breaks something.
+		UpdatePartyHat();
 	}
 	else
 	{
@@ -2224,6 +2224,72 @@ void C_TFPlayer::OnPlayerClassChange( void )
 	SetAppropriateCamera( this );
 }
 
+void C_TFPlayer::UpdatePartyHat( void )
+{
+	bool bBirthday = TFGameRules()->IsBirthday();
+	C_TFWearable *pPartyHat = m_hPartyHat;
+	
+	if ( !bBirthday || !IsAlive() || IsMarkedForDeletion() || IsDormant() ) // Do nothing if it's not TF2's birthday or I'm not alive, and delete any existing party hat too
+	{	
+		if ( pPartyHat )
+		{
+			pPartyHat->Release();
+			pPartyHat = NULL;
+			m_hPartyHat = NULL;
+		}
+		return;
+	}
+
+	bool bCreatePartyHat = !pPartyHat;
+
+	//if ( !pPartyHat )
+	{
+		if ( bCreatePartyHat )
+			pPartyHat = new C_TFWearable();
+
+		if ( !bCreatePartyHat || pPartyHat->InitializeAsClientEntity( BDAY_HAT_MODEL, RENDER_GROUP_OPAQUE_ENTITY ) )
+		{
+			pPartyHat->SetOwnerEntity( this );
+			pPartyHat->SetAbsOrigin( GetAbsOrigin() );
+
+			int nAttachment = LookupAttachment( "partyhat" );
+#if 0
+			if ( nAttachment == -1 )
+			{
+				Msg("Couldn't find party hat attachment\n");
+			}
+			else
+			{
+				Msg("Found party hat attachment\n");
+			}
+#endif
+			int iTeam = GetTeamNumber();
+			C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
+			if ( pLocalPlayer && pLocalPlayer->GetTeamNumber() != GetTeamNumber() && m_Shared.InCond( TF_COND_DISGUISED ) )
+			{
+				iTeam = m_Shared.GetDisguiseTeam();
+			}
+			pPartyHat->m_nSkin = iTeam - 2;
+			if ( !bCreatePartyHat )
+			{
+				pPartyHat->SetParent( NULL );
+				pPartyHat->SetAbsAngles( vec3_angle );
+			}
+			pPartyHat->SetParent( this, nAttachment );
+			if ( bCreatePartyHat )
+				pPartyHat->Spawn();
+			else
+				pPartyHat->UpdateVisibility();
+		}
+		else
+		{
+			pPartyHat->Release();
+			pPartyHat = NULL;
+		}
+		m_hPartyHat = pPartyHat;
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2336,6 +2402,8 @@ CStudioHdr *C_TFPlayer::OnNewModel( void )
 	{
 		m_iSpyMaskBodygroup = -1;
 	}
+
+	UpdatePartyHat();
 
 	return hdr;
 }
@@ -4016,10 +4084,6 @@ void C_TFPlayer::CreatePlayerGibs( const Vector &vecOrigin, const Vector &vecVel
 //-----------------------------------------------------------------------------
 void C_TFPlayer::DropPartyHat( breakablepropparams_t &breakParams, Vector &vecBreakVelocity )
 {
-	// Turning off party hats because we've moving to real hats
-	return;
-
-/*
 	if ( m_hPartyHat )
 	{
 		breakmodel_t breakModel;
@@ -4039,7 +4103,6 @@ void C_TFPlayer::DropPartyHat( breakablepropparams_t &breakParams, Vector &vecBr
 
 		m_hPartyHat->Release();
 	}
-*/
 }
 
 //-----------------------------------------------------------------------------
@@ -4301,13 +4364,13 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 
 	DestroyBoneAttachments();
 
+	UpdatePartyHat();
+
 	m_hHeadGib = NULL;
 	m_hFirstGib = NULL;
 	m_hSpawnedGibs.Purge();
 
 	m_fMetersRan = 0;
-
-	SetShowHudMenuTauntSelection( false );
 
 	CleanUpAnimationOnSpawn();
 }
@@ -5769,6 +5832,8 @@ void C_TFPlayer::FlushAllPlayerVisibilityState()
 		pWeapon->UpdateVisibility();
 	}
 
+	UpdatePartyHat();
+
 	// Update visibility of any worn items.
 	SetBodygroupsDirty();
 }
@@ -5797,10 +5862,9 @@ void C_TFPlayer::UpdateSpyStateChange( void )
 		GetActiveWeapon()->PreDataUpdate( DATA_UPDATE_DATATABLE_CHANGED );
 	}
 
-	// TranqMark
-	// test : Let Marked spies be seen via the debuff
-	//bool bShow = ( m_Shared.InCond( TF_COND_TRANQ_MARKED )
-	//	&& !m_Shared.IsStealthed();
+#ifdef CLIENT_DLL
+	UpdatePartyHat();
+#endif
 }
 
 

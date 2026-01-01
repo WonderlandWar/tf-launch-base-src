@@ -415,6 +415,8 @@ private:
 
 	int					m_iOldSpawnCounter;
 
+	CHandle<CTFWearable> m_hPartyHat;
+
 	// Healer
 	CHandle<C_TFPlayer>	m_hHealer;
 	bool				m_bWasHealedByLocalPlayer;
@@ -576,13 +578,6 @@ private:
 	float	m_flNextMiniCritEffectTime[ kBonusEffect_Count ];
 
 	CNetworkVar( bool, m_bUsingVRHeadset );
-
-public:
-	void SetShowHudMenuTauntSelection( bool bShow ) { m_bShowHudMenuTauntSelection = bShow; }
-	bool ShouldShowHudMenuTauntSelection() const { return m_bShowHudMenuTauntSelection; }
-
-private:
-	bool m_bShowHudMenuTauntSelection;
 
 public:
 

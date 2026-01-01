@@ -44,14 +44,13 @@ public:
 #endif
 
 #if defined( CLIENT_DLL )
+	virtual int			DrawModel( int flags );
 	virtual int			InternalDrawModel( int flags );
 	virtual bool		ShouldDraw();
 
 	virtual void		OnDataChanged( DataUpdateType_t updateType );
 	virtual void		FireGameEvent( IGameEvent *event );
 #endif
-
-	virtual int			GetSkin( void );
 };
 
 #endif // TF_WEARABLE_H

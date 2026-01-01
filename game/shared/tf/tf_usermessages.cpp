@@ -59,16 +59,6 @@ void RegisterUserMessages()
 	usermessages->Register( "HudArenaNotify", 2 );
 
 	usermessages->Register( "UpdateAchievement", -1 );
-	
-//=============================================================================
-// HPE_BEGIN:
-// [msmith]	Training Messages
-//=============================================================================
-	usermessages->Register( "TrainingMsg", -1 );	// Displays a training message
-	usermessages->Register( "TrainingObjective", -1 );	// Displays a training objective
-//=============================================================================
-// HPE_END
-//=============================================================================
 
 
 	usermessages->Register( "DamageDodged", -1 );
@@ -80,7 +70,6 @@ void RegisterUserMessages()
 
 	usermessages->Register( "BreakModel", -1 );
 	usermessages->Register( "CheapBreakModel", -1 );
-	usermessages->Register( "BreakModel_Pumpkin", -1 );
 	usermessages->Register( "BreakModelRocketDud", -1 );
 
 	// Voting

@@ -83,6 +83,7 @@
 #include "tf_weaponbase_melee.h"
 #include "tf_weapon_flamethrower.h"
 #include "tf_weapon_medigun.h"
+#include "../gcsdk/steamextra/rtime.h"
 
 #include "tier3/tier3.h"
 // memdbgon must be the last include file in a .cpp file!!!
@@ -6775,6 +6776,20 @@ int	CTFGameRules::CalcPlayerSupportScore( RoundStats_t *pRoundStats, int iPlayer
 #endif
 }
 
+// TF2007: The logic here is copied from econ_holidays.cpp
+bool IsBirthdayInternal()
+{
+	return false;
+#if 0 // FIXME: Include the file "rtime.cpp" so this logic can be enabled!
+	CRTime rtStartTime = CRTime::RTime32FromString( "08-23" );
+	CRTime rtEndTime = CRTime::RTime32FromString( "08-25" );
+
+	CRTime timeCurrent = CRTime::RTime32TimeCur();
+	
+	return ( ( timeCurrent >= rtStartTime ) && ( timeCurrent <= rtEndTime ) );
+#endif
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -6782,6 +6797,9 @@ bool CTFGameRules::IsBirthday( void ) const
 {
 	if ( IsX360() )
 		return false;
+
+	if ( IsBirthdayInternal() )
+		return true;
 
 	return tf_birthday.GetBool();
 }
