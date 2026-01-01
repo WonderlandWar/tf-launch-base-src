@@ -454,7 +454,6 @@ public:
 	bool SetCtfWinningTeam();
 	bool CheckCapsPerRound();
 	virtual void CheckRespawnWaves();
-	virtual void PlayWinSong( int team ) OVERRIDE;
 
 	virtual void SetWinningTeam( int team, int iWinReason, bool bForceMapReset = true, bool bSwitchTeams = false, bool bDontAddScore = false, bool bFinal = false ) OVERRIDE;
 	virtual void SetStalemate( int iReason, bool bForceMapReset = true, bool bSwitchTeams = false );
@@ -483,7 +482,6 @@ public:
 
 	virtual int GetAutoAimMode()	{ return AUTOAIM_NONE; }
 	void SetSetup( bool bSetup );
-	virtual void HandleTeamScoreModify( int iTeam, int iScore);
 
 	bool CanHaveAmmo( CBaseCombatCharacter *pPlayer, int iAmmoIndex );
 
@@ -535,24 +533,13 @@ public:
 	// Voting
 	void		ManageServerSideVoteCreation( void );
 
-	virtual bool StopWatchShouldBeTimedWin( void ) OVERRIDE;
-
 public:
-	bool	TournamentModeCanEndWithTimelimit( void ){ return ( GetStopWatchTimer() == NULL ); }
 
 	void SetOvertimeAllowedForCTF( bool bAllowed ){ m_bOvertimeAllowedForCTF = bAllowed; }
 	bool GetOvertimeAllowedForCTF( void ){ return m_bOvertimeAllowedForCTF; }
-
-	virtual void ProcessVerboseLogOutput( void );
-
-	void PushAllPlayersAway( const Vector& vFromThisPoint, float flRange, float flForce, int nTeam, CUtlVector< CTFPlayer* > *pPushedPlayers = NULL );
-	
-	int GetTeamAssignmentOverride( CTFPlayer *pTFPlayer, int iDesiredTeam, bool bAutoBalance = false );
 private:
 
 	int DefaultFOV( void ) { return 75; }
-
-	void StopWatchShouldBeTimedWin_Calculate( void );
 	
 #endif // GAME_DLL
 
@@ -574,11 +561,6 @@ private:
 	int m_iPrevRoundState;	// bit string representing the state of the points at the start of the previous miniround
 	int m_iCurrentRoundState;
 	int m_iCurrentMiniRoundMask;
-
-	CHandle<CTeamRoundTimer>	m_hStopWatchTimer;
-	
-
-	CTeamRoundTimer* GetStopWatchTimer( void ) { return (CTeamRoundTimer*)m_hStopWatchTimer.Get(); }
 
 	EHANDLE m_hRequiredObserverTarget;
 	EHANDLE m_hObjectiveObserverTarget;

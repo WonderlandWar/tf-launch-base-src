@@ -300,21 +300,6 @@ ConVar mp_tournament_blueteamname( "mp_tournament_blueteamname", "BLU", FCVAR_RE
 
 ConVar tf_attack_defend_map( "tf_attack_defend_map", "0", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 
-#ifdef GAME_DLL
-void cc_tf_stopwatch_changed( IConVar *pConVar, const char *pOldString, float flOldValue )
-{
-	IGameEvent *event = gameeventmanager->CreateEvent( "stop_watch_changed" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
-	}
-}
-#endif // GAME_DLL
-ConVar mp_tournament_stopwatch( "mp_tournament_stopwatch", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Use Stopwatch mode while using Tournament mode (mp_tournament)"
-#ifdef GAME_DLL
-	, cc_tf_stopwatch_changed 
-#endif
-);
 ConVar mp_tournament_readymode( "mp_tournament_readymode", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Enable per-player ready status for tournament mode." );
 ConVar mp_tournament_readymode_min( "mp_tournament_readymode_min", "2", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum number of players required on the server before players can toggle ready status." );
 ConVar mp_tournament_readymode_team_size( "mp_tournament_readymode_team_size", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum number of players required to be ready per-team before the game can begin." );
@@ -2012,91 +1997,7 @@ void CTFGameRules::RestartTournament( void )
 {
 	BaseClass::RestartTournament();
 
-	if ( GetStopWatchTimer() )
-	{
-		UTIL_Remove( GetStopWatchTimer() );
-	}
-
 	ResetPlayerAndTeamReadyState();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::HandleTeamScoreModify( int iTeam, int iScore )
-{
-	BaseClass::HandleTeamScoreModify( iTeam, iScore );
-
-	if ( IsInStopWatch() == true )
-	{
-		if ( GetStopWatchTimer() )
-		{
-			if ( GetStopWatchTimer()->IsWatchingTimeStamps() == true )
-			{
-				GetStopWatchTimer()->SetStopWatchTimeStamp();
-			}
-	
-			StopWatchModeThink();
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::StopWatchShouldBeTimedWin_Calculate( void )
-{
-	m_bStopWatchShouldBeTimedWin = false;
-
-	if ( IsInTournamentMode() && IsInStopWatch() && ObjectiveResource() )
-	{
-		int iStopWatchTimer = ObjectiveResource()->GetStopWatchTimer();
-		CTeamRoundTimer *pStopWatch = dynamic_cast< CTeamRoundTimer* >( UTIL_EntityByIndex( iStopWatchTimer ) );
-		if ( pStopWatch && !pStopWatch->IsWatchingTimeStamps() )
-		{
-			CTeamControlPointMaster *pMaster = g_hControlPointMasters.Count() ? g_hControlPointMasters[0] : NULL;
-
-			if ( pMaster == NULL )
-				return;
-
-			int iNumPoints = pMaster->GetNumPoints();
-
-			CTFTeam *pAttacker = NULL;
-			CTFTeam *pDefender = NULL;
-
-			for ( int i = LAST_SHARED_TEAM+1; i < GetNumberOfTeams(); i++ )
-			{
-				CTFTeam *pTeam = GetGlobalTFTeam( i );
-
-				if ( pTeam )
-				{
-					if ( pTeam->GetRole() == TEAM_ROLE_DEFENDERS )
-					{
-						pDefender = pTeam;
-					}
-
-					if ( pTeam->GetRole() == TEAM_ROLE_ATTACKERS )
-					{
-						pAttacker = pTeam;
-					}
-				}
-			}
-
-			if ( pAttacker == NULL || pDefender == NULL )
-				return;
-
-			m_bStopWatchShouldBeTimedWin = ( pDefender->GetScore() == iNumPoints );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFGameRules::StopWatchShouldBeTimedWin( void )
-{
-	StopWatchShouldBeTimedWin_Calculate();
-	return m_bStopWatchShouldBeTimedWin;
 }
 
 //-----------------------------------------------------------------------------
@@ -3499,25 +3400,6 @@ void CTFGameRules::CheckRespawnWaves()
 			pTFPlayer->ForceRespawn();
 		}
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::PlayWinSong( int team )
-{
-	if ( IsInTournamentMode() && IsInStopWatch() && ObjectiveResource() )
-	{
-		int iStopWatchTimer = ObjectiveResource()->GetStopWatchTimer();
-		CTeamRoundTimer *pStopWatch = dynamic_cast< CTeamRoundTimer* >( UTIL_EntityByIndex( iStopWatchTimer ) );
-		if ( ( pStopWatch && pStopWatch->IsWatchingTimeStamps() ) || ( !m_bForceMapReset ) )
-		{
-			BroadcastSound( 255, "MatchMaking.RoundEndStalemateMusic" );
-			return;
-		}
-	}
-
-	CTeamplayRoundBasedRules::PlayWinSong( team );
 }
 
 //-----------------------------------------------------------------------------
@@ -5564,28 +5446,6 @@ void CTFGameRules::InternalHandleTeamWin( int iWinningTeam )
 		m_iCurrentRoundState = -1;
 		m_iCurrentMiniRoundMask = 0;
 	}
-
-	if ( IsInStopWatch() == true && GetStopWatchTimer() )
-	{
-		variant_t sVariant;
-		GetStopWatchTimer()->AcceptInput( "Pause", NULL, NULL, sVariant, 0 );
-
-		if ( m_bForceMapReset )
-		{
-			if ( GetStopWatchTimer()->IsWatchingTimeStamps() == true )
-			{
-				m_flStopWatchTotalTime = GetStopWatchTimer()->GetStopWatchTotalTime();
-			}
-			else
-			{
-				ShouldResetScores( true, false );
-				UTIL_Remove( m_hStopWatchTimer	);
-				m_hStopWatchTimer = NULL;
-				m_flStopWatchTotalTime = -1.0f;
-				m_bStopWatch = false;
-			}
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -7584,63 +7444,6 @@ EXTERN_SEND_TABLE( DT_ScriptCreatedItem );
 #else
 EXTERN_RECV_TABLE( DT_ScriptCreatedItem );
 #endif
-
-#ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::ProcessVerboseLogOutput( void )
-{
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-
-		if ( pPlayer && ( pPlayer->GetTeamNumber() > TEAM_UNASSIGNED ) )
-		{
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" position_report (position \"%d %d %d\")\n",   
-				pPlayer->GetPlayerName(),
-				pPlayer->GetUserID(),
-				pPlayer->GetNetworkIDString(),
-				pPlayer->GetTeam()->GetName(),
-				(int)pPlayer->GetAbsOrigin().x, 
-				(int)pPlayer->GetAbsOrigin().y,
-				(int)pPlayer->GetAbsOrigin().z );
-		}
-	}
-}
-
-void CTFGameRules::PushAllPlayersAway( const Vector& vFromThisPoint, float flRange, float flForce, int nTeam, CUtlVector< CTFPlayer* > *pPushedPlayers /*= NULL*/ )
-{
-	CUtlVector< CTFPlayer * > playerVector;
-	CollectPlayers( &playerVector, nTeam, COLLECT_ONLY_LIVING_PLAYERS );
-
-	for( int i=0; i<playerVector.Count(); ++i )
-	{
-		CTFPlayer *pPlayer = playerVector[i];
-
-		Vector toPlayer = pPlayer->EyePosition() - vFromThisPoint;
-
-		if ( toPlayer.LengthSqr() < flRange * flRange )
-		{
-			// send the player flying
-			// make sure we push players up and away
-			toPlayer.z = 0.0f;
-			toPlayer.NormalizeInPlace();
-			toPlayer.z = 1.0f;
-
-			Vector vPush = flForce * toPlayer;
-
-			pPlayer->ApplyAbsVelocityImpulse( vPush );
-
-			if ( pPushedPlayers )
-			{
-				pPushedPlayers->AddToTail( pPlayer );
-			}
-		}
-	}
-}
-
-#endif // GAME_DLL
 
 #ifdef GAME_DLL
 //-----------------------------------------------------------------------------
