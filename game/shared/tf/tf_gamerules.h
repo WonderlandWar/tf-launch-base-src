@@ -72,9 +72,6 @@ const int kLadder_TeamSize_6v6 = 6;
 const int kLadder_TeamSize_9v9 = 9;
 const int kLadder_TeamSize_12v12 = 12;
 
-//#define TF_MVM_FCVAR_CHEAT 0 /* Cheats enabled */
-#define TF_MVM_FCVAR_CHEAT FCVAR_CHEAT /* Cheats disabled */
-
 // How many achievements we show in the summary screen.
 #define MAX_SHOWN_ACHIEVEMENTS 6
 //=============================================================================
@@ -85,12 +82,6 @@ const int kLadder_TeamSize_12v12 = 12;
 extern Vector g_TFClassViewVectors[];
 
 #define NO_CLASS_LIMIT -1
-
-enum {
-	STOPWATCH_CAPTURE_TIME_NOT_SET = 0,
-	STOPWATCH_RUNNING,
-	STOPWATCH_OVERTIME,
-};
 
 class CTFGameRulesProxy : public CTeamplayRoundBasedRulesProxy, public CGameEventListener
 {
@@ -405,8 +396,6 @@ public:
 
 	const char *GetTeamGoalString( int iTeam );
 
-	int		GetStopWatchState( void ) { return m_nStopWatchState; }
-
 	// TF2007: This should all be removed eventually
 	 
 	// Competitive games
@@ -445,9 +434,6 @@ public:
 	int		GetStatsMinimumPlayers( void );
 	int		GetStatsMinimumPlayedTime( void );
 
-	// BountyMode
-	bool IsBountyMode( void ) { return false; }
-
 	float GetGravityMultiplier(  void ){ return m_flGravityMultiplier; }
 
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
@@ -457,7 +443,6 @@ public:
 
 	bool ShowMatchSummary( void ){ return m_bShowMatchSummary; }
 
-	bool HaveStopWatchWinner( void ) { return m_bStopWatchWinner; }
 #ifdef GAME_DLL
 	void KickPlayersNewMatchIDRequestFailed();
 #endif // GAME_DLL
@@ -468,7 +453,6 @@ public:
 
 	virtual ~CTFGameRules();
 
-	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual void	HandleOvertimeBegin();
 
 	bool			ShouldShowTeamGoal( void );
@@ -484,8 +468,6 @@ public:
 	virtual bool	AllowWeatherParticles( void );
 
 	virtual void	ModifySentChat( char *pBuf, int iBufSize );
-
-	bool RecievedBaseline() const { return m_bRecievedBaseline; }
 
 #else
 
@@ -532,7 +514,6 @@ public:
 
 	virtual int GetAutoAimMode()	{ return AUTOAIM_NONE; }
 	void SetSetup( bool bSetup );
-	void ManageStopwatchTimer( bool bInSetup );
 	virtual void HandleTeamScoreModify( int iTeam, int iScore);
 
 	bool CanHaveAmmo( CBaseCombatCharacter *pPlayer, int iAmmoIndex );
@@ -575,7 +556,6 @@ public:
 
 	void	SendHudNotification( IRecipientFilter &filter, HudNotification_t iType, bool bForceShow = false  );
 	void	SendHudNotification( IRecipientFilter &filter, const char *pszText, const char *pszIcon, int iTeam = TEAM_UNASSIGNED );
-	void	StopWatchModeThink( void );
 
 	virtual		void RestartTournament( void );
 
@@ -661,11 +641,9 @@ private:
 #endif
 
 	CNetworkVar( ETFGameType, m_nGameType ); // Type of game this map is (CTF, CP)
-	CNetworkVar( int, m_nStopWatchState );
 	CNetworkString( m_pszTeamGoalStringRed, MAX_TEAMGOAL_STRING );
 	CNetworkString( m_pszTeamGoalStringBlue, MAX_TEAMGOAL_STRING );
 	CNetworkVar( float, m_flCapturePointEnableTime );
-	CNetworkVar( int, m_iGlobalAttributeCacheVersion );
 
 	CNetworkVar( bool, m_bHaveMinPlayersToEnableReady );
 
@@ -675,17 +653,9 @@ private:
 
 	CNetworkVar( bool, m_bTeamsSwitched );
 
-#ifdef GAME_DLL
-	float	m_flNextFlagAlarm;
-	float	m_flNextFlagAlert;
-
-	float	m_flSafeToLeaveTimer;
-#endif
-
 	CNetworkVar( bool, m_bShowMatchSummary );
 	CNetworkVar( bool, m_bMapHasMatchSummaryStage );
 	CNetworkVar( bool, m_bPlayersAreOnMatchSummaryStage );
-	CNetworkVar( bool, m_bStopWatchWinner );
 
 	float		m_flCTFCaptureBonusTime;
 public:
@@ -697,11 +667,7 @@ public:
 
 	virtual bool ShouldDrawHeadLabels() override;
 
-	bool CanInitiateDuels( void );
-
 #ifdef GAME_DLL
-	void SetBirthdayPlayer( CBaseEntity *pEntity );
-
 	// remove all projectiles in the world
 	void RemoveAllProjectiles();
 
@@ -715,28 +681,8 @@ public:
 	void RemoveAllProjectilesAndBuildings( bool bExplodeBuildings = false );
 
 #endif // GAME_DLL
-	CBaseEntity *GetBirthdayPlayer( void ) const
-	{
-		return m_hBirthdayPlayer.Get();
-	}
-
-	int GetGlobalAttributeCacheVersion( void ) const
-	{
-		return m_iGlobalAttributeCacheVersion;
-	}
-
-	void FlushAllAttributeCaches( void )
-	{
-		m_iGlobalAttributeCacheVersion++;
-	}
 
 private:	
-#ifdef CLIENT_DLL
-	bool m_bRecievedBaseline;
-#endif
-
-
-	CountdownTimer m_botCountTimer;
 
 	bool m_bUseMatchHUD;
 	bool m_bUsePreRoundDoors;
@@ -755,16 +701,7 @@ private:
 
 	bool	m_bMapCycleNeedsUpdate;
 
-	float	m_flCompModeRespawnPlayersAtMatchStart;
-
 #endif // GAME_DLL
-
-	// LEGACY BOSS CODE. Keeping this to not break demo
-	CNetworkVar( int, m_nBossHealth );
-	CNetworkVar( int, m_nMaxBossHealth );
-	CNetworkVar( float, m_fBossNormalizedTravelDistance );
-
-	CNetworkHandle( CBaseEntity, m_hBirthdayPlayer );	// entindex of current birthday player (0 = none)
 
 	bool m_bIsBirthday;
 

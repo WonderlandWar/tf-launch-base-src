@@ -654,16 +654,10 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 #ifdef CLIENT_DLL
 
 	RecvPropInt( RECVINFO( m_nGameType ) ),
-	RecvPropInt( RECVINFO( m_nStopWatchState ) ),
 	RecvPropString( RECVINFO( m_pszTeamGoalStringRed ) ),
 	RecvPropString( RECVINFO( m_pszTeamGoalStringBlue ) ),
 	RecvPropTime( RECVINFO( m_flCapturePointEnableTime ) ),
 
-	RecvPropEHandle( RECVINFO( m_hBirthdayPlayer ) ),
-
-	RecvPropInt( RECVINFO( m_nBossHealth ) ),
-	RecvPropInt( RECVINFO( m_nMaxBossHealth ) ),
-	RecvPropInt( RECVINFO( m_fBossNormalizedTravelDistance ) ),
 	RecvPropBool( RECVINFO( m_bHaveMinPlayersToEnableReady ) ),
 
 	RecvPropBool( RECVINFO( m_bBountyModeEnabled ) ),
@@ -674,20 +668,13 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	RecvPropBool( RECVINFO( m_bTeamsSwitched ) ),
 	RecvPropBool( RECVINFO( m_bMapHasMatchSummaryStage ) ),
 	RecvPropBool( RECVINFO( m_bPlayersAreOnMatchSummaryStage ) ),
-	RecvPropBool( RECVINFO( m_bStopWatchWinner ) ),
 #else
 
 	SendPropInt( SENDINFO( m_nGameType ), 4, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_nStopWatchState ), 3, SPROP_UNSIGNED ),
 	SendPropString( SENDINFO( m_pszTeamGoalStringRed ) ),
 	SendPropString( SENDINFO( m_pszTeamGoalStringBlue ) ),
 	SendPropTime( SENDINFO( m_flCapturePointEnableTime ) ),
 
-	SendPropEHandle( SENDINFO( m_hBirthdayPlayer ) ),
-
-	SendPropInt( SENDINFO( m_nBossHealth ) ),
-	SendPropInt( SENDINFO( m_nMaxBossHealth ) ),
-	SendPropInt( SENDINFO( m_fBossNormalizedTravelDistance ) ),
 	SendPropBool( SENDINFO( m_bHaveMinPlayersToEnableReady ) ),
 
 	SendPropBool( SENDINFO( m_bBountyModeEnabled ) ),
@@ -697,7 +684,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	SendPropBool( SENDINFO( m_bTeamsSwitched ) ),
 	SendPropBool( SENDINFO( m_bMapHasMatchSummaryStage ) ),
 	SendPropBool( SENDINFO( m_bPlayersAreOnMatchSummaryStage ) ),
-	SendPropBool( SENDINFO( m_bStopWatchWinner ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -1452,10 +1438,6 @@ CTFGameRules::CTFGameRules()
 	: m_flNextStrangeEventProcessTime( g_flStrangeEventBatchProcessInterval )
 	, m_mapTeleportLocations( DefLessFunc(string_t) )
 	, m_bMapCycleNeedsUpdate( false )
-	, m_flSafeToLeaveTimer( -1.f )
-	, m_flCompModeRespawnPlayersAtMatchStart( -1.f )
-#else
-	: m_bRecievedBaseline( false )
 #endif
 {
 #ifdef GAME_DLL
@@ -1505,11 +1487,7 @@ CTFGameRules::CTFGameRules()
 
 	m_flCapInProgressBuffer = 0.f;
 
-	m_flNextFlagAlarm = 0.0f;
-	m_flNextFlagAlert = 0.0f;
-
 	m_hRequiredObserverTarget = NULL;
-	m_bStopWatchWinner.Set( false );
 
 #else // GAME_DLL
 	m_bSillyGibs = CommandLine()->FindParm( "-sillygibs" ) ? true : false;
@@ -1531,8 +1509,6 @@ CTFGameRules::CTFGameRules()
 
 	m_bTeamsSwitched.Set( false );
 
-	m_iGlobalAttributeCacheVersion = 0;
-
 	m_bIsBirthday = false;
 
 	// Set turbo physics on.  Do it here for now.
@@ -1550,18 +1526,10 @@ CTFGameRules::CTFGameRules()
 	m_pszTeamGoalStringRed.GetForModify()[0] = '\0';
 	m_pszTeamGoalStringBlue.GetForModify()[0] = '\0';
 
-	m_nStopWatchState.Set( STOPWATCH_CAPTURE_TIME_NOT_SET );
-
 	mp_tournament_redteamname.Revert();
 	mp_tournament_blueteamname.Revert();
 
 	m_flCapturePointEnableTime = 0.0f;
-
-	m_hBirthdayPlayer = NULL;
-
-	m_nBossHealth = 0;
-	m_nMaxBossHealth = 0;
-	m_fBossNormalizedTravelDistance = 0.0f;
 
 	m_flGravityMultiplier.Set( 1.0 );
 
@@ -1671,19 +1639,6 @@ bool CTFGameRules::ShouldDrawHeadLabels()
 	return BaseClass::ShouldDrawHeadLabels();
 }
 
-//-----------------------------------------------------------------------------
-bool CTFGameRules::CanInitiateDuels( void )
-{
-	if ( IsInWaitingForPlayers() )
-		return false;
-
-	gamerules_roundstate_t roundState = State_Get();
-	if ( ( roundState != GR_STATE_RND_RUNNING ) && ( roundState != GR_STATE_PREROUND ) )
-		return false;
-
-	return true;
-}
-
 #ifdef GAME_DLL
 void CTFGameRules::KickPlayersNewMatchIDRequestFailed()
 {
@@ -1706,53 +1661,6 @@ void CTFGameRules::KickPlayersNewMatchIDRequestFailed()
 	State_Transition( GR_STATE_RESTART );
 	SetInWaitingForPlayers( true );
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets current birthday player
-//-----------------------------------------------------------------------------
-void CTFGameRules::SetBirthdayPlayer( CBaseEntity *pEntity )
-{
-/*
-	if ( IsBirthday() )
-	{
-		if ( pEntity && pEntity->IsPlayer() && pEntity != m_hBirthdayPlayer.Get() )
-		{
-			CTFPlayer *pTFPlayer = ToTFPlayer( pEntity );
-			if ( pTFPlayer )
-			{
-				// new IT victim - warn them
-//				ClientPrint( pTFPlayer, HUD_PRINTTALK, "#TF_HALLOWEEN_BOSS_WARN_VICTIM", player->GetPlayerName() );
-//				ClientPrint( pTFPlayer, HUD_PRINTCENTER, "#TF_HALLOWEEN_BOSS_WARN_VICTIM", player->GetPlayerName() );
-
-				CSingleUserReliableRecipientFilter filter( pTFPlayer );
-				pTFPlayer->EmitSound( filter, pTFPlayer->entindex(), "Game.HappyBirthday" );
-
-				// force them to scream when they become it
-//				pTFPlayer->EmitSound( "Halloween.PlayerScream" );
-			}
-		}
-
-// 		CTFPlayer *oldIT = ToTFPlayer( m_itHandle );
-// 
-// 		if ( oldIT && oldIT != who && oldIT->IsAlive() )
-// 		{
-// 			// tell old IT player they are safe
-// 			CSingleUserReliableRecipientFilter filter( oldIT );
-// 			oldIT->EmitSound( filter, oldIT->entindex(), "Player.TaggedOtherIT" );
-// 
-// 			ClientPrint( oldIT, HUD_PRINTTALK, "#TF_HALLOWEEN_BOSS_LOST_AGGRO" );
-// 			ClientPrint( oldIT, HUD_PRINTCENTER, "#TF_HALLOWEEN_BOSS_LOST_AGGRO" );
-// 		}
-
-		m_hBirthdayPlayer = pEntity;
-	}
-	else
-	{
-		m_hBirthdayPlayer = NULL;
-	}
-*/
-}
-
 
 #ifdef GAME_DLL
 
@@ -2205,8 +2113,6 @@ void CTFGameRules::SetupOnRoundStart( void )
 
 	m_szMostRecentCappers[0] = 0;
 
-	SetBirthdayPlayer( NULL );
-
 	// Tell the clients to recalculate the holiday
 	IGameEvent *event = gameeventmanager->CreateEvent( "recalculate_holidays" );
 	if ( event )
@@ -2333,214 +2239,12 @@ bool CTFGameRules::StopWatchShouldBeTimedWin( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFGameRules::StopWatchModeThink( void )
-{
-	if ( IsInTournamentMode() == false || IsInStopWatch() == false )
-		return;
-
-	if ( GetStopWatchTimer() == NULL )
-		return;
-
-	CTeamRoundTimer *pTimer = GetStopWatchTimer();
-
-	bool bWatchingCaps = pTimer->IsWatchingTimeStamps();
-	
-	CTFTeam *pAttacker = NULL;
-	CTFTeam *pDefender = NULL;
-
-	for ( int i = LAST_SHARED_TEAM+1; i < GetNumberOfTeams(); i++ )
-	{
-		CTFTeam *pTeam = GetGlobalTFTeam( i );
-
-		if ( pTeam )
-		{
-			if ( pTeam->GetRole() == TEAM_ROLE_DEFENDERS )
-			{
-				pDefender = pTeam;
-			}
-
-			if ( pTeam->GetRole() == TEAM_ROLE_ATTACKERS )
-			{
-				pAttacker = pTeam;
-			}
-		}
-	}
-
-	if ( pAttacker == NULL || pDefender == NULL )
-		return;
-
-	m_bStopWatchWinner.Set( false );
-
-	if ( bWatchingCaps == false )
-	{
-		if ( pTimer->GetTimeRemaining() <= 0.0f )
-		{
-			if ( StopWatchShouldBeTimedWin() )
-			{
-				if ( pAttacker->GetScore() < pDefender->GetScore() )
-				{
-					m_bStopWatchWinner.Set( true );
-					SetWinningTeam( pDefender->GetTeamNumber(), WINREASON_DEFEND_UNTIL_TIME_LIMIT, true, true );
-				}
-			}
-			else
-			{
-				if ( pAttacker->GetScore() > pDefender->GetScore() )
-				{
-					m_bStopWatchWinner.Set( true );
-					SetWinningTeam( pAttacker->GetTeamNumber(), WINREASON_ALL_POINTS_CAPTURED, true, true );	
-				}
-			}
-
-			if ( pTimer->IsTimerPaused() == false )
-			{
-				variant_t sVariant;
-				pTimer->AcceptInput( "Pause", NULL, NULL, sVariant, 0 );
-			}
-
-			m_nStopWatchState.Set( STOPWATCH_OVERTIME );
-		}
-		else
-		{
-			if ( pAttacker->GetScore() >= pDefender->GetScore() )
-			{
-				m_bStopWatchWinner.Set( true );
-				SetWinningTeam( pAttacker->GetTeamNumber(), WINREASON_ALL_POINTS_CAPTURED, true, true );
-			}
-		}
-	}
-	else
-	{
-		if ( pTimer->GetTimeRemaining() <= 0.0f )
-		{
-			m_nStopWatchState.Set( STOPWATCH_CAPTURE_TIME_NOT_SET );
-		}
-		else
-		{
-			m_nStopWatchState.Set( STOPWATCH_RUNNING );
-		}
-	}
-
-	if ( m_bStopWatchWinner == true )
-	{
-		UTIL_Remove( pTimer	);
-		m_hStopWatchTimer = NULL;
-		m_flStopWatchTotalTime = -1.0f;
-		m_bStopWatch = false;
-		m_nStopWatchState.Set( STOPWATCH_CAPTURE_TIME_NOT_SET );
-
-		ShouldResetRoundsPlayed( false );
-		ShouldResetScores( true, false );
-		ResetScores();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::ManageStopwatchTimer( bool bInSetup ) 
-{
-	if ( IsInTournamentMode() == false )
-		return;
-
-	if ( mp_tournament_stopwatch.GetBool() == false )
-		return;
-
-	bool bAttacking = false;
-	bool bDefending = false;
-
-	for ( int i = LAST_SHARED_TEAM+1; i < GetNumberOfTeams(); i++ )
-	{
-		CTFTeam *pTeam = GetGlobalTFTeam( i );
-
-		if ( pTeam )
-		{
-			if ( pTeam->GetRole() == TEAM_ROLE_DEFENDERS )
-			{
-				bDefending = true;
-			}
-
-			if ( pTeam->GetRole() == TEAM_ROLE_ATTACKERS )
-			{
-				bAttacking = true;
-			}
-		}
-	}
-
-	if ( bDefending == true && bAttacking == true )
-	{
-		SetInStopWatch( true );
-	}
-	else
-	{
-		SetInStopWatch( false );
-	}
-
-	if ( IsInStopWatch() == true )
-	{
-		if ( m_hStopWatchTimer == NULL )
-		{
-			variant_t sVariant;
-			CTeamRoundTimer *pStopWatch = (CTeamRoundTimer*)CBaseEntity::CreateNoSpawn( "team_round_timer", vec3_origin, vec3_angle );
-			m_hStopWatchTimer = pStopWatch;
-
-			pStopWatch->SetName( MAKE_STRING("zz_stopwatch_timer") );
-			pStopWatch->SetShowInHud( false );
-			pStopWatch->SetStopWatch( true );
-
-			if ( m_flStopWatchTotalTime < 0.0f )
-			{
-				pStopWatch->SetCaptureWatchState( true );
-				DispatchSpawn( pStopWatch );
-			
-				pStopWatch->AcceptInput( "Enable", NULL, NULL, sVariant, 0 );
-			}
-			else
-			{
-				DispatchSpawn( pStopWatch );
-				pStopWatch->SetCaptureWatchState( false );
-				
-
-				sVariant.SetInt( m_flStopWatchTotalTime );
-				pStopWatch->AcceptInput( "Enable", NULL, NULL, sVariant, 0 );
-				pStopWatch->AcceptInput( "SetTime", NULL, NULL, sVariant, 0 );
-				pStopWatch->SetAutoCountdown( true );
-			}
-
-			if ( bInSetup == true )
-			{
-				pStopWatch->AcceptInput( "Pause", NULL, NULL, sVariant, 0 );
-			}
-
-			ObjectiveResource()->SetStopWatchTimer( pStopWatch );
-		}
-		else
-		{
-			if ( bInSetup == false )
-			{
-				variant_t sVariant;
-				m_hStopWatchTimer->AcceptInput( "Resume", NULL, NULL, sVariant, 0 );
-			}
-			else
-			{
-				variant_t sVariant;
-				m_hStopWatchTimer->AcceptInput( "Pause", NULL, NULL, sVariant, 0 );
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFGameRules::SetSetup( bool bSetup ) 
 { 
 	if ( m_bInSetup == bSetup )
 		return;
 
 	BaseClass::SetSetup( bSetup );
-
-	ManageStopwatchTimer( bSetup );
 }
 
 //-----------------------------------------------------------------------------
@@ -3708,37 +3412,12 @@ void CTFGameRules::Think()
 		return;
 	}
 
-	// periodically count up the fake clients and set the bot_count cvar to update server tags
-	if ( m_botCountTimer.IsElapsed() )
-	{
-		m_botCountTimer.Start( 5.0f );
-
-		int botCount = 0;
-		for ( int i = 1 ; i <= gpGlobals->maxClients ; i++ )
-		{
-			CTFPlayer *player = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-
-			if ( player && player->IsFakeClient() )
-			{
-				++botCount;
-			}
-		}
-
-		tf_bot_count.SetValue( botCount );
-	}
-
 #ifdef GAME_DLL
 	// Josh:
 	// This is global because it handles maps and stuff.
 	if ( g_voteControllerGlobal )
 	{
 		ManageServerSideVoteCreation();
-	}
-
-	if ( m_flNextFlagAlarm > 0.0f )
-	{
-		m_flNextFlagAlarm = 0.0f;
-		m_flNextFlagAlert = gpGlobals->curtime + 5.0f;
 	}
 
 	// Batched strange event message processing?
@@ -4019,8 +3698,6 @@ void CTFGameRules::SetWinningTeam( int team, int iWinReason, bool bForceMapReset
 			}
 		}
 	}
-
-	SetBirthdayPlayer( NULL );
 
 #ifdef GAME_DLL
 	if ( HasMultipleTrains() )
@@ -6127,7 +5804,6 @@ void CTFGameRules::InternalHandleTeamWin( int iWinningTeam )
 				m_hStopWatchTimer = NULL;
 				m_flStopWatchTotalTime = -1.0f;
 				m_bStopWatch = false;
-				m_nStopWatchState.Set( STOPWATCH_CAPTURE_TIME_NOT_SET );
 			}
 		}
 	}
@@ -7453,16 +7129,6 @@ CTFGameRules::~CTFGameRules()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFGameRules::OnDataChanged( DataUpdateType_t updateType )
-{
-	BaseClass::OnDataChanged( updateType );
-
-	m_bRecievedBaseline |= updateType == DATA_UPDATE_CREATED;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFGameRules::HandleOvertimeBegin()
 {
 	C_TFPlayer *pTFPlayer = C_TFPlayer::GetLocalTFPlayer();
@@ -8321,7 +7987,6 @@ bool	ScriptIsHolidayActive( int eHoliday )						{ return TFGameRules()->IsHolida
 bool	ScriptPointsMayBeCaptured()									{ return TFGameRules()->PointsMayBeCaptured(); }
 int		ScriptGetClassLimit( int iClass )							{ return TFGameRules()->GetClassLimit( iClass ); }
 bool	ScriptFlagsMayBeCapped()									{ return TFGameRules()->FlagsMayBeCapped(); }
-int		ScriptGetStopWatchState()									{ return TFGameRules()->GetStopWatchState(); }
 bool	ScriptIsInArenaMode()										{ return TFGameRules()->IsInArenaMode(); }
 bool	ScriptIsInKothMode()										{ return TFGameRules()->IsInKothMode(); }
 bool	ScriptIsMatchTypeCasual()									{ return TFGameRules()->IsMatchTypeCasual(); }
@@ -8339,7 +8004,6 @@ void	ScriptSetGravityMultiplier( float flMultiplier )			{ return TFGameRules()->
 float	ScriptGetGravityMultiplier()								{ return TFGameRules()->GetGravityMultiplier(); }
 bool	ScriptMapHasMatchSummaryStage()								{ return TFGameRules()->MapHasMatchSummaryStage(); }
 bool	ScriptPlayersAreOnMatchSummaryStage()						{ return TFGameRules()->PlayersAreOnMatchSummaryStage(); }
-bool	ScriptHaveStopWatchWinner()									{ return TFGameRules()->HaveStopWatchWinner(); }
 void	ScriptSetOvertimeAllowedForCTF( bool bAllowed )				{ TFGameRules()->SetOvertimeAllowedForCTF( bAllowed ); }
 bool	ScriptGetOvertimeAllowedForCTF()							{ return TFGameRules()->GetOvertimeAllowedForCTF(); }
 
@@ -8355,7 +8019,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( PointsMayBeCaptured,						"Are points able to be captured?" );
 	TF_GAMERULES_SCRIPT_FUNC( GetClassLimit,							"Get class limit for class. See Constants.ETFClass" );
 	TF_GAMERULES_SCRIPT_FUNC( FlagsMayBeCapped,							"May a flag be captured?" );
-	TF_GAMERULES_SCRIPT_FUNC( GetStopWatchState,						"Get the current stopwatch state. See Constants.EStopwatchState" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCasual,						"Playing casual?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCompetitive,					"Playing competitive?" );
 	TF_GAMERULES_SCRIPT_FUNC( InMatchStartCountdown,					"Are we in the pre-match state?" );
@@ -8371,7 +8034,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( GetGravityMultiplier,						"" );
 	TF_GAMERULES_SCRIPT_FUNC( MapHasMatchSummaryStage,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( PlayersAreOnMatchSummaryStage,			"" );
-	TF_GAMERULES_SCRIPT_FUNC( HaveStopWatchWinner,						"" );
 	TF_GAMERULES_SCRIPT_FUNC( GetOvertimeAllowedForCTF,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetOvertimeAllowedForCTF,					"" );
 
