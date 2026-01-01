@@ -1623,8 +1623,6 @@ void CTFGameRules::LevelInitPostEntity( void )
 #ifdef GAME_DLL
 	// Refind our proxy, because we might have had it deleted due to a mapmaker placed one
 	m_hGamerulesProxy = dynamic_cast<CTFGameRulesProxy*>( gEntList.FindEntityByClassname( NULL, "tf_gamerules" ) );
-
-	m_flMatchSummaryTeleportTime = -1.f;
 #endif // GAME_DLL
 }
 
@@ -2236,8 +2234,6 @@ void CTFGameRules::SetupOnRoundStart( void )
 
 		UTIL_Remove( pLocation );
 	}
-
-	m_flMatchSummaryTeleportTime = -1.f;
 }
 
 //-----------------------------------------------------------------------------
@@ -3676,14 +3672,7 @@ void CTFGameRules::Think()
 		LoadMapCycleFile();
 	}
 
-	if ( g_fGameOver )
-	{
-		if ( ( m_flMatchSummaryTeleportTime > 0 ) && ( gpGlobals->curtime > m_flMatchSummaryTeleportTime ) )
-		{
-			m_flMatchSummaryTeleportTime = -1.f;
-		}
-	}
-	else
+	if ( !g_fGameOver )
 	{
 		if ( gpGlobals->curtime > m_flNextPeriodicThink )
 		{
@@ -8250,7 +8239,6 @@ void CTFGameRules::MatchSummaryStart( void )
 	}
 
 	m_bShowMatchSummary.Set( true );
-	m_flMatchSummaryTeleportTime = gpGlobals->curtime + 2.f;
 
 	if ( m_hGamerulesProxy )
 	{

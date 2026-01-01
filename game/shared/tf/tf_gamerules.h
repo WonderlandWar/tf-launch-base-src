@@ -662,8 +662,6 @@ private:
 	CUtlVector< CHandle< CCPTimerLogic > > m_CPTimerEnts;
 	float	m_flCapInProgressBuffer;
 
-	float	m_flMatchSummaryTeleportTime;
-
 #ifdef TF_RAID_MODE
 	CHandle< CRaidLogic >		m_hRaidLogic;
 	CHandle< CBossBattleLogic > m_hBossBattleLogic;
