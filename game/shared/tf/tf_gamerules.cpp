@@ -1533,6 +1533,8 @@ CTFGameRules::CTFGameRules()
 
 	m_iGlobalAttributeCacheVersion = 0;
 
+	m_bIsBirthday = false;
+
 	// Set turbo physics on.  Do it here for now.
 	sv_turbophysics.SetValue( 1 );
 
@@ -1593,9 +1595,30 @@ void CTFGameRules::Precache( void )
 //extern void AddHalloweenGiftPositionsForMap( const char *pszMapName, CUtlVector<Vector> &vLocations );
 //#endif
 
+bool IsBirthdayInternal()
+{
+	tm time_start;
+	time_start.tm_mon = 8;
+	time_start.tm_mday = 23;
+	time_start.tm_isdst = -1;
+	RTime32 rtStartTime = mktime( &time_start );
+	
+	tm time_end;
+	time_end.tm_mon = 1;
+	time_end.tm_mday = 25;
+	time_end.tm_isdst = -1;
+	RTime32 rtEndTime = mktime( &time_end );
+
+	RTime32 timeCurrent = time(NULL);
+
+	return ( ( timeCurrent >= rtStartTime ) && ( timeCurrent <= rtEndTime ) );
+}
+
 void CTFGameRules::LevelInitPostEntity( void )
 {
 	BaseClass::LevelInitPostEntity();
+
+	m_bIsBirthday = IsBirthdayInternal();
 
 #ifdef GAME_DLL
 	// Refind our proxy, because we might have had it deleted due to a mapmaker placed one
@@ -6776,20 +6799,6 @@ int	CTFGameRules::CalcPlayerSupportScore( RoundStats_t *pRoundStats, int iPlayer
 #endif
 }
 
-// TF2007: The logic here is copied from econ_holidays.cpp
-bool IsBirthdayInternal()
-{
-	return false;
-#if 0 // FIXME: Include the file "rtime.cpp" so this logic can be enabled!
-	CRTime rtStartTime = CRTime::RTime32FromString( "08-23" );
-	CRTime rtEndTime = CRTime::RTime32FromString( "08-25" );
-
-	CRTime timeCurrent = CRTime::RTime32TimeCur();
-	
-	return ( ( timeCurrent >= rtStartTime ) && ( timeCurrent <= rtEndTime ) );
-#endif
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -6798,7 +6807,7 @@ bool CTFGameRules::IsBirthday( void ) const
 	if ( IsX360() )
 		return false;
 
-	if ( IsBirthdayInternal() )
+	if ( m_bIsBirthday )
 		return true;
 
 	return tf_birthday.GetBool();

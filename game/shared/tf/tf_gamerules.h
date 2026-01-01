@@ -784,6 +784,8 @@ private:
 
 	CNetworkHandle( CBaseEntity, m_hBirthdayPlayer );	// entindex of current birthday player (0 = none)
 
+	bool m_bIsBirthday;
+
 // MvM Helpers
 #ifdef GAME_DLL
 public:
