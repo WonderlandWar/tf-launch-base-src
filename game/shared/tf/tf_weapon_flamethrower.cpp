@@ -571,7 +571,7 @@ void CTFFlameThrower::PrimaryAttack()
 			//flDamage = tf_flamethrower_damage_per_tick;
 		}
 
-		CTFFlameEntity::Create( pOwner->Weapon_ShootPosition(), vAngles, this, tf_flamethrower_velocity.GetFloat(), iDmgType, flDamage, false );
+		CTFFlameEntity::Create( pOwner->Weapon_ShootPosition(), vAngles, this, tf_flamethrower_velocity.GetFloat(), iDmgType, flDamage );
 
 		// Pyros can become invis in some game modes.  Hitting fire normally handles this,
 		// but in the case of flamethrowers it's likely that stealth will be applied while
@@ -1313,7 +1313,7 @@ void CTFFlameEntity::Spawn( void )
 //-----------------------------------------------------------------------------
 // Purpose: Creates an instance of this entity
 //-----------------------------------------------------------------------------
-CTFFlameEntity *CTFFlameEntity::Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner, float flSpeed, int iDmgType, float flDmgAmount, bool bAlwaysCritFromBehind, bool bRandomize )
+CTFFlameEntity *CTFFlameEntity::Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner, float flSpeed, int iDmgType, float flDmgAmount )
 {
 	CTFFlameEntity *pFlame = static_cast<CTFFlameEntity*>( CBaseEntity::Create( "tf_flame", vecOrigin, vecAngles, pOwner ) );
 	if ( !pFlame )
@@ -1336,11 +1336,8 @@ CTFFlameEntity *CTFFlameEntity::Create( const Vector &vecOrigin, const QAngle &v
 	AngleVectors( vecAngles, &vecForward, &vecRight, &vecUp );
 
 	float velocity = flSpeed;
-	pFlame->m_vecBaseVelocity = vecForward * velocity;
-	if ( bRandomize )
-	{
-		pFlame->m_vecBaseVelocity += RandomVector( -velocity * tf_flamethrower_vecrand.GetFloat(), velocity * tf_flamethrower_vecrand.GetFloat() );
-	}
+	pFlame->m_vecBaseVelocity = vecForward * velocity + RandomVector( -velocity * tf_flamethrower_vecrand.GetFloat(), velocity * tf_flamethrower_vecrand.GetFloat() );
+	
 	if ( pOwner->GetOwnerEntity() )
 	{
 		pFlame->m_vecAttackerVelocity = pOwner->GetOwnerEntity()->GetAbsVelocity();
@@ -1348,7 +1345,6 @@ CTFFlameEntity *CTFFlameEntity::Create( const Vector &vecOrigin, const QAngle &v
 	pFlame->SetAbsVelocity( pFlame->m_vecBaseVelocity );	
 	// Setup the initial angles.
 	pFlame->SetAbsAngles( vecAngles );
-	pFlame->SetCritFromBehind( bAlwaysCritFromBehind );
 
 	return pFlame;
 }
@@ -1588,11 +1584,6 @@ void CTFFlameEntity::OnCollide( CBaseEntity *pOther )
 		CTFPlayer *pVictim = ToTFPlayer( pOther );
 		if ( IsBehindTarget( pOther ) )
 		{
-			if ( m_bCritFromBehind == true )
-			{
-				iDamageType |= DMG_CRITICAL;
-			}
-
 			if ( pVictim )
 			{
 				pVictim->HandleAchievement_Pyro_BurnFromBehind( ToTFPlayer( pAttacker ) );

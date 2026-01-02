@@ -199,10 +199,9 @@ public:
 	virtual void Spawn( void );
 
 public:
-	static CTFFlameEntity *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner, float flSpeed, int iDmgType, float m_flDmgAmount, bool bAlwaysCritFromBehind, bool bRandomize=true );
+	static CTFFlameEntity *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner, float flSpeed, int iDmgType, float m_flDmgAmount );
 
 	void FlameThink( void );
-	void SetCritFromBehind( bool bState ) { m_bCritFromBehind = bState; }
 	bool IsEntityAttacker( CBaseEntity *pEnt ) { return m_hAttacker.Get() == pEnt; }
 
 private:
@@ -225,7 +224,6 @@ private:
 	float					m_flDmgAmount;			// amount of base damage
 	CUtlVector<EHANDLE>		m_hEntitiesBurnt;		// list of entities this flame has burnt
 	EHANDLE					m_hAttacker;			// attacking player
-	bool					m_bCritFromBehind;		// Always crits from behind.
 	bool					m_bBurnedEnemy;			// We track hitting to calculate hit/miss ratio in the Flamethrower
 
 	CHandle< CTFFlameThrower > m_hFlameThrower;
