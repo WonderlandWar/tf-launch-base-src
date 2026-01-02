@@ -1281,6 +1281,11 @@ void CHLClient::HudUpdate( bool bActive )
 
 	gHUD.UpdateHud( bActive );
 
+#ifdef TF_CLIENT_DLL
+	// TF2007: Ideally this should be called in some Init function rather than having the game constantly check if it should play the song
+	extern void PlayStartupMusic();
+	PlayStartupMusic();
+#endif
 	{
 		C_BaseAnimating::AutoAllowBoneAccess boneaccess( true, false ); 
 		IGameSystem::UpdateAllSystems( frametime );

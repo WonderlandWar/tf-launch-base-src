@@ -185,6 +185,22 @@ public:
 static CTFModeManager g_ModeManager;
 IVModeManager *modemanager = ( IVModeManager * )&g_ModeManager;
 
+// See interface.h/.cpp for specifics:  basically this ensures that we actually Sys_UnloadModule the dll and that we don't call Sys_LoadModule 
+//  over and over again.
+static CDllDemandLoader g_GameUI( "GameUI" );
+
+bool g_bPlayStartupMusic = true;
+
+void PreventStartupMusic()
+{	
+	bool bNoStartupSound = CommandLine()->FindParm( "-nostartupsound" );
+	g_bPlayStartupMusic = !bNoStartupSound; // We don't want to play the song if the paramater was specified (even after we already added it!)
+	if ( !g_bPlayStartupMusic )
+		return;
+
+	// Manually add the -nostartupsound parameter
+	CommandLine()->AppendParm( "-nostartupsound", "" );
+}
 
 // --------------------------------------------------------------------------------- //
 // CTFModeManager implementation.
@@ -256,10 +272,6 @@ ClientModeTFNormal::~ClientModeTFNormal()
 {
 }
 
-// See interface.h/.cpp for specifics:  basically this ensures that we actually Sys_UnloadModule the dll and that we don't call Sys_LoadModule 
-//  over and over again.
-static CDllDemandLoader g_GameUI( "GameUI" );
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -320,6 +332,8 @@ void ClientModeTFNormal::Init()
 	ListenForGameEvent( "scorestats_accumulated_update" );
 
 	BaseClass::Init();
+
+	PreventStartupMusic();
 
 	m_bPendingRichPresenceUpdate = true;
 }
@@ -1320,4 +1334,22 @@ void PlayOutOfGameSound( const char *pszSound )
 #ifdef _WIN32
 	PlaySound( pszSound, NULL, SND_FILENAME | SND_ASYNC );
 #endif
+}
+
+void PlayStartupMusic()
+{
+	if ( !g_bPlayStartupMusic )
+		return;
+
+	g_bPlayStartupMusic = false;
+
+	const int NUM_STARTUP_SONGS = 4;
+	
+	int nSongIndex = RandomInt( 1, NUM_STARTUP_SONGS );
+
+	char szMusic[32];
+	memset( szMusic, 0, sizeof( szMusic ) );
+	V_snprintf( szMusic, sizeof( szMusic ), "ui/gamestartup%i.mp3", nSongIndex );
+#undef PlaySound
+	vgui::surface()->PlaySound( szMusic );
 }
