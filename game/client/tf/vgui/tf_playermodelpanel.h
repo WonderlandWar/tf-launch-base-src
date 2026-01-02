@@ -56,7 +56,7 @@ public:
 	CTFPlayerAttachmentModel	*GetOrCreateHeldItem();
 	void ClearHeldItem() { ClearMergeMDLs(); delete m_pHeldItem; m_pHeldItem = NULL; }
 
-	void	PlayVCD( const char *pszVCD, const char *pszWeaponEntityRequired = NULL, bool bLoopVCD = true );
+	void	PlayVCD( const char *pszVCD );
 
 	// Handle animation events
 	virtual void FireEvent( const char *pszEventName, const char *pszEventOptions );
@@ -132,14 +132,11 @@ private:
 	CTFPlayerAttachmentModel	*m_pHeldItem;
 
 	const char		*m_pszVCD;
-	const char		*m_pszWeaponEntityRequired;
-	bool			m_bLoopVCD;
 
 	CChoreoScene	*m_pScene;
 	float			m_flSceneTime;
 	float			m_flSceneEndTime;
 	float			m_flLastTickTime;
-	bool			m_bLoopScene;
 
 	// Choreo scenes
 	bool				m_bShouldRunFlexEvents;

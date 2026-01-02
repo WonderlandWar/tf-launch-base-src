@@ -726,7 +726,7 @@ void CTFClassMenu::LoadItems()
 
 	m_pTFPlayerModelPanel->ClearHeldItem();
 
-	m_pTFPlayerModelPanel->PlayVCD( "class_select", g_pszLegacyClassSelectVCDWeapons[iClass] );
+	m_pTFPlayerModelPanel->PlayVCD( "class_select" );
 	m_pTFPlayerModelPanel->HoldItemInSlot( g_iLegacyClassSelectWeaponSlots[iClass] );
 }
 

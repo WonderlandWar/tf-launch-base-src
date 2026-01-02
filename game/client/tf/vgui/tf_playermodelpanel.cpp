@@ -81,8 +81,6 @@ CTFPlayerModelPanel::CTFPlayerModelPanel( vgui::Panel *pParent, const char *pNam
 	m_pHeldItem = NULL;
 	m_iTeam = TF_TEAM_RED;
 	m_pszVCD = NULL;
-	m_pszWeaponEntityRequired = NULL;
-	m_bLoopVCD = true;
 
 	InitPhonemeMappings();
 
@@ -171,6 +169,7 @@ void CTFPlayerModelPanel::SetToPlayerClass( int iClass, bool bForceRefresh /*= f
 	m_nBody = 0;
 }
 extern int g_iLegacyClassSelectWeaponSlots[TF_LAST_NORMAL_CLASS];
+extern const char *g_pszLegacyClassSelectVCDWeapons[TF_LAST_NORMAL_CLASS];
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -254,7 +253,6 @@ void CTFPlayerModelPanel::ClearScene( void )
 	m_flSceneTime = 0;
 	m_flSceneEndTime = 0;
 	m_flLastTickTime = 0;
-	m_bLoopScene = true;
 	//memset( m_flexWeight, 0, sizeof( m_flexWeight ) );
 }
 
@@ -338,11 +336,9 @@ CChoreoScene *LoadSceneForModel( const char *filename, IChoreoEventCallback *pCa
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerModelPanel::PlayVCD( const char *pszVCD, const char *pszWeaponEntityRequired /*= NULL*/, bool bLoopVCD /*= true*/ )
+void CTFPlayerModelPanel::PlayVCD( const char *pszVCD )
 {
 	m_pszVCD = pszVCD;
-	m_pszWeaponEntityRequired = pszWeaponEntityRequired;
-	m_bLoopVCD = bLoopVCD;
 }
 
 //-----------------------------------------------------------------------------
@@ -415,7 +411,6 @@ void CTFPlayerModelPanel::SwitchHeldItemTo( CTFPlayerAttachmentModel *pItem )
 			}
 			
 			m_pScene = LoadSceneForModel( g_szSceneTmpName, this, &m_flSceneEndTime );
-			m_bLoopScene = m_bLoopVCD;
 
 			return;
 		}
@@ -448,7 +443,7 @@ CTFPlayerAttachmentModel *CTFPlayerModelPanel::GetOrCreateHeldItem()
 	if ( m_pHeldItem )
 		return m_pHeldItem;
 
-	CTFWeaponInfo *pInfo = static_cast<CTFWeaponInfo*>( GetFileWeaponInfoFromHandle( LookupWeaponInfoSlot( m_pszWeaponEntityRequired ) ) );
+	CTFWeaponInfo *pInfo = static_cast<CTFWeaponInfo*>( GetFileWeaponInfoFromHandle( LookupWeaponInfoSlot( g_pszLegacyClassSelectVCDWeapons[m_iCurrentClassIndex] ) ) );
 	CTFPlayerAttachmentModel *pModel = new CTFPlayerAttachmentModel;
 	V_strcpy( pModel->m_szModelName, pInfo->szWorldModel );
 	return pModel;
@@ -1047,21 +1042,13 @@ void CTFPlayerModelPanel::SetupFlexWeights( void )
 
 		if ( m_flSceneEndTime > FLT_EPSILON && m_flSceneTime > m_flSceneEndTime )
 		{
-			bool bLoopScene = m_bLoopScene;
 			char filename[MAX_PATH];
 			V_strcpy_safe( filename, m_pScene->GetFilename() );
 
 			SetSequenceLayers( NULL, 0 );
 			ClearScene();
 
-			if ( bLoopScene )
-			{
-				m_pScene = LoadSceneForModel( filename, this, &m_flSceneEndTime );
-			}
-			else
-			{
-				m_pszVCD = NULL;
-			}
+			m_pScene = LoadSceneForModel( filename, this, &m_flSceneEndTime );
 		}
 	}
 }
