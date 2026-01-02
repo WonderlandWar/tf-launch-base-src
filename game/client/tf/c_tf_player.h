@@ -683,7 +683,6 @@ private:
 	bool  m_bFadingOut;
 	bool  m_bGib;
 	bool  m_bBurning;
-	bool  m_bWasDisguised;
 	int	  m_iDamageCustom;
 	CountdownTimer m_freezeTimer;
 	CountdownTimer m_frozenTimer;

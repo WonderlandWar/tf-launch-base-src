@@ -278,7 +278,6 @@ public:
 	{
 		m_bGib = false;
 		m_bBurning = false;
-		m_bWasDisguised = false;
 		m_bOnGround = false;
 		m_iDamageCustom = 0;
 		m_vecRagdollOrigin.Init();
@@ -297,7 +296,6 @@ public:
 	CNetworkVector( m_vecRagdollOrigin );
 	CNetworkVar( bool, m_bGib );
 	CNetworkVar( bool, m_bBurning );
-	CNetworkVar( bool, m_bWasDisguised );
 	CNetworkVar( bool, m_bOnGround );
 	CNetworkVar( int, m_iDamageCustom );
 	CNetworkVar( int, m_iTeam );
@@ -314,7 +312,6 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CTFRagdoll, DT_TFRagdoll )
 	SendPropInt( SENDINFO( m_nForceBone ) ),
 	SendPropBool( SENDINFO( m_bGib ) ),
 	SendPropBool( SENDINFO( m_bBurning ) ),
-	SendPropBool( SENDINFO( m_bWasDisguised ) ),
 	SendPropBool( SENDINFO( m_bOnGround ) ),
 	SendPropInt( SENDINFO( m_iDamageCustom ) ),
 	SendPropInt( SENDINFO( m_iTeam ), 3, SPROP_UNSIGNED ),
