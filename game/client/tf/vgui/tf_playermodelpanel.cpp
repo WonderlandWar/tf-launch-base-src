@@ -422,22 +422,6 @@ void CTFPlayerModelPanel::SwitchHeldItemTo( CTFPlayerAttachmentModel *pItem )
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerModelPanel::EquipRequiredLoadoutSlot( int iRequiredLoadoutSlot )
-{
-	if ( iRequiredLoadoutSlot != TF_WPN_TYPE_COUNT )
-	{
-		// If we didn't find a weapon in the appropriate slot, get the base item
-		CTFPlayerAttachmentModel *pWeapon = GetOrCreateHeldItem();
-		if ( pWeapon )
-		{
-			EquipItem( pWeapon );
-		}
-	}
-}
-
 CTFPlayerAttachmentModel *CTFPlayerModelPanel::GetOrCreateHeldItem()
 {
 	if ( m_pHeldItem )

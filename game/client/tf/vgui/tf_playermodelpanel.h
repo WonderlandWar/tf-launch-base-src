@@ -51,7 +51,6 @@ public:
 	bool	HoldItemInSlot( int iSlot );
 	bool	HoldItem( int iItemNumber );
 	void	SwitchHeldItemTo( CTFPlayerAttachmentModel *pItem );
-	void	EquipRequiredLoadoutSlot( int iRequiredLoadoutSlot );
 	CTFPlayerAttachmentModel	*GetHeldItem() { return m_pHeldItem; }
 	CTFPlayerAttachmentModel	*GetOrCreateHeldItem();
 	void ClearHeldItem() { ClearMergeMDLs(); delete m_pHeldItem; m_pHeldItem = NULL; }
