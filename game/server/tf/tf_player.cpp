@@ -1276,6 +1276,7 @@ void CTFPlayer::Precache()
 		  The most offending function is PrecacheGibsForModel which re-parsing through KeyValues every time it's called
 		  If you have any question, come talk to me (Bank)
 	*/
+
 	PrecacheTFPlayer();
 
 	BaseClass::Precache();

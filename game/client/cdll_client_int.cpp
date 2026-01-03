@@ -1587,6 +1587,9 @@ void CHLClient::View_Fade( ScreenFade_t *pSF )
 //-----------------------------------------------------------------------------
 void CHLClient::LevelInitPreEntity( char const* pMapName )
 {
+#ifdef CLIENT_DLL
+	C_TFGameRules::CalcIsBirthday();
+#endif
 	ReloadParticleEffects();
 
 	// HACK: Bogus, but the logic is too complicated in the engine

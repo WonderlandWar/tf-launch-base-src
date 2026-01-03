@@ -195,7 +195,7 @@ public:
 	DECLARE_CLASS( CTFGameRules, CTeamplayRoundBasedRules );
 
 	CTFGameRules();
-
+	
 	virtual void	LevelInitPostEntity( void );
 	virtual float	GetRespawnTimeScalar( int iTeam );
 	virtual float	GetRespawnWaveMaxLength( int iTeam, bool bScaleWithNumPlayers = true );
@@ -218,6 +218,7 @@ public:
 	static int		CalcPlayerSupportScore( RoundStats_t *pRoundStats, int iPlayerIdx );
 
 	bool			IsBirthday( void ) const;
+	static void		CalcIsBirthday( void );
 
 	virtual const unsigned char *GetEncryptionKey( void ) { return GetTFEncryptionKey(); }
 
@@ -649,7 +650,7 @@ private:
 
 #endif // GAME_DLL
 
-	bool m_bIsBirthday;
+	static bool m_bIsBirthday;
 
 // MvM Helpers
 #ifdef GAME_DLL

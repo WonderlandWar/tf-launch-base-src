@@ -1295,6 +1295,8 @@ bool CTFGameRules::IsDefaultGameMode( void )
 	return true;
 }
 
+bool CTFGameRules::m_bIsBirthday = false;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1372,8 +1374,6 @@ CTFGameRules::CTFGameRules()
 
 	m_bTeamsSwitched.Set( false );
 
-	m_bIsBirthday = false;
-
 	// Set turbo physics on.  Do it here for now.
 	sv_turbophysics.SetValue( 1 );
 
@@ -1424,30 +1424,9 @@ void CTFGameRules::Precache( void )
 //extern void AddHalloweenGiftPositionsForMap( const char *pszMapName, CUtlVector<Vector> &vLocations );
 //#endif
 
-bool IsBirthdayInternal()
-{
-	tm time_start;
-	time_start.tm_mon = 8;
-	time_start.tm_mday = 23;
-	time_start.tm_isdst = -1;
-	RTime32 rtStartTime = mktime( &time_start );
-	
-	tm time_end;
-	time_end.tm_mon = 1;
-	time_end.tm_mday = 25;
-	time_end.tm_isdst = -1;
-	RTime32 rtEndTime = mktime( &time_end );
-
-	RTime32 timeCurrent = time(NULL);
-
-	return ( ( timeCurrent >= rtStartTime ) && ( timeCurrent <= rtEndTime ) );
-}
-
 void CTFGameRules::LevelInitPostEntity( void )
 {
 	BaseClass::LevelInitPostEntity();
-
-	m_bIsBirthday = IsBirthdayInternal();
 
 #ifdef GAME_DLL
 	// Refind our proxy, because we might have had it deleted due to a mapmaker placed one
@@ -6090,6 +6069,58 @@ bool CTFGameRules::IsBirthday( void ) const
 		return true;
 
 	return tf_birthday.GetBool();
+}
+
+// Copied from rtime.cpp
+// Modified function from CRTime::RTime32FromString
+static RTime32 RTime32FromString( const char* pszValue )
+{
+	struct tm tm;
+	
+	char num[5];
+	char szValue[64];
+
+	Q_memset( &tm, 0x0, sizeof( tm ) );
+	Q_strncpy( szValue, pszValue, sizeof( szValue) );
+		
+	const char *str= szValue;
+
+	num[0] =*str++; num[1] =*str++; num[2] =*str++; num[3] =*str++; num[4] = 0;
+	tm.tm_year = strtol( num, 0, 10 ) - 1900;
+	if (*str == '-') str++;
+	num[0] = *str++; num[1] = *str++; num[2] = 0;
+	tm.tm_mon = strtol( num, 0, 10 ) - 1;
+	if (*str == '-') str++;
+	num[0] = *str++; num[1] = *str++; num[2] = 0;
+	tm.tm_mday = strtol( num, 0, 10 );
+
+	tm.tm_isdst = -1;
+
+	return mktime( &tm );
+}
+
+void CTFGameRules::CalcIsBirthday( void )
+{
+	// TF2007: Birthday mode only lasted 1 day (on 08-24), a lot of this needs to be corrected.
+	
+	// Get the year
+	time_t timeCur = time( NULL );
+	struct tm tmStruct;
+	struct tm *ptmCur = Plat_gmtime( &timeCur, &tmStruct );
+	int iYear = ptmCur->tm_year + 1900;
+	
+	// Next, create the string
+	char szStartTime[k_RTimeRenderBufferSize];
+	char szEndTime[k_RTimeRenderBufferSize];
+	V_sprintf_safe( szStartTime, "%d-%s", iYear, "08-23" );
+	V_sprintf_safe( szEndTime, "%d-%s", iYear, "08-25" );
+
+	// Lastly, get the time from the string and compare
+	RTime32 rtStartTime = RTime32FromString( szStartTime );
+	RTime32 rtEndTime = RTime32FromString( szEndTime );
+	RTime32 timeCurrent = time(NULL);
+	
+	m_bIsBirthday = ( ( timeCurrent >= rtStartTime ) && ( timeCurrent <= rtEndTime ) );
 }
 
 #ifndef GAME_DLL

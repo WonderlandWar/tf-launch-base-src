@@ -948,6 +948,9 @@ float g_flServerCurTime = 0.0f;
 bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background )
 {
 	VPROF("CServerGameDLL::LevelInit");
+#ifdef GAME_DLL
+	CTFGameRules::CalcIsBirthday();
+#endif
 
 	g_flServerCurTime = gpGlobals->curtime;
 
