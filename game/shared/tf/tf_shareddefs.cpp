@@ -153,26 +153,6 @@ int GetRemappedMenuIndexForClass( int iClass )
 	return iIndex;
 }
 
-ETFCond condition_to_attribute_translation[]  =
-{
-	TF_COND_BURNING,					// 1 (1<<0)
-	TF_COND_AIMING,						// 2 (1<<1)
-	TF_COND_ZOOMED,						// 4 (1<<2)
-	TF_COND_DISGUISING,					// 8 (...)
-	TF_COND_DISGUISED,					// 16
-	TF_COND_STEALTHED,					// 32
-	TF_COND_INVULNERABLE,				// 64
-	TF_COND_TELEPORTED,					// 128
-	TF_COND_TAUNTING,					// 256
-	TF_COND_INVULNERABLE_WEARINGOFF,	// 512
-	TF_COND_STEALTHED_BLINK,			// 1024
-	TF_COND_SELECTED_TO_TELEPORT,		// 2048
-	TF_COND_HEALTH_BUFF,				// 131072
-	TF_COND_HEALTH_OVERHEALED,			// 262144
-
-	TF_COND_LAST				// sentinel value checked against when iterating
-};
-
 ETFCond g_aDebuffConditions[] =
 {
 	TF_COND_BURNING,

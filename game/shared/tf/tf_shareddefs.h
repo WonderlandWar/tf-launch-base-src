@@ -535,11 +535,6 @@ inline ETFCond TFCondIndexToEnum( int nCond )
 // add it to this function in tf_shareddefs.cpp
 bool ConditionExpiresFast( ETFCond eCond );
 
-// Some attributes specify conditions to be or'd. The problem there is that if we add conditions
-// to the above list, they get hosed. So we maintain this separate list as a translation table.
-// When you add conditions to the above list, add them TO THE BOTTOM of this list.
-extern ETFCond condition_to_attribute_translation[];
-
 extern ETFCond g_aDebuffConditions[];
 //-----------------------------------------------------------------------------
 // TF Player State.
