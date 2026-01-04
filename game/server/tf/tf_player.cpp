@@ -127,8 +127,6 @@ extern ConVar tf_powerup_mode_killcount_timer_length;
 
 float GetCurrentGravity( void );
 
-float			m_flNextReflectZap = 0.f;
-
 bool CTFPlayer::m_bTFPlayerNeedsPrecache = true;
 
 static const char g_pszIdleKickString[] = "#TF_Idle_kicked";
@@ -408,8 +406,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( CanJump, "Can the player jump?" )
 	DEFINE_SCRIPTFUNC( CanPlayerMove, "Can the player move?" )
 	DEFINE_SCRIPTFUNC( RemoveAllObjects, "Remove all player objects. Eg. dispensers/sentries." )
-	DEFINE_SCRIPTFUNC( IsPlacingSapper, "Returns true if we placed a sapper in the last few moments" )
-	DEFINE_SCRIPTFUNC( IsSapping, "Returns true if we are currently sapping" )
 	DEFINE_SCRIPTFUNC( RemoveInvisibility, "Un-invisible a spy." )
 	DEFINE_SCRIPTFUNC( RemoveDisguise, "Undisguise a spy." )
 	DEFINE_SCRIPTFUNC( IsCallingForMedic, "Is this player calling for medic?" )
@@ -663,10 +659,6 @@ CTFPlayer::CTFPlayer()
 
 	m_flLastReadySoundTime = 0.f;
 
-	m_bIsSapping = false;
-	m_iSappingEvent = TF_SAPEVENT_NONE;
-	m_flSapStartTime = 0.00;
-
 	m_bUsingVRHeadset = false;
 
 	SetRespawnOverride( -1.f, NULL_STRING );
@@ -680,7 +672,6 @@ CTFPlayer::CTFPlayer()
 	m_flLastAutobalanceTime = 0.f;
 
 	m_bRegenerating = false;
-	m_bRespawning = false;
 
 	m_bAlreadyUsedExtendFreezeThisDeath = false;
 }
@@ -838,23 +829,6 @@ void CTFPlayer::RegenThink( void )
 
 	m_flAccumulatedHealthRegen -= nHealAmount;
 	m_flLastHealthRegenAt = gpGlobals->curtime;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::RegenAmmoInternal( int iIndex, float flRegen )
-{
-	m_flAccumulatedAmmoRegens[iIndex] += flRegen;
-	
-	// As soon as we have enough accumulated to regen a single unit of ammo, do it.
-	int iMaxAmmo = GetMaxAmmo(iIndex);
-	int iAmmo = m_flAccumulatedAmmoRegens[iIndex] * iMaxAmmo;
-	if ( iAmmo >= 1 )
-	{
-		GiveAmmo( iAmmo, iIndex, true );
-		m_flAccumulatedAmmoRegens[iIndex] -= ((float)iAmmo / (float)iMaxAmmo);
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1112,7 +1086,7 @@ void CTFPlayer::PrecachePlayerModels( void )
 	{
 		PrecacheModel( g_pszBDayGibs[i] );
 	}
-
+	// TF2007: This code doesn't make sense because they already get precached
 	if ( TFGameRules() && TFGameRules()->IsBirthday() )
 	{
 		for ( i = 0; i < 4/*ARRAYSIZE(g_pszBDayGibs)*/; i++ )
@@ -1152,57 +1126,20 @@ void CTFPlayer::PrecacheTFPlayer()
 	PrecacheScriptSound( "Player.Spawn" );
 	PrecacheScriptSound( "TFPlayer.Pain" );
 	PrecacheScriptSound( "TFPlayer.CritHit" );
-	PrecacheScriptSound( "TFPlayer.CritHitMini" );
-	PrecacheScriptSound( "TFPlayer.DoubleDonk" );
 	PrecacheScriptSound( "TFPlayer.CritPain" );
 	PrecacheScriptSound( "TFPlayer.CritDeath" );
 	PrecacheScriptSound( "TFPlayer.FreezeCam" );
 	PrecacheScriptSound( "TFPlayer.Drown" );
 	PrecacheScriptSound( "TFPlayer.AttackerPain" );
 	PrecacheScriptSound( "TFPlayer.SaveMe" );
-	PrecacheScriptSound( "TFPlayer.CritBoostOn" );
-	PrecacheScriptSound( "TFPlayer.CritBoostOff" );
-	PrecacheScriptSound( "TFPlayer.Decapitated" );
-	PrecacheScriptSound( "TFPlayer.ReCharged" );
 	PrecacheScriptSound( "Camera.SnapShot" );
 	PrecacheScriptSound( "TFPlayer.Dissolve" );
-
-	PrecacheScriptSound( "Saxxy.TurnGold" );
-
-	PrecacheScriptSound( "Icicle.TurnToIce" );
-	PrecacheScriptSound( "Icicle.HitWorld" );
-	PrecacheScriptSound( "Icicle.Melt" );
-
-	PrecacheScriptSound( "DemoCharge.ChargeCritOn" );
-	PrecacheScriptSound( "DemoCharge.ChargeCritOff" );
-	PrecacheScriptSound( "DemoCharge.Charging" );
-
-	PrecacheScriptSound( "TFPlayer.StunImpactRange" );
-	PrecacheScriptSound( "TFPlayer.StunImpact" );
-	PrecacheScriptSound( "Halloween.PlayerScream" );
-	PrecacheScriptSound( "Halloween.PlayerEscapedUnderworld" );
 
 	PrecacheScriptSound( "Game.YourTeamLost" );
 	PrecacheScriptSound( "Game.YourTeamWon" );
 	PrecacheScriptSound( "Game.SuddenDeath" );
 	PrecacheScriptSound( "Game.Stalemate" );
 	PrecacheScriptSound( "TV.Tune" );
-
-	//This will be moved out once we do the announcer pass.
-	PrecacheScriptSound( "Announcer.AM_FirstBloodRandom" );
-	PrecacheScriptSound( "Announcer.AM_CapEnabledRandom" );
-	PrecacheScriptSound( "Announcer.AM_RoundStartRandom" );
-	PrecacheScriptSound( "Announcer.AM_FirstBloodFast" );
-	PrecacheScriptSound( "Announcer.AM_FirstBloodFinally" );
-	PrecacheScriptSound( "Announcer.AM_FlawlessVictoryRandom" );
-	PrecacheScriptSound( "Announcer.AM_FlawlessDefeatRandom" );
-	PrecacheScriptSound( "Announcer.AM_FlawlessVictory01" );
-	PrecacheScriptSound( "Announcer.AM_TeamScrambleRandom" );
-	PrecacheScriptSound( "Taunt.MedicHeroic" );
-	PrecacheScriptSound( "Taunt.GuitarRiff" );
-
-	// Dmg absorb sound
-	PrecacheScriptSound( "Powerup.ReducedDamage" );
 
 	// Tourney UI
 	PrecacheScriptSound( "Tournament.PlayerReady" );
@@ -1234,32 +1171,15 @@ void CTFPlayer::PrecacheTFPlayer()
 	PrecacheParticleSystem( "burningplayer_rainbow" );
 	PrecacheParticleSystem( "blood_spray_red_01" );
 	PrecacheParticleSystem( "blood_spray_red_01_far" );
-	PrecacheParticleSystem( "pyrovision_blood" );
 
 	PrecacheParticleSystem( "water_blood_impact_red_01" );
 	PrecacheParticleSystem( "blood_impact_red_01" );
 	PrecacheParticleSystem( "water_playerdive" );
 	PrecacheParticleSystem( "water_playeremerge" );
-	PrecacheParticleSystem( "healthgained_red" );
-	PrecacheParticleSystem( "healthgained_blu" );
-	PrecacheParticleSystem( "healthgained_red_large" );
-	PrecacheParticleSystem( "healthgained_blu_large" );
-	PrecacheParticleSystem( "healthgained_red_giant" );
-	PrecacheParticleSystem( "healthgained_blu_giant" );
-
 
 	PrecacheModel( "effects/beam001_red.vmt" );
 	PrecacheModel( "effects/beam001_blu.vmt" );
 	PrecacheModel( "effects/beam001_white.vmt" );
-
-	PrecacheScriptSound( "BlastJump.Whistle" );
-
-	PrecacheScriptSound( "Spy.TeaseVictim" );
-
-
-	// precache the EOTL bomb cart replacements
-	PrecacheModel( "models/props_trainyard/bomb_eotl_blue.mdl" );
-	PrecacheModel( "models/props_trainyard/bomb_eotl_red.mdl" );
 }
 
 //-----------------------------------------------------------------------------
@@ -1276,7 +1196,6 @@ void CTFPlayer::Precache()
 		  The most offending function is PrecacheGibsForModel which re-parsing through KeyValues every time it's called
 		  If you have any question, come talk to me (Bank)
 	*/
-
 	PrecacheTFPlayer();
 
 	BaseClass::Precache();
@@ -1511,9 +1430,7 @@ void CTFPlayer::Spawn()
 		{
 			EmitSound( "Player.Spawn" );
 		}
-		m_bRespawning = true;
 		InitClass();
-		m_bRespawning = false;
 		m_Shared.RemoveAllCond(); // Remove conc'd, burning, rotting, hallucinating, etc.
 
 		UpdateSkin( GetTeamNumber() );
@@ -1614,7 +1531,6 @@ void CTFPlayer::Spawn()
 	m_iLeftGroundHealth = -1;
 
 	m_flAccumulatedHealthRegen = 0;
-	memset( m_flAccumulatedAmmoRegens, 0, sizeof(m_flAccumulatedAmmoRegens) );
 
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_spawn" );
 	if ( event )
@@ -2089,7 +2005,7 @@ void CTFPlayer::RemoveAllItems()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::PostInventoryApplication( void )
+void CTFPlayer::PostInventoryApplication( void ) // TF2007: This function seems unnecessary, but keeping it just to be safe
 {
 	m_Shared.RecalculatePlayerBodygroups();
 
@@ -2103,14 +2019,6 @@ void CTFPlayer::PostInventoryApplication( void )
 	if ( !CanDisguise() )
 	{
 		RemoveDisguise();
-	}
-
-	// Notify the client.
-	IGameEvent *event = gameeventmanager->CreateEvent( "post_inventory_application" );
-	if ( event )
-	{
-		event->SetInt( "userid", GetUserID() );
-		gameeventmanager->FireEvent( event ); 
 	}
 }
 
@@ -3180,14 +3088,6 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName, bool bAllowSpaw
 	{
 		CommitSuicide( false, true );
 	}
-
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: The GC has told us this player wants to respawn now that their loadout has changed.
-//-----------------------------------------------------------------------------
-void CTFPlayer::CheckInstantLoadoutRespawn( void )
-{
 
 }
 
@@ -5959,47 +5859,6 @@ void CTFPlayer::DropAmmoPack( const CTakeDamageInfo &info, bool bEmpty, bool bDi
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::DropAmmoPackFromProjectile( CBaseEntity *pProjectile )
-{
-	QAngle qPackAngles = pProjectile->GetAbsAngles();
-	Vector vecPackOrigin = pProjectile->GetAbsOrigin();
-	UTIL_Remove( pProjectile );
-
-	// Create the ammo pack.
-	CTFAmmoPack *pAmmoPack = CTFAmmoPack::Create( vecPackOrigin, qPackAngles, this, "models/items/ammopack_small.mdl" );
-	Assert( pAmmoPack );
-	if ( pAmmoPack )
-	{
-		// half of ammopack_small
-		float flAmmoRatio = 0.1f;
-		pAmmoPack->InitAmmoPack( this, NULL, 0, false, false, flAmmoRatio );
-
-		// Clean up old ammo packs if they exist in the world
-		AmmoPackCleanUp();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::DropHealthPack( const CTakeDamageInfo &info, bool bEmpty )
-{
-	Vector vecSrc = this->WorldSpaceCenter();
-	CHealthKitSmall *pMedKit = assert_cast<CHealthKitSmall*>( CBaseEntity::Create( "item_healthkit_small", vecSrc, vec3_angle, this ) );
-	if ( pMedKit )
-	{
-		Vector vecImpulse = RandomVector( -1,1 );
-		vecImpulse.z = 1;
-		VectorNormalize( vecImpulse );
-
-		Vector vecVelocity = vecImpulse * 250.0;
-		pMedKit->DropSingleInstance( vecVelocity, this, 0 );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayer::PlayerDeathThink( void )
 {
 
@@ -6083,25 +5942,6 @@ void CTFPlayer::UpdateSkin( int iTeam )
 		m_nSkin = iSkin;
 		m_iLastSkin = iSkin;
 	}
-}
-
-//=========================================================================
-// Displays the state of the items specified by the Goal passed in
-void CTFPlayer::DisplayLocalItemStatus( CTFGoal *pGoal )
-{
-#if 0
-	for (int i = 0; i < 4; i++)
-	{
-		if (pGoal->display_item_status[i] != 0)
-		{
-			CTFGoalItem *pItem = Finditem(pGoal->display_item_status[i]);
-			if (pItem)
-				DisplayItemStatus(pGoal, this, pItem);
-			else
-				ClientPrint( this, HUD_PRINTTALK, "#Item_missing" );
-		}
-	}
-#endif
 }
 
 //=========================================================================
@@ -7592,18 +7432,6 @@ void CTFPlayer::RemoveTeleportEffect( void )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CTFPlayer::StopRagdollDeathAnim( void )
-{
-	CTFRagdoll *pRagdoll = dynamic_cast<CTFRagdoll*>( m_hRagdoll.Get() );
-	if ( pRagdoll )
-	{
-		pRagdoll->m_iDamageCustom = 0;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
 void CTFPlayer::CreateRagdollEntity( void )
 {
 	CreateRagdollEntity( false, false, false );
@@ -7704,44 +7532,6 @@ void CTFPlayer::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarge
 {
 
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Call this when this player fires a weapon to allow other systems to react
-//-----------------------------------------------------------------------------
-void CTFPlayer::OnMyWeaponFired( CBaseCombatWeapon *weapon )
-{
-	BaseClass::OnMyWeaponFired( weapon );
-
-	// mark region as 'in combat'
-	if ( m_inCombatThrottleTimer.IsElapsed() )
-	{
-		CTFWeaponBase *tfWeapon = static_cast< CTFWeaponBase * >( weapon );
-
-		if ( !tfWeapon )
-		{
-			return;
-		}
-
-		switch ( tfWeapon->GetWeaponID() )
-		{
-		case TF_WEAPON_MEDIGUN:
-		case TF_WEAPON_PDA:
-		case TF_WEAPON_PDA_ENGINEER_BUILD:
-		case TF_WEAPON_PDA_ENGINEER_DESTROY:
-		case TF_WEAPON_PDA_SPY:
-		case TF_WEAPON_BUILDER:
-		case TF_WEAPON_DISPENSER:
-		case TF_WEAPON_INVIS:
-		case TF_WEAPON_WRENCH:			// skip this so engineer building doesn't mark 'in combat'
-			// not a 'combat' weapon
-			return;
-		};
-
-		// important to keep this at one second, so rate cvars make sense (units/sec)
-		m_inCombatThrottleTimer.Start( 1.0f );
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Remove invisibility, called when player attacks
@@ -8395,71 +8185,6 @@ void CTFPlayer::RefreshCollisionBounds( void )
 	BaseClass::RefreshCollisionBounds();
 
 	SetViewOffset( ( IsDucked() ) ? ( VEC_DUCK_VIEW_SCALED( this ) ) : ( GetClassEyeHeight() ) );
-}
-
-//-----------------------------------------------------------------------------------------------------
-// Return true if the given threat is aiming in our direction
-bool CTFPlayer::IsThreatAimingTowardMe( CBaseEntity *threat, float cosTolerance ) const
-{
-	CTFPlayer *player = ToTFPlayer( threat );
-	Vector to = GetAbsOrigin() - threat->GetAbsOrigin();
-	float threatRange = to.NormalizeInPlace();
-	Vector forward;
-
-	if ( player == NULL )
-	{
-		CObjectSentrygun *sentry = dynamic_cast< CObjectSentrygun * >( threat );
-		if ( sentry )
-		{
-			// are we in range?
-			if ( threatRange < SENTRY_MAX_RANGE )
-			{
-				// is it pointing at us?
-				AngleVectors( sentry->GetTurretAngles(), &forward );
-
-				if ( DotProduct( to, forward ) > cosTolerance )
-				{
-					return true;
-				}
-			}
-		}
-
-		// not a player, not a sentry, not a threat?
-		return false;
-	}
-
-	// is the player pointing at me?
-	player->EyeVectors( &forward );
-
-	if ( DotProduct( to, forward ) > cosTolerance )
-	{
-		return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------------------------------
-// Return true if the given threat is aiming in our direction and firing its weapon
-bool CTFPlayer::IsThreatFiringAtMe( CBaseEntity *threat ) const
-{
-	if ( IsThreatAimingTowardMe( threat ) )
-	{
-		CTFPlayer *player = ToTFPlayer( threat );
-
-		if ( player )
-		{
-			return player->IsFiringWeapon();
-		}
-
-		CObjectSentrygun *sentry = dynamic_cast< CObjectSentrygun * >( threat );
-		if ( sentry )
-		{
-			return sentry->GetTimeSinceLastFired() < 1.0f;
-		}
-	}
-
-	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -10002,56 +9727,6 @@ EntityHistory_t* CAchievementData::IsSentryDamagerInHistory( CBaseEntity *pDamag
 	}
 
 	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Return true if any enemy sentry has LOS and is facing me and is in range to attack
-//-----------------------------------------------------------------------------
-bool CTFPlayer::IsAnyEnemySentryAbleToAttackMe( void ) const
-{
-	if ( m_Shared.InCond( TF_COND_DISGUISED ) ||
-		 m_Shared.InCond( TF_COND_DISGUISING ) ||
-		 m_Shared.IsStealthed() )
-	{
-		// I'm a disguised or cloaked Spy
-		return false;
-	}
-
-	for ( int i=0; i<IBaseObjectAutoList::AutoList().Count(); ++i )
-	{
-		CBaseObject* pObj = static_cast< CBaseObject* >( IBaseObjectAutoList::AutoList()[i] );
-		if ( pObj->ObjectType() != OBJ_SENTRYGUN )
-			continue;
-		
-		if ( pObj->HasSapper() )
-			continue;
-
-		if ( pObj->IsPlasmaDisabled() )
-			continue;
-
-		if ( pObj->IsDisabled() )
-			continue;
-
-		if ( pObj->IsBuilding() )
-			continue;
-
-		// are we in range?
-		if ( ( GetAbsOrigin() - pObj->GetAbsOrigin() ).IsLengthGreaterThan( SENTRY_MAX_RANGE ) )
-			continue;
-
-		// is the sentry aiming towards me?
-		if ( !IsThreatAimingTowardMe( pObj, 0.95f ) )
-			continue;
-
-		// does the sentry have clear line of fire?
-		if ( !IsLineOfSightClear( pObj, IGNORE_ACTORS ) )
-			continue;
-
-		// this sentry can attack me
-		return true;
-	}
-
-	return false;
 }
 
 

@@ -38,7 +38,6 @@ public:
 
 	virtual void	Spawn();
 	virtual void	Precache();
-	void			Precache( const char *pchBaseModel );
 	virtual bool	IsHostileUpgrade( void ) { return true; }
 	virtual void	FinishedBuilding( void );
 	virtual void	SetupAttachedVersion( void );
@@ -47,9 +46,8 @@ public:
 	virtual void	OnGoActive( void );
 	bool			IsParentValid( void );
 
-	const char*		GetSapperModelName( SapperModel_t nModel, const char *pchModelName = NULL );
-	const char*		GetSapperSoundName( void );
-
+	const char*		GetSapperModelName( SapperModel_t nModel );
+	
 	virtual void	SapperThink( void );
 
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
@@ -60,13 +58,6 @@ public:
 private:
 	float m_flSapperDamageAccumulator;
 	float m_flLastThinkTime;
-	
-	float m_flSelfDestructTime;
-	float m_flSapperStartTime;
-
-	char m_szSapperModel[ _MAX_PATH ];
-	char m_szPlacementModel[ _MAX_PATH ];
-	char szSapperSound[ _MAX_PATH ];
 };
 
 #endif // TF_OBJ_SAPPER_H

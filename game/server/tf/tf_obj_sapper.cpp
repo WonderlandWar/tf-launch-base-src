@@ -45,14 +45,8 @@ ConVar	obj_sapper_amount( "obj_sapper_amount", "25", FCVAR_NONE, "Amount of heal
 //-----------------------------------------------------------------------------
 CObjectSapper::CObjectSapper()
 {
-	m_szPlacementModel[ 0 ] = '\0';
-	m_szSapperModel[ 0 ] = '\0';
-	szSapperSound[ 0 ] = '\0';
-
 	m_iHealth = GetBaseHealth();
 	SetMaxHealth( m_iHealth );
-
-	m_flSelfDestructTime = 0;
 
 	UseClientSideAnimation();
 }
@@ -63,14 +57,6 @@ CObjectSapper::CObjectSapper()
 void CObjectSapper::UpdateOnRemove()
 {
 	StopSound( "Weapon_Sapper.Timer" );
-	StopSound( "Weapon_sd_sapper.Timer" );
-	StopSound( "Weapon_p2rec.Timer" );
-
-	if( GetBuilder() )
-	{
-		GetBuilder()->OnSapperFinished( m_flSapperStartTime );
-	}
-	
 
 	BaseClass::UpdateOnRemove();
 }
@@ -106,33 +92,14 @@ void CObjectSapper::Spawn()
 //-----------------------------------------------------------------------------
 void CObjectSapper::Precache()
 {
-	Precache( "c_sapper.mdl" );			// Precache the placed and placement models for the sappers
-	Precache( "c_sd_sapper.mdl" );
-	Precache( "c_p2rec.mdl" );
-	Precache( "c_sapper_xmas.mdl" );
-	Precache( "c_breadmonster_sapper.mdl" );
+	int iModelIndex = PrecacheModel( GetSapperModelName( SAPPER_MODEL_PLACED ) );
+	PrecacheGibsForModel( iModelIndex );
+	PrecacheModel( GetSapperModelName( SAPPER_MODEL_PLACEMENT ) );
 
 	PrecacheScriptSound( "Weapon_Sapper.Plant" );
 	PrecacheScriptSound( "Weapon_Sapper.Timer" );
-	PrecacheScriptSound( "Weapon_sd_sapper.Timer" );
-	PrecacheScriptSound( "Weapon_p2rec.Timer" );
 
 	BaseClass::Precache();
-}
-
-void CObjectSapper::Precache( const char *pchBaseModel )
-{
-	m_szPlacementModel[ 0 ] = '\0';
-	m_szSapperModel[ 0 ] = '\0';
-
-	int iModelIndex;
-
-	iModelIndex = PrecacheModel( GetSapperModelName( SAPPER_MODEL_PLACED, pchBaseModel ) );
-	PrecacheGibsForModel( iModelIndex );
-	PrecacheModel( GetSapperModelName( SAPPER_MODEL_PLACEMENT, pchBaseModel ) );
-
-	m_szPlacementModel[ 0 ] = '\0';
-	m_szSapperModel[ 0 ] = '\0';
 }
 
 //-----------------------------------------------------------------------------
@@ -169,14 +136,8 @@ void CObjectSapper::FinishedBuilding( void )
 		}
 	}
 
-	if( GetBuilder() )
-	{
-		m_flSapperStartTime = gpGlobals->curtime;
-		GetBuilder()->OnSapperStarted( m_flSapperStartTime );
-	}
-
 	EmitSound( "Weapon_Sapper.Plant" );
-	EmitSound( GetSapperSoundName() );	// start looping "Weapon_Sapper.Timer", killed when we die
+	EmitSound( "Weapon_Sapper.Timer" );	// start looping "Weapon_Sapper.Timer", killed when we die
 
 	m_flSapperDamageAccumulator = 0;
 	m_flLastThinkTime = gpGlobals->curtime;
@@ -214,8 +175,6 @@ void CObjectSapper::OnGoActive( void )
 
 	// set new model
 	CBaseEntity *pEntity = m_hBuiltOnEntity.Get();
-
-	m_flSelfDestructTime = 0;
 
 	if ( pEntity )
 	{
@@ -276,79 +235,12 @@ void CObjectSapper::DetachObjectFromObject( void )
 }
 
 //-----------------------------------------------------------------------------
-const char* CObjectSapper::GetSapperModelName( SapperModel_t nModel, const char *pchModelName /*= NULL */)
+const char* CObjectSapper::GetSapperModelName( SapperModel_t nModel )
 {
-	// Check to see if we have model names generated, if not we must generate
-	if ( m_szPlacementModel[0] == '\0' || m_szSapperModel[0] == '\0' )
-	{
-		if ( !pchModelName )
-		{
-			if ( GetBuilder() )
-			{
-				CTFWeaponBuilder *pWeapon = dynamic_cast< CTFWeaponBuilder* >( GetBuilder()->Weapon_GetWeaponByType( TF_WPN_TYPE_BUILDING ) );
-				if ( pWeapon )
-				{
-					pchModelName = pWeapon->GetWorldModel();
-				}
-			}
-		}
-
-		if ( !pchModelName )
-		{
-			 if ( nModel >= SAPPER_MODEL_PLACEMENT )
-				 return g_sapperPlacementModel;
-			 return g_sapperModel;
-		}
-
-		// Generate Models
-		// Name base
-		char szModelName[ _MAX_PATH ];
-		V_FileBase( pchModelName, szModelName, sizeof( szModelName ) );
-		pchModelName = szModelName + 2;
-
-		{
-			V_snprintf(m_szPlacementModel, sizeof(m_szPlacementModel), "models/buildables/%s%s", pchModelName, "_placement.mdl");
-			V_snprintf(m_szSapperModel, sizeof(m_szSapperModel), "models/buildables/%s%s", pchModelName, "_placed.mdl");
-		}
-	}
-
 	if ( nModel >= SAPPER_MODEL_PLACEMENT )
-	{
-		return m_szPlacementModel;
-	}
-	return m_szSapperModel;
-}
+		return g_sapperPlacementModel;
 
-//-----------------------------------------------------------------------------
-const char* CObjectSapper::GetSapperSoundName( void )
-{
-	if ( szSapperSound[ 0 ] == '\0' )
-	{
-		const char *pchModelName = NULL;
-		if ( GetBuilder() )
-		{
-			CTFWeaponBuilder *pWeapon = dynamic_cast< CTFWeaponBuilder* >( GetBuilder()->Weapon_GetWeaponByType( TF_WPN_TYPE_BUILDING ) );
-			if ( pWeapon )
-			{
-				pchModelName = pWeapon->GetWorldModel();
-			}
-		}
-
-
-		if ( !pchModelName )
-		{
-			return "Weapon_Sapper.Timer";
-		}
-
-		char szModelName[ _MAX_PATH ];
-		V_FileBase( pchModelName, szModelName, sizeof( szModelName ) );
-
-		pchModelName = szModelName + 2;
-
-		V_snprintf( szSapperSound, sizeof( szSapperSound ), "Weapon_%s.Timer", pchModelName );
-	}
-
-	return szSapperSound;
+	return g_sapperModel;
 }
 
 //-----------------------------------------------------------------------------
@@ -373,12 +265,6 @@ void CObjectSapper::SapperThink( void )
 			if ( !pBuilder || !pTFOwner || ( pTFOwner && !pTFOwner->IsAlive() ) )
 			{		
 				bDestroy = true;
-			}
-
-			if ( gpGlobals->curtime >= m_flSelfDestructTime )
-			{
-				bDestroy = true;
-				Explode();
 			}
 
 			if ( bDestroy )

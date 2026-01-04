@@ -18,8 +18,6 @@
 
 class CTFPlayer;
 class CTFTeam;
-class CTFGoal;
-class CTFGoalItem;
 class CTFItem;
 class CTFWeaponBuilder;
 //class CBaseObject;
@@ -134,7 +132,6 @@ public:
 	virtual bool		IsReadyToSpawn( void );
 	virtual bool		ShouldGainInstantSpawn( void );
 	virtual void		ResetScores( void );
-	void				CheckInstantLoadoutRespawn( void );
 
 	virtual void		ResetPerRoundStats( void );
 
@@ -183,8 +180,6 @@ public:
 	void				ApplyPushFromDamage( const CTakeDamageInfo &info, Vector vecDir );
 
 	virtual bool		Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon );
-
-	void				SetHealthBuffTime( float flTime )		{ m_flHealthBuffTime = flTime; }
 
 	CTFWeaponBase		*GetActiveTFWeapon( void ) const;
 	virtual void		RemoveAllWeapons();
@@ -276,7 +271,6 @@ public:
 
 	virtual bool		ClientCommand( const CCommand &args );
 	void				ClientHearVox( const char *pSentence );
-	void				DisplayLocalItemStatus( CTFGoal *pGoal );
 
 	int					BuildObservableEntityList( void );
 	virtual int			GetNextObserverSearchStartPoint( bool bReverse ); // Where we should start looping the player list in a FindNextObserverTarget call
@@ -352,15 +346,6 @@ public:
 	void DetonateObjectOfType( int iObjectType, int iObjectMode = 0, bool bIgnoreSapperState = false );
 	void StartBuildingObjectOfType( int iType, int iObjectMode = 0 );
 
-	void OnSapperPlaced( CBaseEntity *sappedObject );			// invoked when we place a sapper on an enemy building
-	bool IsPlacingSapper( void ) const;							// return true if we are a spy who placed a sapper on a building in the last few moments
-	void OnSapperStarted( float flStartTime );
-	void OnSapperFinished( float flStartTime );
-	bool IsSapping( void ) const;
-	int GetSappingEvent( void) const;
-	void ClearSappingEvent( void );
-	void ClearSappingTracking( void );
-
 	CTFTeam *GetTFTeam( void );
 	CTFTeam *GetOpposingTFTeam( void );
 
@@ -374,25 +359,18 @@ public:
 	void DestroyRagdoll( void );
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
 	virtual bool ShouldGib( const CTakeDamageInfo &info ) OVERRIDE;
-	void StopRagdollDeathAnim( void );
 
 	// Dropping Ammo
 	bool ShouldDropAmmoPack( void );
 	void DropAmmoPack( const CTakeDamageInfo &info, bool bEmpty, bool bDisguisedWeapon );
-	void DropAmmoPackFromProjectile( CBaseEntity *pProjectile );
-	void DropExtraAmmo( const CTakeDamageInfo& info, bool bFromDeath = false );
-	void DropHealthPack( const CTakeDamageInfo &info, bool bEmpty );
 	
 	bool CanDisguise( void );
 	bool CanGoInvisible( bool bAllowWhileCarryingFlag = false );
 	void RemoveInvisibility( void );
 
-	bool CanStartPhase( void );
-
 	void RemoveDisguise( void );
 
 	bool DoClassSpecialSkill( void );
-	bool EndClassSpecialSkill( void );
 
 	float GetLastDamageReceivedTime( void ) { return m_flLastDamageTime; }
 	float GetLastEntityDamagedTime( void ) { return m_flLastDamageDoneTime; }
@@ -458,14 +436,8 @@ public:
 	void CheckObserverSettings(); // checks, if target still valid (didn't die etc)
 
 	CTriggerAreaCapture *GetControlPointStandingOn( void );
-	CCaptureZone *GetCaptureZoneStandingOn( void );
-	CCaptureZone *GetClosestCaptureZone( void );
 
 	bool CanAirDash( void ) const;
-
-	bool IsThreatAimingTowardMe( CBaseEntity *threat, float cosTolerance = 0.8f ) const;	// return true if the given threat is aiming in our direction
-	bool IsThreatFiringAtMe( CBaseEntity *threat ) const;		// return true if the given threat is aiming in our direction and firing its weapon
-	bool IsInCombat( void ) const;								// return true if we are engaged in active combat
 
 	void PlayerUse( void );
 
@@ -522,8 +494,6 @@ public:
 	virtual void 		SelectItem( const char *pstr, int iSubType = 0 ) OVERRIDE;
 	virtual bool		Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 ) OVERRIDE;
 	virtual void		Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget , const Vector *pVelocity ) OVERRIDE;
-
-	virtual void		OnMyWeaponFired( CBaseCombatWeapon *weapon );	// call this when this player fires a weapon to allow other systems to react
 
 	void				ManageRegularWeapons( TFPlayerClassData_t *pData );
 	void				ManageRegularWeaponsLegacy( TFPlayerClassData_t *pData );	// Older, pre-inventory method of managing regular weapons
@@ -630,8 +600,6 @@ private:
 	float				m_flTauntNextStartTime;
 	float				m_flTauntRemoveTime;
 
-	float				m_flNextReflectZap;
-
 public:
 	virtual float		PlayScene( const char *pszScene, float flDelay = 0.0f, AI_Response *response = NULL, IRecipientFilter *filter = NULL );
 	void				SetDeathFlags( int iDeathFlags ) { m_iDeathFlags = iDeathFlags; }
@@ -679,8 +647,6 @@ public:
 
 	void				SetTargetDummy( void ){ m_bIsTargetDummy = true; }
 
-	bool				IsAnyEnemySentryAbleToAttackMe( void ) const;		// return true if any enemy sentry has LOS and is facing me and is in range to attack
-
 	int					GetHealthBefore( void ) { return m_iHealthBefore; }
 
 	int					GetAutoTeam( int nPreferedTeam = TF_TEAM_AUTOASSIGN );
@@ -727,13 +693,11 @@ protected:
 
 	// Regeneration due to being a Medic, or derived from items
 	void				RegenThink();
-	void				RegenAmmoInternal( int iAmmo, float flRegen );
 	void				ResetPlayerClass( void );
 
 private:
 	float				m_flAccumulatedHealthRegen;	// Regeneration can be in small amounts, so we accumulate it and apply when it's > 1
 	float				m_flLastHealthRegenAt;
-	float				m_flAccumulatedAmmoRegens[TF_AMMO_SECONDARY+1];	// Only support regenerating primary & secondary right now
 
 	// Bots.
 	friend void			Bot_Think( CTFPlayer *pBot );
@@ -776,15 +740,9 @@ public:
 
 private:
 	// Map introductions
-	int					m_iIntroStep;
-	CHandle<CIntroViewpoint> m_hIntroView;
-	float				m_flIntroShowHintAt;
-	float				m_flIntroShowEventAt;
-	bool				m_bHintShown;
 	bool				m_bAbortFreezeCam;
 	bool				m_bSeenRoundInfo;
 	CNetworkVar( bool, m_bRegenerating );
-	bool				m_bRespawning;
 
 	// Items.
 	CNetworkHandle( CTFItem, m_hItem );
@@ -792,7 +750,6 @@ private:
 	// Combat.
 	CNetworkHandle( CTFWeaponBase, m_hOffHandWeapon );
 
-	float					m_flHealthBuffTime;
 	int						m_iHealthBefore;
 
 	float					m_flNextRegenerateTime;
@@ -890,17 +847,12 @@ private:
 	IntervalTimer		m_calledForMedicTimer;
 	CountdownTimer		m_placedSapperTimer;
 
-	CountdownTimer		m_inCombatThrottleTimer;
-
 public:
 
 	QAngle				GetAnimRenderAngles( void ) { return m_PlayerAnimState->GetRenderAngles(); }
 
 private:
 
-	bool				m_bIsSapping;
-	int					m_iSappingEvent;
-	float				m_flSapStartTime;
 	float				m_flLastThinkTime;
 	float				m_flRespawnTimeOverride;
 	string_t			m_strRespawnLocationOverride;
@@ -974,66 +926,9 @@ inline CTFPlayer *ToTFPlayer( CBaseEntity *pEntity )
 	return static_cast< CTFPlayer* >( pEntity );
 }
 
-inline void CTFPlayer::OnSapperPlaced( CBaseEntity *sappedObject )
-{
-	m_placedSapperTimer.Start( 3.0f );
-}
-inline void CTFPlayer::OnSapperStarted( float flStartTime )
-{
-	if (m_iSappingEvent == TF_SAPEVENT_NONE && m_flSapStartTime == 0.00 )
-	{
-		m_flSapStartTime = flStartTime;
-		m_bIsSapping = true;
-		m_iSappingEvent = TF_SAPEVENT_PLACED;
-	}
-}
-inline void CTFPlayer::OnSapperFinished( float flStartTime )
-{
-	if (m_iSappingEvent == TF_SAPEVENT_NONE && flStartTime == m_flSapStartTime )
-	{
-		if ( m_bIsSapping )
-			m_iSappingEvent = TF_SAPEVENT_DONE;
-
-		m_bIsSapping = false;
-		m_flSapStartTime = 0.00;
-	}
-}
-inline bool CTFPlayer::IsSapping( void ) const
-{
-	return m_bIsSapping;
-}
-
-inline int CTFPlayer::GetSappingEvent( void ) const
-{
-	return m_iSappingEvent;
-}
-
-inline void CTFPlayer::ClearSappingEvent( void )
-{
-	m_iSappingEvent = TF_SAPEVENT_NONE;
-}
-
-inline void CTFPlayer::ClearSappingTracking( void )
-{
-	ClearSappingEvent();
-	m_bIsSapping = false;
-	m_flSapStartTime = 0.00;
-}
-
-inline bool CTFPlayer::IsPlacingSapper( void ) const
-{
-	return !m_placedSapperTimer.IsElapsed();
-}
-
 inline int CTFPlayer::StateGet( void ) const
 {
 	return m_Shared.m_nPlayerState;
-}
-
-inline bool CTFPlayer::IsInCombat( void ) const
-{
-	// the simplest condition is whether we've been firing our weapon very recently
-	return GetTimeSinceWeaponFired() < 2.0f;
 }
 
 inline bool CTFPlayer::IsCallingForMedic( void ) const

@@ -146,8 +146,6 @@ void CTFWeaponBaseMelee::PrimaryAttack()
 	m_iWeaponMode = TF_WEAPON_PRIMARY_MODE;
 	m_bConnected = false;
 
-	pPlayer->EndClassSpecialSkill();
-
 	// Swing the weapon.
 	Swing( pPlayer );
 

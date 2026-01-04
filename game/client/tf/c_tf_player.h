@@ -308,16 +308,10 @@ public:
 	virtual void		ThirdPersonSwitch( bool bThirdperson );
 
 	bool	DoClassSpecialSkill( void );
-	bool	EndClassSpecialSkill( void );
 	bool	CanGoInvisible( bool bAllowWhileCarryingFlag = false );
 	int		GetMaxAmmo( int iAmmoIndex, int iClassIndex = -1 );
 
-	bool	CanStartPhase( void );
-
 	void	StartBuildingObjectOfType( int iType, int iObjectMode=0 );
-
-	C_CaptureZone *GetCaptureZoneStandingOn( void );
-	C_CaptureZone *GetClosestCaptureZone( void );
 
 	float			GetMetersRan( void )	{ return m_fMetersRan; }
 	void			SetMetersRan( float fMeters, int iFrame );

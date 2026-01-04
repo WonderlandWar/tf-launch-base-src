@@ -4294,53 +4294,6 @@ bool CTFPlayer::HasTheFlag( ETFFlagType exceptionTypes[], int nNumExceptions ) c
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-CCaptureZone *CTFPlayer::GetCaptureZoneStandingOn( void )
-{
-	touchlink_t *root = ( touchlink_t * )GetDataObject( TOUCHLINK );
-	if ( root )
-	{
-		for ( touchlink_t *link = root->nextLink; link != root; link = link->nextLink )
-		{
-			CBaseEntity *pTouch = link->entityTouched;
-			if ( pTouch && pTouch->IsSolidFlagSet( FSOLID_TRIGGER ) && pTouch->IsBSPModel() )
-			{
-				CCaptureZone *pAreaTrigger = dynamic_cast< CCaptureZone* >(pTouch);
-				if ( pAreaTrigger )
-				{
-					return pAreaTrigger;
-				}
-			}
-		}
-	}
-
-	return NULL;
-}
-
-CCaptureZone *CTFPlayer::GetClosestCaptureZone( void )
-{
-	CCaptureZone *pCaptureZone = NULL;
-	float flClosestDistance = FLT_MAX;
-
-	for ( int i=0; i<ICaptureZoneAutoList::AutoList().Count(); ++i )
-	{
-		CCaptureZone *pTempCaptureZone = static_cast< CCaptureZone* >( ICaptureZoneAutoList::AutoList()[i] );
-		if ( !pTempCaptureZone->IsDisabled() && pTempCaptureZone->GetTeamNumber() == GetTeamNumber() )
-		{
-			float fCurrentDistance = GetAbsOrigin().DistTo( pTempCaptureZone->WorldSpaceCenter() );
-			if ( flClosestDistance > fCurrentDistance )
-			{
-				pCaptureZone = pTempCaptureZone;
-				flClosestDistance = fCurrentDistance;
-			}
-		}
-	}
-
-	return pCaptureZone;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Return true if this player's allowed to build another one of the specified object
 //-----------------------------------------------------------------------------
 int CTFPlayer::CanBuild( int iObjectType, int iObjectMode )
@@ -4771,55 +4724,12 @@ bool CTFPlayer::DoClassSpecialSkill( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFPlayer::EndClassSpecialSkill( void )
-{
-	if ( !IsAlive() )
-		return false;
-
-	switch( GetPlayerClass()->GetClassIndex() )
-	{
-	case TF_CLASS_DEMOMAN:
-		break;
-
-	default:
-		break;
-	}
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFPlayer::CanGoInvisible( bool bAllowWhileCarryingFlag )
 {
 	// The "flag" in Player Destruction doesn't block cloak
 	if ( !bAllowWhileCarryingFlag && ( HasTheFlag() ) )
 	{
 		HintMessage( HINT_CANNOT_CLOAK_WITH_FLAG );
-		return false;
-	}
-
-	CTFGameRules *pRules = TFGameRules();
-
-	Assert( pRules );
-
-	if ( ( pRules->State_Get() == GR_STATE_TEAM_WIN ) && ( pRules->GetWinningTeam() != GetTeamNumber() ) )
-	{
-		return false;
-	}
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFPlayer::CanStartPhase( void )
-{
-	if ( HasTheFlag() )
-	{
-		HintMessage( HINT_CANNOT_PHASE_WITH_FLAG );
 		return false;
 	}
 
