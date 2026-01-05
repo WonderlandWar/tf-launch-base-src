@@ -334,11 +334,6 @@ void CCaptureFlag::Precache( void )
 	PrecacheScriptSound( TF_AD_TEAM_DROPPED );
 	PrecacheScriptSound( TF_AD_TEAM_CAPTURED );
 	PrecacheScriptSound( TF_AD_TEAM_RETURNED );
-	
- 	PrecacheScriptSound( TF_MVM_AD_ENEMY_STOLEN );
-	PrecacheScriptSound( TF_MVM_AD_ENEMY_DROPPED );
-	PrecacheScriptSound( TF_MVM_AD_ENEMY_CAPTURED );
-	PrecacheScriptSound( TF_MVM_AD_ENEMY_RETURNED );
 
 	PrecacheScriptSound( TF_INVADE_ENEMY_STOLEN );
 	PrecacheScriptSound( TF_INVADE_ENEMY_DROPPED );
@@ -1215,7 +1210,6 @@ void CCaptureFlag::Capture( CTFPlayer *pPlayer, int nCapturePoint )
 	RemoveFlagTrail();
 	m_nSkin = ( GetTeamNumber() == TEAM_UNASSIGNED ) ? 2 : (GetTeamNumber() - 2);
 
-	HandleFlagCapturedInDetectionZone( pPlayer );
 	HandleFlagDroppedInDetectionZone( pPlayer );
 
 	// Reset the flag.

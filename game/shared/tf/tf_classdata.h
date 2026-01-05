@@ -18,10 +18,6 @@
 
 #define DEATH_SOUND_FIRST			( DEATH_SOUND_GENERIC )
 #define DEATH_SOUND_LAST			( DEATH_SOUND_EXPLOSION )
-#define DEATH_SOUND_MVM_FIRST		( DEATH_SOUND_GENERIC_MVM )
-#define DEATH_SOUND_MVM_LAST		( DEATH_SOUND_EXPLOSION_MVM )
-#define DEATH_SOUND_GIANT_MVM_FIRST	( DEATH_SOUND_GENERIC_GIANT_MVM )
-#define DEATH_SOUND_GIANT_MVM_LAST	( DEATH_SOUND_EXPLOSION_GIANT_MVM )
 
 enum DeathSoundType_t
 {
@@ -29,16 +25,6 @@ enum DeathSoundType_t
 	DEATH_SOUND_CRIT,
 	DEATH_SOUND_MELEE,
 	DEATH_SOUND_EXPLOSION,
-
-	DEATH_SOUND_GENERIC_MVM,
-	DEATH_SOUND_CRIT_MVM,
-	DEATH_SOUND_MELEE_MVM,
-	DEATH_SOUND_EXPLOSION_MVM,
-
-	DEATH_SOUND_GENERIC_GIANT_MVM,
-	DEATH_SOUND_CRIT_GIANT_MVM,
-	DEATH_SOUND_MELEE_GIANT_MVM,
-	DEATH_SOUND_EXPLOSION_GIANT_MVM,
 
 	DEATH_SOUND_TOTAL
 };
@@ -78,7 +64,6 @@ struct TFPlayerClassData_t
 
 	void Parse( const char *pszClassName );
 	void ParseData( KeyValues *pKeyValuesData );
-	void AddAdditionalPlayerDeathSounds( void );
 };
 
 
@@ -89,7 +74,6 @@ public:
 	CTFPlayerClassDataMgr();
 	virtual bool Init( void );	
 	TFPlayerClassData_t *Get( unsigned int iClass );
-	void AddAdditionalPlayerDeathSounds( void );
 private:
 
 	TFPlayerClassData_t m_aTFPlayerClassData[TF_CLASS_COUNT_ALL];

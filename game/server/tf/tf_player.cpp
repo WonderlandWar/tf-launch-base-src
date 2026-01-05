@@ -101,8 +101,6 @@
 ConVar sv_motd_unload_on_dismissal( "sv_motd_unload_on_dismissal", "0", 0, "If enabled, the MOTD contents will be unloaded when the player closes the MOTD." );
 
 #define DAMAGE_FORCE_SCALE_SELF				9
-#define SCOUT_ADD_BIRD_ON_GIB_CHANCE		5
-#define MEDIC_RELEASE_DOVE_COUNT			10
 
 #define JUMP_MIN_SPEED	268.3281572999747f		
 
@@ -121,9 +119,6 @@ extern ConVar	tf_gravetalk;
 
 extern ConVar	tf_bot_quota_mode;
 extern ConVar	tf_bot_quota;
-extern ConVar	halloween_starting_souls;
-
-extern ConVar tf_powerup_mode_killcount_timer_length;
 
 float GetCurrentGravity( void );
 
@@ -132,8 +127,6 @@ bool CTFPlayer::m_bTFPlayerNeedsPrecache = true;
 static const char g_pszIdleKickString[] = "#TF_Idle_kicked";
 
 EHANDLE g_pLastSpawnPoints[TF_TEAM_COUNT];
-
-EHANDLE	g_hTestSub;
 
 ConVar tf_playerstatetransitions( "tf_playerstatetransitions", "-2", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "tf_playerstatetransitions <ent index or -1 for all>. Show player state transitions." );
 ConVar tf_playergib( "tf_playergib", "1", FCVAR_NOTIFY, "Allow player gibbing. 0: never, 1: normal, 2: always", true, 0, true, 2 );
@@ -144,45 +137,13 @@ ConVar tf_damageforcescale_self_soldier_badrj( "tf_damageforcescale_self_soldier
 ConVar tf_damageforcescale_pyro_jump( "tf_damageforcescale_pyro_jump", "8.5", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar tf_damagescale_self_soldier( "tf_damagescale_self_soldier", "0.60", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
-
 ConVar tf_damage_range( "tf_damage_range", "0.5", FCVAR_DEVELOPMENTONLY );
 ConVar tf_damage_multiplier_blue( "tf_damage_multiplier_blue", "1.0", FCVAR_CHEAT, "All incoming damage to a blue player is multiplied by this value" );
 ConVar tf_damage_multiplier_red( "tf_damage_multiplier_red", "1.0", FCVAR_CHEAT, "All incoming damage to a red player is multiplied by this value" );
 
-
 ConVar tf_max_voice_speak_delay( "tf_max_voice_speak_delay", "1.5", FCVAR_DEVELOPMENTONLY, "Max time after a voice command until player can do another one", true, 0.1f, false, 0.f );
 
 ConVar tf_allow_player_use( "tf_allow_player_use", "0", FCVAR_NOTIFY, "Allow players to execute +use while playing." );
-
-ConVar tf_deploying_bomb_time( "tf_deploying_bomb_time", "1.90", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Time to deploy bomb before the point of no return." );
-ConVar tf_deploying_bomb_delay_time( "tf_deploying_bomb_delay_time", "0.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Time to delay before deploying bomb." );
-
-ConVar tf_mvm_death_penalty( "tf_mvm_death_penalty", "0", FCVAR_NOTIFY | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How much currency players lose when dying" );
-extern ConVar tf_populator_damage_multiplier;
-extern ConVar tf_mvm_skill;
-
-ConVar tf_highfive_separation_forward( "tf_highfive_separation_forward", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Forward distance between high five partners" );
-ConVar tf_highfive_separation_right( "tf_highfive_separation_right", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Right distance between high five partners" );
-
-ConVar tf_highfive_max_range( "tf_highfive_max_range", "150", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "The farthest away a high five partner can be" );
-ConVar tf_highfive_height_tolerance( "tf_highfive_height_tolerance", "12", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "The maximum height difference allowed for two high-fivers." );
-ConVar tf_highfive_debug( "tf_highfive_debug", "0", FCVAR_NONE, "Turns on some console spew for debugging high five issues." );
-
-ConVar tf_test_teleport_home_fx( "tf_test_teleport_home_fx", "0", FCVAR_CHEAT );
-
-ConVar tf_halloween_giant_health_scale( "tf_halloween_giant_health_scale", "10", FCVAR_CHEAT );
-
-ConVar tf_grapplinghook_los_force_detach_time( "tf_grapplinghook_los_force_detach_time", "1", FCVAR_CHEAT );
-ConVar tf_powerup_max_charge_time( "tf_powerup_max_charge_time", "30", FCVAR_CHEAT );
-
-extern ConVar tf_powerup_mode;
-
-#define TF_CANNONBALL_FORCE_SCALE	80.f
-#define TF_CANNONBALL_FORCE_UPWARD	300.f
-
-ConVar tf_tauntcam_fov_override( "tf_tauntcam_fov_override", "0", FCVAR_CHEAT );
-
-ConVar tf_nav_in_combat_range( "tf_nav_in_combat_range", "1000", FCVAR_CHEAT );
 
 ConVar tf_maxhealth_drain_hp_min( "tf_maxhealth_drain_hp_min", "100", FCVAR_DEVELOPMENTONLY );
 ConVar tf_maxhealth_drain_deploy_cost( "tf_maxhealth_drain_deploy_cost", "20", FCVAR_DEVELOPMENTONLY );
@@ -4874,107 +4835,6 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 
 		SpeakConceptIfAllowed( MP_CONCEPT_KILLED_PLAYER, modifiers );
 		
-		// Check for CP_Foundry achievements
-		if ( FStrEq( "cp_foundry", STRING( gpGlobals->mapname ) ) )
-		{
-			if ( pTFVictim && ( pTFVictim->GetTeamNumber() != GetTeamNumber() ) )
-			{
-				if ( pTFVictim->IsCapturingPoint() )
-				{
-					if ( info.GetDamageType() & DMG_CRITICAL )
-					{
-						AwardAchievement( ACHIEVEMENT_TF_MAPS_FOUNDRY_KILL_CAPPING_ENEMY );
-					}
-				}
-
-				if ( InAchievementZone( pTFVictim ) )
-				{
-					IGameEvent *event = gameeventmanager->CreateEvent( "player_killed_achievement_zone" );
-					if ( event )
-					{
-						event->SetInt( "attacker", entindex() );
-						event->SetInt( "victim", pTFVictim->entindex() );
-						gameeventmanager->FireEvent( event );
-					}
-				}
-			}
-		}
-		
-		// Check for SD_Doomsday achievements		
-		if ( FStrEq( "sd_doomsday", STRING( gpGlobals->mapname ) ) )
-		{
-			if ( pTFVictim && ( pTFVictim->GetTeamNumber() != GetTeamNumber() ) )
-			{
-				// find the flag in the map
-				CCaptureFlag *pFlag = NULL;
-				for ( int i=0; i<ICaptureFlagAutoList::AutoList().Count(); ++i )
-				{
-					pFlag = static_cast< CCaptureFlag* >( ICaptureFlagAutoList::AutoList()[i] );
-					if ( !pFlag->IsDisabled() )
-					{
-						break;
-					}
-				}
-
-				// was the victim in an achievement zone?
-				CAchievementZone *pZone = InAchievementZone( pTFVictim );
-				if ( pZone )
-				{
-					int iZoneID = pZone->GetZoneID();
-					if ( iZoneID == 0 )
-					{
-						if ( pFlag && pFlag->IsHome() )
-						{
-							AwardAchievement( ACHIEVEMENT_TF_MAPS_DOOMSDAY_DENY_NEUTRAL_PICKUP );
-						}
-					}
-					else
-					{
-						IGameEvent *event = gameeventmanager->CreateEvent( "player_killed_achievement_zone" );
-						if ( event )
-						{
-							event->SetInt( "attacker", entindex() );
-							event->SetInt( "victim", pTFVictim->entindex() );
-							event->SetInt( "zone_id", iZoneID );
-							gameeventmanager->FireEvent( event );
-						}
-					}
-				}
-
-				// check the flag carrier to see if the victim has recently damaged them
-				if ( pFlag && pFlag->IsStolen() )
-				{
-					CTFPlayer *pFlagCarrier = ToTFPlayer( pFlag->GetOwnerEntity() );
-					if ( pFlagCarrier && ( pFlagCarrier->GetTeamNumber() == GetTeamNumber() ) )
-					{
-						// has the victim damaged the flag carrier in the last 3 seconds?
-						if ( pFlagCarrier->m_AchievementData.IsDamagerInHistory( pTFVictim, 3.0 ) )
-						{
-							AwardAchievement( ACHIEVEMENT_TF_MAPS_DOOMSDAY_DEFEND_CARRIER );
-						}
-					}
-				}
-			}
-		}
-
-		// Check for CP_Snakewater achievement
-		if ( FStrEq( "cp_snakewater_final1", STRING( gpGlobals->mapname ) ) )
-		{
-			if ( pTFVictim && ( pTFVictim->GetTeamNumber() != GetTeamNumber() ) )
-			{
-				if ( InAchievementZone( pTFVictim ) )
-				{
-					IGameEvent *event = gameeventmanager->CreateEvent( "player_killed_achievement_zone" );
-					if ( event )
-					{
-						event->SetInt( "attacker", entindex() );
-						event->SetInt( "victim", pTFVictim->entindex() );
-						gameeventmanager->FireEvent( event );
-					}
-				}
-			}
-		}
-
 		if ( IsPlayerClass( TF_CLASS_DEMOMAN ) )
 		{
 			if ( pVictim->GetTeamNumber() != GetTeamNumber() )
@@ -8950,12 +8810,8 @@ void CTFPlayer::AwardAchievement( int iAchievement, int iCount )
 {
 	if ( TFGameRules()->State_Get() >= GR_STATE_TEAM_WIN )
 	{
-		// allow the Helltower loot island achievement during the bonus time
-		if ( iAchievement != ACHIEVEMENT_TF_HALLOWEEN_HELLTOWER_SKULL_ISLAND_REWARD )
-		{
-			// reject in endround
-			return;
-		}
+		// reject in endround
+		return;
 	}
 
 	BaseClass::AwardAchievement( iAchievement, iCount );
@@ -9286,15 +9142,6 @@ void CTFPlayer::InputRoundSpawn( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CTFPlayer::IgnitePlayer()
 {
-	if ( FStrEq( "sd_doomsday", STRING( gpGlobals->mapname ) ) )
-	{
-		CTFPlayer *pRecentDamager = TFGameRules()->GetRecentDamager( this, 0, 5.0 );
-		if ( pRecentDamager && ( pRecentDamager->GetTeamNumber() != GetTeamNumber() ) )
-		{
-			pRecentDamager->AwardAchievement( ACHIEVEMENT_TF_MAPS_DOOMSDAY_PUSH_INTO_EXHAUST );
-		}
-	}
-
 	m_Shared.Burn( this, NULL );
 }
 

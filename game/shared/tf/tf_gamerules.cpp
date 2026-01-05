@@ -4432,16 +4432,6 @@ void CTFGameRules::ClientDisconnected( edict_t *pClient )
 			}
 		}
 
-		CTFPlayerResource *pTFResource = dynamic_cast< CTFPlayerResource* >( g_pPlayerResource );		
-		if ( pTFResource )
-		{
-			if ( pPlayer->entindex() == pTFResource->GetPartyLeaderIndex( pPlayer->GetTeamNumber() ) )
-			{
-				// the leader is leaving so reset the player resource index
-				pTFResource->SetPartyLeaderIndex( pPlayer->GetTeamNumber(), 0 ); 
-			}
-		}
-
 		// Notify gamestats that the player left.
 		CTF_GameStats.Event_PlayerDisconnectedTF( pPlayer );
 
@@ -5899,8 +5889,7 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 					( pRoundStats->m_iStat[TFSTAT_TELEPORTS] / TF_SCORE_TELEPORTS_PER_POINT ) +
 					( pRoundStats->m_iStat[TFSTAT_INVULNS] / TF_SCORE_INVULN ) +
 					( pRoundStats->m_iStat[TFSTAT_REVENGE] / TF_SCORE_REVENGE ) +
-					( pRoundStats->m_iStat[TFSTAT_BONUS_POINTS] / TF_SCORE_BONUS_POINT_DIVISOR ) +
-					( pRoundStats->m_iStat[TFSTAT_CURRENCY_COLLECTED] / TF_SCORE_CURRENCY_COLLECTED );
+					( pRoundStats->m_iStat[TFSTAT_BONUS_POINTS] / TF_SCORE_BONUS_POINT_DIVISOR );
 
 	const int nDivisor = TF_SCORE_HEAL_HEALTHUNITS_PER_POINT;
 	iScore += ( pRoundStats->m_iStat[TFSTAT_DAMAGE] / nDivisor );

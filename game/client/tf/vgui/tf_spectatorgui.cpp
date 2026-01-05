@@ -732,7 +732,7 @@ void CTFSpectatorGUI::RecalculatePlayerPanels( void )
 
 	int iLocalTeam = pPlayer->GetTeamNumber();
 
-	// Calculate the number of players that must be shown. Spectators see all players (except in MvM), team members only see their team.
+	// Calculate the number of players that must be shown. Spectators see all players, team members only see their team.
 	int iPanel = 0;
 
 	for ( int nClass = TF_FIRST_NORMAL_CLASS; nClass <= TF_LAST_NORMAL_CLASS; nClass++ )

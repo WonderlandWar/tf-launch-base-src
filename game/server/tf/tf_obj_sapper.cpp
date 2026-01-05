@@ -197,17 +197,10 @@ bool CObjectSapper::IsParentValid( void )
 	CBaseEntity *pEntity = m_hBuiltOnEntity.Get();
 	if ( pEntity )
 	{
-		if ( pEntity->IsPlayer() )	// sapped bot in MvM mode
+		CBaseObject *pObject = dynamic_cast<CBaseObject *>( pEntity ); 
+		if ( pObject )
 		{
 			bValid = true;
-		}
-		else
-		{
-			CBaseObject *pObject = dynamic_cast<CBaseObject *>( pEntity ); 
-			if ( pObject )
-			{
-				bValid = true;
-			}
 		}
 	}
 
@@ -256,58 +249,37 @@ void CObjectSapper::SapperThink( void )
 	CBaseEntity *pEntity = m_hBuiltOnEntity.Get();
 	if ( pEntity )
 	{
-		if ( pEntity->IsPlayer() )	// sapping bots in MvM mode
+		CBaseObject *pObject = GetParentObject();
+		if ( !pObject )
 		{
-			bool bDestroy = false;
-
-			CTFPlayer *pTFOwner = ToTFPlayer( m_hBuiltOnEntity.Get() );
-			CTFPlayer *pBuilder = GetBuilder();
-			if ( !pBuilder || !pTFOwner || ( pTFOwner && !pTFOwner->IsAlive() ) )
-			{		
-				bDestroy = true;
-			}
-
-			if ( bDestroy )
-			{
-				DestroyObject();
-				bThink = false;
-				return;
-			}
+			DestroyObject();
+			bThink = false;
+			return;
 		}
-		else
-		{
-			CBaseObject *pObject = GetParentObject();
-			if ( !pObject )
-			{
-				DestroyObject();
-				bThink = false;
-				return;
-			}
 
-			// Don't bring objects back from the dead
-			if ( !pObject->IsAlive() || pObject->IsDying() )
-				return;
+		// Don't bring objects back from the dead
+		if ( !pObject->IsAlive() || pObject->IsDying() )
+			return;
 
-			// how much damage to give this think?
-			float flTimeSinceLastThink = gpGlobals->curtime - m_flLastThinkTime;
-			float flDamageToGive = ( flTimeSinceLastThink ) * obj_sapper_amount.GetFloat();
+		// how much damage to give this think?
+		float flTimeSinceLastThink = gpGlobals->curtime - m_flLastThinkTime;
+		float flDamageToGive = ( flTimeSinceLastThink ) * obj_sapper_amount.GetFloat();
 
-			// add to accumulator
-			m_flSapperDamageAccumulator += flDamageToGive;
+		// add to accumulator
+		m_flSapperDamageAccumulator += flDamageToGive;
 
-			int iDamage = (int)m_flSapperDamageAccumulator;
+		int iDamage = (int)m_flSapperDamageAccumulator;
 
-			m_flSapperDamageAccumulator -= iDamage;
+		m_flSapperDamageAccumulator -= iDamage;
 
-			CTakeDamageInfo info;
-			info.SetDamage( iDamage );
-			info.SetAttacker( this );
-			info.SetInflictor( this );
-			info.SetDamageType( DMG_CRUSH );
-			info.SetDamageCustom( 0 );
+		CTakeDamageInfo info;
+		info.SetDamage( iDamage );
+		info.SetAttacker( this );
+		info.SetInflictor( this );
+		info.SetDamageType( DMG_CRUSH );
+		info.SetDamageCustom( 0 );
 
-			pObject->TakeDamage( info );
-		}
+		pObject->TakeDamage( info );
 	}
 
 	if ( bThink )

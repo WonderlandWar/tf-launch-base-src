@@ -31,11 +31,7 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayerResource, DT_TFPlayerResource )
 	SendPropArray3( SENDINFO_ARRAY3( m_iDamageBlocked ), SendPropInt( SENDINFO_ARRAY( m_iDamageBlocked ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iCurrencyCollected ), SendPropInt( SENDINFO_ARRAY( m_iCurrencyCollected ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iBonusPoints ), SendPropInt( SENDINFO_ARRAY( m_iBonusPoints ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
-	SendPropInt( SENDINFO( m_iPartyLeaderRedTeamIndex ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
-	SendPropInt( SENDINFO( m_iPartyLeaderBlueTeamIndex ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
-	SendPropInt( SENDINFO( m_iEventTeamStatus ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iPlayerClassWhenKilled ), SendPropInt( SENDINFO_ARRAY( m_iPlayerClassWhenKilled ), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_iConnectionState ), SendPropInt( SENDINFO_ARRAY( m_iConnectionState ), 3, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_flConnectTime ), SendPropTime( SENDINFO_ARRAY( m_flConnectTime ) ) ),
 END_SEND_TABLE()
 
@@ -46,13 +42,7 @@ LINK_ENTITY_TO_CLASS( tf_player_manager, CTFPlayerResource );
 //-----------------------------------------------------------------------------
 CTFPlayerResource::CTFPlayerResource( void )
 {
-	ListenForGameEvent( "mvm_wave_complete" );
-
 	m_flNextDamageAndHealingSend = 0.f;
-
-	m_iPartyLeaderRedTeamIndex = 0;
-	m_iPartyLeaderBlueTeamIndex = 0;
-	m_iEventTeamStatus = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -68,39 +58,6 @@ void CTFPlayerResource::FireGameEvent( IGameEvent * event )
 		m_flNextDamageAndHealingSend = 0.f;
 		UpdatePlayerData();
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerResource::SetPartyLeaderIndex( int iTeam, int iIndex )
-{
-	Assert( iIndex >= 0 && iIndex <= MAX_PLAYERS );
-
-	switch( iTeam )
-	{
-	case TF_TEAM_RED:
-		m_iPartyLeaderRedTeamIndex = iIndex;
-		break;
-	case TF_TEAM_BLUE:
-		m_iPartyLeaderBlueTeamIndex = iIndex;
-		break;
-	default:
-		break;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int CTFPlayerResource::GetPartyLeaderIndex( int iTeam )
-{
-	if ( iTeam == TF_TEAM_RED )
-		return m_iPartyLeaderRedTeamIndex;
-	else if ( iTeam == TF_TEAM_BLUE )
-		return m_iPartyLeaderBlueTeamIndex;
-
-	return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -149,7 +106,6 @@ void CTFPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer 
 			m_iHealing.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_HEALING] );
 			m_iHealingAssist.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_HEALING_ASSIST] );
 			m_iDamageBlocked.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE_BLOCKED] );
-			m_iCurrencyCollected.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_CURRENCY_COLLECTED] );
 			m_iBonusPoints.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_BONUS_POINTS] );
 		}
 	}
@@ -198,8 +154,6 @@ void CTFPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer 
 			pVecPlayers->AddToTail( steamID.GetAccountID() );
 		}
 	}
-
-	m_iConnectionState.Set( iIndex, MM_CONNECTED );
 }
 
 
@@ -211,7 +165,6 @@ void CTFPlayerResource::UpdateDisconnectedPlayer( int iIndex )
 	BaseClass::UpdateDisconnectedPlayer( iIndex );
 	
 	// free up the slot if we're not preserving it
-	m_iConnectionState.Set( iIndex, MM_DISCONNECTED );
 	m_vecFreeSlots.AddToTail( iIndex );
 }
 
@@ -237,7 +190,6 @@ void CTFPlayerResource::Init( int iIndex )
 	m_iPlayerClass.Set( iIndex, TF_CLASS_UNDEFINED );
 	m_iActiveDominations.Set( iIndex, 0 );
 	m_iPlayerClassWhenKilled.Set( iIndex, TF_CLASS_UNDEFINED );
-	m_iConnectionState.Set( iIndex, MM_DISCONNECTED );
 	m_bValid.Set( iIndex, 0 );
 }
 

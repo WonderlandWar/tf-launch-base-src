@@ -51,10 +51,6 @@ private:
 	EditablePanel		*m_pTeamScorePanel;
 	CTFLabel			*m_pRedTeamName;
 	CTFLabel			*m_pBlueTeamName;
-	CAvatarImagePanel	*m_pRedLeaderAvatarImage;
-	CAvatarImagePanel	*m_pBlueLeaderAvatarImage;
-	EditablePanel		*m_pRedLeaderAvatarBG;
-	EditablePanel		*m_pBlueLeaderAvatarBG;
 
 	float	m_flTimeUpdateTeamScore;
 	int		m_iBlueTeamScore;

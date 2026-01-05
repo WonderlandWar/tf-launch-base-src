@@ -179,7 +179,6 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 		// if there was an assister, put both the killer's and assister's names in the death message
 		int iAssisterID = engine->GetPlayerForUserID( event->GetInt( "assister" ) );
 
-		EHorriblePyroVisionHack ePyroVisionHack = kHorriblePyroVisionHack_KillAssisterType_Default;
 		CUtlConstString sAssisterNameScratch;
 		const char *assister_name = ( iAssisterID > 0 ? g_PR->GetPlayerName( iAssisterID ) : NULL );
 
@@ -193,8 +192,7 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 
 			// Check to see if we're swapping the killer and the assister. We use this so the brain slug can get the kill
 			// credit for the HUD death notices, with the player being the assister.
-			if ( pszAssisterName && (ePyroVisionHack == kHorriblePyroVisionHack_KillAssisterType_CustomName_First ||
-									 ePyroVisionHack == kHorriblePyroVisionHack_KillAssisterType_LocalizationString_First) )
+			if ( pszAssisterName )
 			{
 				std::swap( pszKillerName, pszAssisterName );
 			}

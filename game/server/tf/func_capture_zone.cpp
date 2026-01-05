@@ -135,7 +135,6 @@ void CCaptureZone::ShimTouch( CBaseEntity *pOther )
 					}
 				}
 
-				// in MvM, the "flag" is the bomb and is captured when the carrying bot deploys it
 				if ( TFGameRules()->FlagsMayBeCapped() )
 				{
 					Capture( pOther );
@@ -505,51 +504,6 @@ bool CFlagDetectionZone::EntityIsFlagCarrier( CBaseEntity *pEntity )
 	return false;
 }
 
-void CFlagDetectionZone::FlagCaptured( CBasePlayer *pPlayer )
-{
-	if ( !pPlayer )
-		return;
-
-	if ( FStrEq( "sd_doomsday", STRING( gpGlobals->mapname ) ) )
-	{
-		EHANDLE hOther;
-		hOther = pPlayer;
-
-		if ( m_hTouchingPlayers.Find( hOther ) != m_hTouchingPlayers.InvalidIndex() )
-		{
-			int nWinningTeam = pPlayer->GetTeamNumber();
-			CUtlVector< EHANDLE > winningPlayers;
-
-			for ( int i = 0 ; i < m_hTouchingPlayers.Count() ; i++ )
-			{
-				EHANDLE hTemp = m_hTouchingPlayers[i];
-				if ( hTemp && ( hTemp->GetTeamNumber() == nWinningTeam ) )
-				{
-					winningPlayers.AddToHead( hTemp );
-				}
-			}
-
-			// ACHIEVEMENT_TF_MAPS_DOOMSDAY_RIDE_THE_ELEVATOR
-			if ( winningPlayers.Count() >= 5 )
-			{
-				// loop through and award the achievement
-				for ( int i = 0 ; i < winningPlayers.Count() ; i++ )
-				{
-					EHANDLE hTemp = winningPlayers[i];
-					if ( hTemp )
-					{
-						CTFPlayer *pTFPlayer = ToTFPlayer( hTemp );
-						if ( pTFPlayer )
-						{
-							pTFPlayer->AwardAchievement( ACHIEVEMENT_TF_MAPS_DOOMSDAY_RIDE_THE_ELEVATOR );
-						}
-					}
-				}
-			}
- 		}
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Handles if the specified entity is dropped in a detection zone
 //-----------------------------------------------------------------------------
@@ -576,21 +530,6 @@ void HandleFlagPickedUpInDetectionZone( CBasePlayer *pPlayer )
 		if ( !pZone->IsDisabled() )
 		{
 			pZone->FlagPickedUp( pPlayer );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Handles if the specified entity is captured in a detection zone 
-//-----------------------------------------------------------------------------
-void HandleFlagCapturedInDetectionZone( CBasePlayer *pPlayer )
-{
-	for ( int i=0; i<IFlagDetectionZoneAutoList::AutoList().Count(); ++i )
-	{
-		CFlagDetectionZone *pZone = static_cast<CFlagDetectionZone *>( IFlagDetectionZoneAutoList::AutoList()[i] );
-		if ( !pZone->IsDisabled() )
-		{
-			pZone->FlagCaptured( pPlayer );
 		}
 	}
 }

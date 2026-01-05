@@ -49,14 +49,7 @@ public:
 
 	int GetNumPlayersForTeam( int iTeam, bool bAliveOnly );
 
-	bool HasPremadeParties(){ return ( ( m_iPartyLeaderRedTeamIndex > 0 ) && ( m_iPartyLeaderBlueTeamIndex > 0 ) ); }
-	int GetPartyLeaderRedTeamIndex(){ return m_iPartyLeaderRedTeamIndex; }
-	int GetPartyLeaderBlueTeamIndex(){ return m_iPartyLeaderBlueTeamIndex; }
-	int GetEventTeamStatus() { return m_iEventTeamStatus; }
-
 	int GetPlayerClassWhenKilled( int iIndex ) { return GetArrayValue( iIndex, m_iPlayerClassWhenKilled, TF_CLASS_UNDEFINED ); }
-
-	MM_PlayerConnectionState_t GetPlayerConnectionState( int iIndex ) const;
 
 	float GetConnectTime( int iIndex ) { return ( IsConnected( iIndex ) ? m_flConnectTime[iIndex] : 0.f ); }
 	
@@ -85,12 +78,7 @@ private:
 	int		m_iBonusPoints[MAX_PLAYERS_ARRAY_SAFE];
 	// Pseudo multidimensional array [MAX_PLAYERS_ARRAY_SAFE][CTFPlayerShared::kTFStreak_COUNT]
 
-	int		m_iPartyLeaderBlueTeamIndex;
-	int		m_iPartyLeaderRedTeamIndex;
-	int		m_iEventTeamStatus;
-
 	int		m_iPlayerClassWhenKilled[MAX_PLAYERS_ARRAY_SAFE];
-	MM_PlayerConnectionState_t	m_iConnectionState[MAX_PLAYERS_ARRAY_SAFE];
 	float	m_flConnectTime[MAX_PLAYERS_ARRAY_SAFE];
 
 	struct PlayerScoreboardStats_t

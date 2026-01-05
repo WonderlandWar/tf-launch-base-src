@@ -46,10 +46,6 @@ CTFWinPanel::CTFWinPanel( const char *pElementName ) : EditablePanel( NULL, "Win
 	m_pTeamScorePanel = new EditablePanel( this, "TeamScoresPanel" );
 	m_pRedTeamName = new CTFLabel( m_pTeamScorePanel, "RedTeamLabel", "" );
 	m_pBlueTeamName = new CTFLabel( m_pTeamScorePanel, "BlueTeamLabel", "" );
-	m_pRedLeaderAvatarImage = new CAvatarImagePanel( m_pTeamScorePanel, "RedLeaderAvatar" );
-	m_pBlueLeaderAvatarImage = new CAvatarImagePanel( m_pTeamScorePanel, "BlueLeaderAvatar" );
-	m_pRedLeaderAvatarBG = new EditablePanel( m_pTeamScorePanel, "RedLeaderAvatarBG" );
-	m_pBlueLeaderAvatarBG = new EditablePanel( m_pTeamScorePanel, "BlueLeaderAvatarBG" );
 	m_flTimeUpdateTeamScore = 0;
 	m_iBlueTeamScore = 0;
 	m_iRedTeamScore = 0;
@@ -493,23 +489,8 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 //-----------------------------------------------------------------------------
 void CTFWinPanel::UpdateTeamInfo()
 {
-	bool bShowAvatars = g_TF_PR && g_TF_PR->HasPremadeParties();
-
-	if ( bShowAvatars )
-	{
-		m_pRedLeaderAvatarImage->SetPlayer( GetSteamIDForPlayerIndex( g_TF_PR->GetPartyLeaderRedTeamIndex() ), k_EAvatarSize64x64 );
-		m_pRedLeaderAvatarImage->SetShouldDrawFriendIcon( false );
-		m_pBlueLeaderAvatarImage->SetPlayer( GetSteamIDForPlayerIndex( g_TF_PR->GetPartyLeaderBlueTeamIndex() ), k_EAvatarSize64x64 );
-		m_pBlueLeaderAvatarImage->SetShouldDrawFriendIcon( false );
-	}
-
-	m_pRedLeaderAvatarImage->SetVisible( bShowAvatars );
-	m_pRedLeaderAvatarBG->SetVisible( bShowAvatars );
-	m_pRedTeamName->SetVisible( !bShowAvatars );
-
-	m_pBlueLeaderAvatarImage->SetVisible( bShowAvatars );
-	m_pBlueLeaderAvatarBG->SetVisible( bShowAvatars );
-	m_pBlueTeamName->SetVisible( !bShowAvatars );
+	m_pRedTeamName->SetVisible( true );
+	m_pBlueTeamName->SetVisible( true );
 }
 
 //-----------------------------------------------------------------------------

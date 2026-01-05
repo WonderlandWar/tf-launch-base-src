@@ -95,7 +95,6 @@ public:
 
 	void	FlagDropped( CBasePlayer *pPlayer );
 	void	FlagPickedUp( CBasePlayer *pPlayer );
-	void	FlagCaptured( CBasePlayer *pPlayer );
 
 private:
 
@@ -118,7 +117,6 @@ private:
 // Fire output for detection zones if entity is in a the zone
 void HandleFlagDroppedInDetectionZone( CBasePlayer *pPlayer );
 void HandleFlagPickedUpInDetectionZone( CBasePlayer *pPlayer );
-void HandleFlagCapturedInDetectionZone( CBasePlayer *pPlayer );
 
 
 #endif // FUNC_CAPTURE_ZONE_H

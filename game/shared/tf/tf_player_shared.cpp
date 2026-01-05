@@ -1561,19 +1561,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 	{
 		if ( m_flAfterburnDuration <= 0.f || m_pOuter->GetWaterLevel() >= WL_Waist )
 		{
-			// If we're underwater, put the fire out
-			if ( m_pOuter->GetWaterLevel() >= WL_Waist )
-			{
-				// General achievement for jumping into water while you're on fire
-				m_pOuter->AwardAchievement( ACHIEVEMENT_TF_FIRE_WATERJUMP );
-
-				// Pyro achievement for forcing players into water
-				if ( m_hBurnAttacker )
-				{
-					m_hBurnAttacker->AwardAchievement( ACHIEVEMENT_TF_PYRO_FORCE_WATERJUMP );
-				}
-			}
-
 			RemoveCond( TF_COND_BURNING );
 
 			if ( InCond( TF_COND_HEALTH_BUFF ) )

@@ -401,10 +401,6 @@ $Project "Client (TF)"
 				$File	"tf\vgui\vgui_rotation_slider.h"
 				$File	"tf\vgui\tf_mouseforwardingpanel.cpp"
 				$File	"tf\vgui\tf_mouseforwardingpanel.h"
-				$File	"tf\vgui\report_player_dialog.cpp"	[!$SOURCESDK]
-				$File	"tf\vgui\report_player_dialog.h"	[!$SOURCESDK]
-				$File	"tf\vgui\mute_player_dialog.cpp"
-				$File	"tf\vgui\mute_player_dialog.h"
 			}
 		}
 

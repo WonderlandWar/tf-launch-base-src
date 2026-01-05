@@ -25,8 +25,6 @@
 
 extern bool IsInCommentaryMode();
 
-extern ConVar tf_nav_in_combat_range;
-
 #define UPGRADE_LEVEL_HEALTH_MULTIPLIER 1.2f
 
 // Ground placed version

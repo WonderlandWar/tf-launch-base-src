@@ -282,16 +282,6 @@ static ConVar tf_medieval_cam_idealpitch( "tf_medieval_cam_idealpitch", "0", FCV
 extern ConVar cam_idealpitch;
 extern ConVar tf_allow_taunt_switch;
 
-static void PromptAcceptReviveCallback( bool bCancel, void *pContext )
-{
-	if ( bCancel )
-	{
-		KeyValues *kv = new KeyValues( "MVM_Revive_Response" );
-		kv->SetBool( "accepted", false );
-		engine->ServerCmdKeyValues( kv );
-	}
-}
-
 C_EntityDissolve *DissolveEffect( C_BaseEntity *pTarget, float flTime );
 
 void SetAppropriateCamera( C_TFPlayer *pPlayer )
@@ -4375,7 +4365,7 @@ bool C_TFPlayer::ShouldDraw()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_TFPlayer::CreateSaveMeEffect( MedicCallerType nType /*= CALLER_TYPE_NORMAL*/ )
+void C_TFPlayer::CreateSaveMeEffect( void )
 {
 	// Don't create them for the local player in first-person view.
 	if ( IsLocalPlayer() && InFirstPersonView() )
@@ -4403,16 +4393,8 @@ void C_TFPlayer::CreateSaveMeEffect( MedicCallerType nType /*= CALLER_TYPE_NORMA
 	vHealth.y = flHealth;
 	vHealth.z = flHealth;
 
-	if ( nType == CALLER_TYPE_AUTO )
-	{
-		m_pSaveMeEffect = ParticleProp()->Create( "speech_mediccall_auto", PATTACH_POINT_FOLLOW, "head" );
-		EmitSound( "Medic.AutoCallerAnnounce" );
-	}
-	else
-	{
-		m_pSaveMeEffect = ParticleProp()->Create( "speech_mediccall", PATTACH_POINT_FOLLOW, "head" );
-	}
-
+	m_pSaveMeEffect = ParticleProp()->Create( "speech_mediccall", PATTACH_POINT_FOLLOW, "head" );
+	
 	if ( m_pSaveMeEffect )
 	{
 		m_pSaveMeEffect->SetControlPoint( 1, vHealth );
@@ -4425,7 +4407,7 @@ void C_TFPlayer::CreateSaveMeEffect( MedicCallerType nType /*= CALLER_TYPE_NORMA
 		if ( GetAttachmentLocal( LookupAttachment( "head" ), vecPos ) )
 		{
 			vecPos += Vector(0,0,18);	// Particle effect is 18 units above the attachment
-			CTFMedicCallerPanel::AddMedicCaller( this, 5.0, vecPos, nType );
+			CTFMedicCallerPanel::AddMedicCaller( this, 5.0, vecPos );
 		}
 	}
 

@@ -30,11 +30,6 @@ public:
 
 	int	GetTotalScore( int iIndex );
 
-	void SetPartyLeaderIndex( int iTeam, int iIndex );
-	int GetPartyLeaderIndex( int iTeam );
-	void SetEventTeamStatus( int iValue ) { m_iEventTeamStatus = iValue; }
-	uint32 GetEventTeamStatus( void ) { return m_iEventTeamStatus; }
-
 	void SetPlayerClassWhenKilled( int iIndex, int iClass );
 
 protected:
@@ -60,12 +55,7 @@ protected:
 	CNetworkArray( int, m_iCurrencyCollected, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iBonusPoints, MAX_PLAYERS_ARRAY_SAFE );
 
-	CNetworkVar( int, m_iPartyLeaderRedTeamIndex );
-	CNetworkVar( int, m_iPartyLeaderBlueTeamIndex );
-	CNetworkVar( int, m_iEventTeamStatus );
-
 	CNetworkArray( int, m_iPlayerClassWhenKilled, MAX_PLAYERS_ARRAY_SAFE );
-	CNetworkArray( MM_PlayerConnectionState_t, m_iConnectionState, MAX_PLAYERS_ARRAY_SAFE );
 
 	CNetworkArray( float, m_flConnectTime, MAX_PLAYERS_ARRAY_SAFE );
 

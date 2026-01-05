@@ -83,8 +83,6 @@ public:
 
 	void			StopChargeEffect( bool bImmediately );
 	void			ManageChargeEffect( void );
-
-	void			UpdateMedicAutoCallers( void );
 #else
 
 	void			HealTargetThink( void );
@@ -168,9 +166,6 @@ protected:
 	CNewParticleEffect	*m_pChargeEffect;
 	CSoundPatch			*m_pChargedSound;
 	CSoundPatch			*m_pHealSound;
-
-	CUtlVector< int >	m_iAutoCallers;
-	float				m_flAutoCallerCheckTime;
 #endif
 
 private:														

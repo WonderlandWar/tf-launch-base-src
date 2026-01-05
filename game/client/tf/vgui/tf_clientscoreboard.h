@@ -126,13 +126,6 @@ private:
 	bool						m_bBlueScrollBarVisible;
 	int							m_nExtraSpace;
 
-	CAvatarImagePanel			*m_pRedLeaderAvatarImage;
-	EditablePanel				*m_pRedLeaderAvatarBG;
-	vgui::ImagePanel			*m_pRedTeamImage;
-	CAvatarImagePanel			*m_pBlueLeaderAvatarImage;
-	EditablePanel				*m_pBlueLeaderAvatarBG;
-	vgui::ImagePanel			*m_pBlueTeamImage;
-
 	CHandle< C_TFPlayer >		m_hSelectedPlayer;
 };
 

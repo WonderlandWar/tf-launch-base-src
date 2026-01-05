@@ -171,12 +171,6 @@ CTFClientScoreBoardDialog::CTFClientScoreBoardDialog( IViewPort *pViewPort ) : C
 	m_pLabelPlayerName = new CTFLabel( this, "PlayerNameLabel", "" );
 	m_pImagePanelHorizLine = new ImagePanel( this, "HorizontalLine" );
 	m_pClassImage = new ImagePanel( this, "ClassImage" );
-	m_pRedLeaderAvatarImage = new CAvatarImagePanel( this, "RedLeaderAvatar" );
-	m_pRedLeaderAvatarBG = new EditablePanel( this, "RedLeaderAvatarBG" );
-	m_pRedTeamImage = new ImagePanel( this, "RedTeamImage" );
-	m_pBlueLeaderAvatarImage = new CAvatarImagePanel( this, "BlueLeaderAvatar" );
-	m_pBlueLeaderAvatarBG = new EditablePanel( this, "BlueLeaderAvatarBG" );
-	m_pBlueTeamImage = new ImagePanel( this, "BlueTeamImage" );
 
 	m_pFontTimeLeftNumbers = vgui::INVALID_FONT;
 	m_pFontTimeLeftString = vgui::INVALID_FONT;
@@ -859,23 +853,6 @@ void CTFClientScoreBoardDialog::UpdateTeamInfo()
 			SetDialogVariable( pDialogVarTeamName, team->Get_Localized_Name() );
 		}
 	}
-
-	bool bShowAvatars = g_TF_PR && g_TF_PR->HasPremadeParties();
-	if ( bShowAvatars )
-	{
-		m_pRedLeaderAvatarImage->SetPlayer( GetSteamIDForPlayerIndex( g_TF_PR->GetPartyLeaderRedTeamIndex() ), k_EAvatarSize64x64 );
-		m_pRedLeaderAvatarImage->SetShouldDrawFriendIcon( false );
-		m_pBlueLeaderAvatarImage->SetPlayer( GetSteamIDForPlayerIndex( g_TF_PR->GetPartyLeaderBlueTeamIndex() ), k_EAvatarSize64x64 );
-		m_pBlueLeaderAvatarImage->SetShouldDrawFriendIcon( false );
-	}
-
-	m_pRedLeaderAvatarImage->SetVisible( bShowAvatars );
-	m_pRedLeaderAvatarBG->SetVisible( bShowAvatars );
-	m_pRedTeamImage->SetVisible( !bShowAvatars );
-
-	m_pBlueLeaderAvatarImage->SetVisible( bShowAvatars );
-	m_pBlueLeaderAvatarBG->SetVisible( bShowAvatars );
-	m_pBlueTeamImage->SetVisible( !bShowAvatars );
 }
 
 //-----------------------------------------------------------------------------
@@ -968,39 +945,6 @@ void CTFClientScoreBoardDialog::UpdatePlayerList()
 			}
 			if ( !pPlayerList )
 				continue;
-
-			MM_PlayerConnectionState_t eConnectionState = g_TF_PR->GetPlayerConnectionState( playerIndex );
-			const wchar_t *pwszFormat = NULL;
-			if ( eConnectionState == MM_DISCONNECTED )
-			{
-				pwszFormat = g_pVGuiLocalize->Find( "#TF_MM_PlayerLostConnection" );
-			}
-			else if ( ( eConnectionState == MM_CONNECTING ) || ( eConnectionState == MM_LOADING ) )
-			{
-				pwszFormat = g_pVGuiLocalize->Find( "#TF_MM_PlayerConnecting" );
-			}
-
-			if ( pwszFormat )
-			{
-				KeyValues *pKV = new KeyValues( "data" );
-				pKV->SetInt( "playerIndex", playerIndex );
-				pKV->SetInt( "connected", 1 );
-
-				// HOLY CHEESEBALL BUSY INDICATOR
-				const wchar_t *pwszEllipses = &L"....."[4 - ( (unsigned)Plat_FloatTime() % 5U )];
-				wchar_t wszLocalized[512];
-				g_pVGuiLocalize->ConstructString_safe( wszLocalized, pwszFormat, 1, pwszEllipses );
-				pKV->SetWString( "name", wszLocalized );
-
-				int itemID = pPlayerList->AddItem( 0, pKV );
-				pPlayerList->SetItemFgColor( itemID, ( eConnectionState == MM_DISCONNECTED ) ? Color( 208, 147, 7, 255 ) : Color( 76, 107, 34, 255 ) );
-				pPlayerList->SetItemBgColor( itemID, Color( 0, 0, 0, 80 ) );
-				pPlayerList->SetItemFont( itemID, m_hScoreFontSmallest );
-
-				pKV->deleteThis();
-
-				continue;
-			}
 
 			int iActiveDominations = g_TF_PR->GetActiveDominations( playerIndex );
 
@@ -1174,47 +1118,6 @@ void CTFClientScoreBoardDialog::UpdatePlayerList()
 			}
 
 			pKeyValues->deleteThis();
-		}
-		else
-		{
-			MM_PlayerConnectionState_t eConnectionState = g_TF_PR->GetPlayerConnectionState( playerIndex );
-			if ( eConnectionState == MM_WAITING_FOR_PLAYER )
-			{
-				SectionedListPanel *pPlayerList = NULL;
-				int nTeam = g_PR->GetTeam( playerIndex );
-				switch ( nTeam )
-				{
-				case TF_TEAM_BLUE:
-					pPlayerList = m_pPlayerListBlue;
-					break;
-				case TF_TEAM_RED:
-					pPlayerList = m_pPlayerListRed;
-					break;
-				}
-				if ( pPlayerList )
-				{
-					const wchar_t *pwszFormat = g_pVGuiLocalize->Find( "#TF_MM_LookingForPlayer" );
-					if ( pwszFormat )
-					{
-						KeyValues *pKV = new KeyValues( "data" );
-						pKV->SetInt( "playerIndex", playerIndex );
-						pKV->SetInt( "connected", 0 );
-
-						// HOLY CHEESEBALL BUSY INDICATOR
-						const wchar_t *pwszEllipses = &L"....."[4 - ( (unsigned)Plat_FloatTime() % 5U )];
-						wchar_t wszLocalized[512];
-						g_pVGuiLocalize->ConstructString_safe( wszLocalized, pwszFormat, 1, pwszEllipses );
-						pKV->SetWString( "name", wszLocalized );
-
-						int itemID = pPlayerList->AddItem( 0, pKV );
-						pPlayerList->SetItemFgColor( itemID, Color( 120, 120, 120, 255 ) );
-						pPlayerList->SetItemBgColor( itemID, Color( 0, 0, 0, 80 ) );
-						pPlayerList->SetItemFont( itemID, m_hScoreFontSmallest );
-
-						pKV->deleteThis();
-					}
-				}
-			}
 		}
 	}
 

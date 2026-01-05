@@ -27,9 +27,6 @@
 using namespace vgui;
 
 ConVar tf_hud_notification_duration( "tf_hud_notification_duration", "3.0", 0, "How long to display hud notification panels before fading them" );
-ConVar tf_hud_notification_show_count_kart_controls( "tf_hud_notification_show_count_kart_controls", "0", FCVAR_ARCHIVE );
-ConVar tf_hud_notification_show_count_ghost_controls( "tf_hud_notification_show_count_ghost_controls", "0", FCVAR_ARCHIVE );
-ConVar tf_hud_notification_show_count_ghost_controls_no_respawn( "tf_hud_notification_show_count_ghost_controls_no_respawn", "0", FCVAR_ARCHIVE );
 
 DECLARE_HUDELEMENT( CHudNotificationPanel );
 
@@ -62,9 +59,6 @@ CHudNotificationPanel::CHudNotificationPanel( const char *pElementName ) : CHudE
 
 	LoadManifest();
 	m_mapShowCounts.SetLessFunc( DefLessFunc( int ) ) ;
-	m_mapShowCounts.Insert( HUD_NOTIFY_HOW_TO_CONTROL_GHOST, ShowCount_t( 3, 300.f, &tf_hud_notification_show_count_ghost_controls ) );
-	m_mapShowCounts.Insert( HUD_NOTIFY_HOW_TO_CONTROL_KART, ShowCount_t( 3, 300.f, &tf_hud_notification_show_count_kart_controls ) );
-	m_mapShowCounts.Insert( HUD_NOTIFY_HOW_TO_CONTROL_GHOST_NO_RESPAWN, ShowCount_t( 3, 300.f, &tf_hud_notification_show_count_ghost_controls_no_respawn ) );
 }
 
 
@@ -458,90 +452,6 @@ const char *CHudNotificationPanel::GetNotificationByType( int iType, float& flDu
 
 	case HUD_NOTIFY_SPECIAL:
 		pszResult = "resource/UI/notifications/notify_special.res";
-		break;
-
-	case HUD_NOTIFY_GOLDEN_WRENCH:
-		pszResult = "resource/UI/notifications/notify_golden_wrench.res";
-		break;
-
-	case HUD_NOTIFY_RD_ROBOT_UNDER_ATTACK:
-		if ( bOnBlueTeam )
-		{
-			pszResult = "resource/UI/notifications/notify_rd_robot_attacked_blue.res";
-		}
-		else
-		{
-			pszResult = "resource/UI/notifications/notify_rd_robot_attacked_red.res";
-		}
-		break;
-
-	case HUD_NOTIFY_HOW_TO_CONTROL_GHOST:
-		pszResult = "resource/UI/notifications/notify_how_to_control_ghost.res";
-		flDuration = 10.f;
-		break;
-
-	case HUD_NOTIFY_HOW_TO_CONTROL_KART:
-		pszResult = "resource/UI/notifications/notify_how_to_control_kart.res";
-		flDuration = 10.f;
-		break;
-
-	case HUD_NOTIFY_HOW_TO_CONTROL_GHOST_NO_RESPAWN:
-		pszResult = "resource/UI/notifications/notify_how_to_control_ghost_no_respawn.res";
-		flDuration = 10.f;
-		break;
-
-	// Passtime
-	case HUD_NOTIFY_PASSTIME_HOWTO: 
-		pszResult = "resource/UI/notifications/notify_passtime_howto.res"; 
-		flDuration = 10.f; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_TELE: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_tele.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_CARRY: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_carry.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_INVULN: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_invuln.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_DISGUISE: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_disguise.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_CLOAK:
-		pszResult = "resource/UI/notifications/notify_passtime_no_cloak.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_OOB:
-		pszResult = "resource/UI/notifications/notify_passtime_no_oob.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_HOLSTER: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_holster.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_TAUNT: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_taunt.res"; 
-		break;
-
-	// Competitive
-	case HUD_NOTIFY_COMPETITIVE_GC_DOWN:
-		pszResult = "resource/UI/notifications/notify_competitive_gc_down.res";
-		flDuration = 20.f;
-		break;
-
-	case HUD_NOTIFY_TRUCE_START:
-		pszResult = "resource/UI/notifications/notify_truce_start.res";
-		flDuration = 10.f;
-		break;
-
-	case HUD_NOTIFY_TRUCE_END:
-		pszResult = "resource/UI/notifications/notify_truce_end.res";
-		flDuration = 10.f;
 		break;
 
 	default:

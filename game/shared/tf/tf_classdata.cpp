@@ -207,20 +207,6 @@ void TFPlayerClassData_t::ParseData( KeyValues *pKeyValuesData )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void TFPlayerClassData_t::AddAdditionalPlayerDeathSounds( void )
-{
-#ifdef GAME_DLL	
-	for ( int i = DEATH_SOUND_FIRST; i <= DEATH_SOUND_LAST; ++i )
-	{
-		CopySoundNameWithModifierToken( m_szDeathSound[ i + DEATH_SOUND_MVM_FIRST ], m_szDeathSound[ i ], ARRAYSIZE( m_szDeathSound[0] ), "MVM_" );
-		CopySoundNameWithModifierToken( m_szDeathSound[ i + DEATH_SOUND_GIANT_MVM_FIRST ], m_szDeathSound[ i ], ARRAYSIZE( m_szDeathSound[0] ), "M_MVM_" );
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 CTFPlayerClassDataMgr::CTFPlayerClassDataMgr()
 {
 
@@ -265,17 +251,4 @@ TFPlayerClassData_t *CTFPlayerClassDataMgr::Get( unsigned int iClass )
 TFPlayerClassData_t *GetPlayerClassData( unsigned int iClass )
 {
 	return g_pTFPlayerClassDataMgr->Get( iClass );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayerClassDataMgr::AddAdditionalPlayerDeathSounds( void )
-{
-	for ( int iClass = 1; iClass < TF_CLASS_COUNT_ALL; ++iClass )
-	{
-		TFPlayerClassData_t *pClassData = &m_aTFPlayerClassData[iClass];
-		Assert( pClassData );
-		pClassData->AddAdditionalPlayerDeathSounds();
-	}
 }

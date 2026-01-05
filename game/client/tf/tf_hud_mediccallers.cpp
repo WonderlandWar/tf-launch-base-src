@@ -35,8 +35,6 @@ CTFMedicCallerPanel::CTFMedicCallerPanel( Panel *parent, const char *name ) : Ed
 	m_bOnscreen = false;
 	m_flPanelScale = 1.0f;
 	m_bBurning = false;
-	m_nCallerType = CALLER_TYPE_NORMAL;
-	ListenForGameEvent( "player_calledformedic" );
 }
 
 //-----------------------------------------------------------------------------
@@ -76,9 +74,6 @@ void CTFMedicCallerPanel::PerformLayout( void )
 
 	int nWide = XRES(100), nTall = YRES(100);
 
-	bool bNormal = ( m_nCallerType == CALLER_TYPE_NORMAL );
-	bool bAutoCaller = ( m_nCallerType == CALLER_TYPE_AUTO );
-
 	// Adjust scale of the panel based on distance to the caller
 	C_TFPlayer *pLocalTFPlayer = C_TFPlayer::GetLocalTFPlayer();
 	if ( pLocalTFPlayer && m_hEntity )
@@ -87,137 +82,14 @@ void CTFMedicCallerPanel::PerformLayout( void )
 		m_flPanelScale = RemapValClamped( vecDistance.LengthSqr(), 0.0f, (2000.0f * 2000.0f), 1.0f, 0.5f );
 	}
 
-	vgui::Panel *pPanelAuto = FindChildByName( "CallerAuto" );
-	if ( pPanelAuto )
-	{
-		if ( pPanelAuto->IsVisible() != bAutoCaller )
-		{
-			pPanelAuto->SetVisible( bAutoCaller );
-		}
-
-		if ( bAutoCaller )
-		{
-			pPanelAuto->GetSize( nWide, nTall );
-			pPanelAuto->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pPanelAuto->SetPos( ( GetWide() - pPanelAuto->GetWide() ) * 0.5, ( GetTall() - pPanelAuto->GetTall() ) * 0.5 );
-		}
-	}
-
 	vgui::Panel *pPanel = FindChildByName( "CallerBG" );
 	if ( pPanel )
 	{
-		if ( pPanel->IsVisible() != bNormal )
-		{
-			pPanel->SetVisible( bNormal );
-		}
-
-		if ( bNormal )
-		{
-			pPanel->GetSize( nWide, nTall );
-			pPanel->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pPanel->SetPos( (GetWide() - pPanel->GetWide()) * 0.5, (GetTall() - pPanel->GetTall()) * 0.5 );
-		}
-	}
-
-	vgui::Panel *pBurningPanel = FindChildByName( "CallerBurning" );
-	if ( pBurningPanel )
-	{
-		bool bVisible = bNormal && m_bBurning;
-		if ( pBurningPanel->IsVisible() != bVisible )
-		{
-			pBurningPanel->SetVisible( bVisible );
-		}
-
-		if ( bVisible )
-		{
-			pBurningPanel->GetSize( nWide, nTall );
-			pBurningPanel->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pBurningPanel->SetPos( (GetWide() - pBurningPanel->GetWide()) * 0.5, (GetTall() - pBurningPanel->GetTall()) * 0.5 );
-		}
-	}
-
-	vgui::Panel *pBleedingPanel = FindChildByName( "CallerBleeding" );
-	if ( pBleedingPanel )
-	{
-		bool bVisible = bNormal;
-		if ( pBleedingPanel->IsVisible() != bVisible )
-		{
-			pBleedingPanel->SetVisible( bVisible );
-		}
-
-		if ( bVisible )
-		{
-			pBleedingPanel->GetSize( nWide, nTall );
-			pBleedingPanel->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pBleedingPanel->SetPos( (GetWide() - pBleedingPanel->GetWide()) * 0.5, (GetTall() - pBleedingPanel->GetTall()) * 0.5 );
-		}
-	}
-
-	vgui::Panel *pPanelHealth = FindChildByName( "CallerHealth" );
-	if ( pPanelHealth )
-	{
-		if ( pPanelHealth->IsVisible() != bNormal )
-		{
-			pPanelHealth->SetVisible( bNormal );
-		}
-
-		if ( bNormal )
-		{
-			pPanelHealth->GetSize( nWide, nTall );
-			pPanelHealth->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pPanelHealth->SetPos( (GetWide() - pPanelHealth->GetWide()) * 0.5, (GetTall() - pPanelHealth->GetTall()) * 0.5 );
-			pPanelHealth->SetAlpha( 0 );
-		}
-	}
-
-	// Revive block
-	vgui::Panel *pPanelReviveEasy = FindChildByName( "CallerReviveEasy" );
-	if ( pPanelReviveEasy )
-	{
-		bool bReviveEasy = m_nCallerType == CALLER_TYPE_REVIVE_EASY;
-		if ( pPanelReviveEasy->IsVisible() != bReviveEasy )
-		{
-			pPanelReviveEasy->SetVisible( bReviveEasy );
-		}
-
-		if ( bReviveEasy )
-		{
-			pPanelReviveEasy->GetSize( nWide, nTall );
-			pPanelReviveEasy->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pPanelReviveEasy->SetPos( ( GetWide() - pPanelReviveEasy->GetWide() ) * 0.5, ( GetTall() - pPanelReviveEasy->GetTall() ) * 0.5 );
-		}
-	}
-	vgui::Panel *pPanelReviveMedium = FindChildByName( "CallerReviveMedium" );
-	if ( pPanelReviveMedium )
-	{
-		bool bReviveMedium = m_nCallerType == CALLER_TYPE_REVIVE_MEDIUM;
-		if ( pPanelReviveMedium->IsVisible() != bReviveMedium )
-		{
-			pPanelReviveMedium->SetVisible( bReviveMedium );
-		}
-
-		if ( bReviveMedium )
-		{
-			pPanelReviveMedium->GetSize( nWide, nTall );
-			pPanelReviveMedium->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pPanelReviveMedium->SetPos( ( GetWide() - pPanelReviveMedium->GetWide() ) * 0.5, ( GetTall() - pPanelReviveMedium->GetTall() ) * 0.5 );
-		}
-	}
-	vgui::Panel *pPanelReviveHard = FindChildByName( "CallerReviveHard" );
-	if ( pPanelReviveHard )
-	{
-		bool bReviveHard = m_nCallerType == CALLER_TYPE_REVIVE_HARD;
-		if ( pPanelReviveHard->IsVisible() != bReviveHard )
-		{
-			pPanelReviveHard->SetVisible( bReviveHard );
-		}
-
-		if ( bReviveHard )
-		{
-			pPanelReviveHard->GetSize( nWide, nTall );
-			pPanelReviveHard->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pPanelReviveHard->SetPos( ( GetWide() - pPanelReviveHard->GetWide() ) * 0.5, ( GetTall() - pPanelReviveHard->GetTall() ) * 0.5 );
-		}
+		pPanel->SetVisible( true );
+		
+		pPanel->GetSize( nWide, nTall );
+		pPanel->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
+		pPanel->SetPos( (GetWide() - pPanel->GetWide()) * 0.5, (GetTall() - pPanel->GetTall()) * 0.5 );
 	}
 }
 
@@ -290,30 +162,23 @@ void CTFMedicCallerPanel::OnTick( void )
 					return;
 				}
 
-				// Updates the state of the caller panel if they are now burning or bleeding, or have stopped while caller panel is still up.
-				if ( m_nCallerType != CALLER_TYPE_AUTO )
+				m_bBurning = pTFPlayer->m_Shared.InCond( TF_COND_BURNING );
+				vgui::Panel *pBurningPanel = FindChildByName( "CallerBurning" );
+				if ( pBurningPanel && pBurningPanel->IsVisible() != m_bBurning )
 				{
-					m_bBurning = pTFPlayer->m_Shared.InCond( TF_COND_BURNING );
-					vgui::Panel *pBurningPanel = FindChildByName( "CallerBurning" );
-					if ( pBurningPanel && pBurningPanel->IsVisible() != m_bBurning )
-					{
-						pBurningPanel->SetVisible( m_bBurning );
-					}
+					pBurningPanel->SetVisible( m_bBurning );
 				}
 			}
 		}
 	}
 
-	if ( m_nCallerType == CALLER_TYPE_NORMAL )
+	// Tints caller panel based on health remaining.
+	vgui::Panel *pPanelHealth = FindChildByName( "CallerHealth" );
+	if ( pPanelHealth )
 	{
-		// Tints caller panel based on health remaining.
-		vgui::Panel *pPanelHealth = FindChildByName( "CallerHealth" );
-		if ( pPanelHealth )
-		{
-			float flHealth = ( float(m_hEntity->GetHealth()) / float(m_hEntity->GetMaxHealth()) );
-			int iCallerHurtAlpha = 255 * ( 1 - flHealth ) + 75;
-			pPanelHealth->SetAlpha( clamp( iCallerHurtAlpha, 0, 255 ) );
-		}
+		float flHealth = ( float(m_hEntity->GetHealth()) / float(m_hEntity->GetMaxHealth()) );
+		int iCallerHurtAlpha = 255 * ( 1 - flHealth ) + 75;
+		pPanelHealth->SetAlpha( clamp( iCallerHurtAlpha, 0, 255 ) );
 	}
 }
 
@@ -467,49 +332,16 @@ void CTFMedicCallerPanel::SetEntity( C_BaseEntity *pEntity, float flDuration, Ve
 	m_vecOffset = vecOffset;
 }
 
-
-void CTFMedicCallerPanel::SetMedicCallerType( MedicCallerType nType )
-{
-	m_nCallerType = nType;
-}
-
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFMedicCallerPanel::AddMedicCaller( C_BaseEntity *pEntity, float flDuration, Vector &vecOffset, MedicCallerType nType /* = CALLER_TYPE_NORMAL */ )
+void CTFMedicCallerPanel::AddMedicCaller( C_BaseEntity *pEntity, float flDuration, Vector &vecOffset )
 {
 	CTFMedicCallerPanel *pCaller = new CTFMedicCallerPanel( g_pClientMode->GetViewport(), "MedicCallerPanel" );
 	vgui::SETUP_PANEL(pCaller);
 	pCaller->SetBounds( 0,0, MEDICCALLER_WIDE, MEDICCALLER_TALL );
 	pCaller->SetEntity( pEntity, flDuration, vecOffset );
-	pCaller->SetMedicCallerType( nType );
 	pCaller->SetVisible( true );
 	vgui::ivgui()->AddTickSignal( pCaller->GetVPanel() );
 	pCaller->OnTick();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFMedicCallerPanel::FireGameEvent( IGameEvent *event )
-{
-	if ( m_nCallerType == CALLER_TYPE_AUTO )
-	{
-		if ( Q_strcmp( event->GetName(), "player_calledformedic" ) == 0 )
-		{
-			if ( m_hEntity && m_hEntity->IsPlayer() )
-			{
-				C_TFPlayer *pTFPlayer = ToTFPlayer( m_hEntity );
-				if ( pTFPlayer )
-				{
-					int iCaller = engine->GetPlayerForUserID( event->GetInt( "userid" ) );
-					if ( pTFPlayer->GetUserID() == iCaller )
-					{
-						MarkForDeletion();
-					}
-				}
-			}
-		}
-	}
 }

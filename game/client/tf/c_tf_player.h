@@ -207,7 +207,7 @@ public:
 
 	virtual bool	ShouldDraw();
 
-	void CreateSaveMeEffect( MedicCallerType nType = CALLER_TYPE_NORMAL );
+	void CreateSaveMeEffect( void );
 	void StopSaveMeEffect( bool bForceRemoveInstantly = false );
 
 	bool IsAllowedToTaunt( void );

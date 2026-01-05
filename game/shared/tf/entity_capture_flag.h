@@ -55,11 +55,6 @@
 #define TF_AD_ENEMY_DROPPED			"AttackDefend.EnemyDropped"
 #define TF_AD_ENEMY_CAPTURED		"AttackDefend.EnemyCaptured"
 #define TF_AD_ENEMY_RETURNED		"AttackDefend.EnemyReturned"
-
-#define TF_MVM_AD_ENEMY_STOLEN		"MVM.AttackDefend.EnemyStolen"
-#define TF_MVM_AD_ENEMY_DROPPED		"MVM.AttackDefend.EnemyDropped"
-#define TF_MVM_AD_ENEMY_CAPTURED	"MVM.AttackDefend.EnemyCaptured"
-#define TF_MVM_AD_ENEMY_RETURNED	"MVM.AttackDefend.EnemyReturned"
    
 #define TF_AD_TEAM_STOLEN			"AttackDefend.TeamStolen"
 #define TF_AD_TEAM_DROPPED			"AttackDefend.TeamDropped"

@@ -41,49 +41,6 @@ bool CTFTips::Init()
 			int iClassTipCount = wzTipCount ? _wtoi( wzTipCount ) : 0;
 			m_iTipCount[iClass] = iClassTipCount;
 			m_iTipCountAll += iClassTipCount;
-
-			m_iArenaTipCount = g_pVGuiLocalize->Find( "Tip_arena_Count" ) ? _wtoi( g_pVGuiLocalize->Find( "Tip_arena_Count" ) ) : 0;	
-		}
-
-		// Captain Canteen mascot parts!
-		m_CaptainCanteenBody.RemoveAll();
-		m_CaptainCanteenMisc.RemoveAll();
-		m_CaptainCanteenHat.RemoveAll();
-
-		KeyValues *kv = new KeyValues( "cpncntn" );
-		KeyValues::AutoDelete autodelete_key( kv );
-
-		if ( kv->LoadFromFile( g_pFullFileSystem, "scripts/cpncntn.txt", "MOD" ) )
-		{
-			for ( KeyValues *pSubKey = kv->GetFirstTrueSubKey(); pSubKey; pSubKey = pSubKey->GetNextTrueSubKey() )
-			{
-				// Figure out which bucket it goes in
-				CUtlVector< CaptainCanteenAsset_t > *pAssetBucket = NULL;
-
-				if ( V_stricmp( pSubKey->GetName(), "body" ) == 0 )
-				{
-					pAssetBucket = &m_CaptainCanteenBody;
-				}
-				else if ( V_stricmp( pSubKey->GetName(), "misc" ) == 0 )
-				{
-					pAssetBucket = &m_CaptainCanteenMisc;
-				}
-				else if ( V_stricmp( pSubKey->GetName(), "hat" ) == 0 )
-				{
-					pAssetBucket = &m_CaptainCanteenHat;
-				}
-
-				if ( pAssetBucket )
-				{
-					// Added more assets to that bucket
-					for ( KeyValues *pAssetKey = pSubKey->GetFirstSubKey(); pAssetKey; pAssetKey = pAssetKey->GetNextKey() )
-					{
-						int nNewAsset = pAssetBucket->AddToTail();
-						V_strncpy( (*pAssetBucket)[ nNewAsset ].szImage, pAssetKey->GetName(), sizeof( (*pAssetBucket)[ nNewAsset ].szImage ) );
-						(*pAssetBucket)[ nNewAsset ].flRarity = ( 1.0f / pAssetKey->GetFloat() );
-					}
-				}
-			}
 		}
 
 		m_bInited = true;
@@ -164,61 +121,6 @@ const wchar_t *CTFTips::GetTip( int iClass, int iTip )
 
 	return wzTip;
 }
-
-void CTFTips::GetRandomCaptainCanteenImages( const char **ppchBody, const char **ppchMisc, const char **ppchHat )
-{
-	// Select and copy over all 3 parts
-	*ppchBody = GetRandomCaptainCanteenAsset( &m_CaptainCanteenBody );
-	*ppchMisc = GetRandomCaptainCanteenAsset( &m_CaptainCanteenMisc );
-	*ppchHat = GetRandomCaptainCanteenAsset( &m_CaptainCanteenHat );
-}
-
-const char *CTFTips::GetRandomCaptainCanteenAsset( CUtlVector< CaptainCanteenAsset_t > *pAssetBucket )
-{
-	// If there's nothing in the bucket, bail out
-	if ( pAssetBucket->Count() <= 0 )
-	{
-		return "";
-	}
-
-	if ( pAssetBucket->Count() == 1 )
-	{
-		// Easy out if there's only 1 choice
-		return (*pAssetBucket)[ 0 ].szImage;
-	}
-
-	// Get the total scale of selection possibilities
-	float flSelectionTotal = 0.0f;
-
-	for ( int i = 0; i < pAssetBucket->Count(); ++i )
-	{
-		flSelectionTotal += (*pAssetBucket)[ i ].flRarity;
-	}
-
-	if ( flSelectionTotal > 0.0f )
-	{
-		// Pick a number from 0 to 1
-		float flRand = RandomFloat();
-
-		// Loop through to figure out which asset we've chosen
-		float flCurrentPosition = 0.0f;
-
-		for ( int i = 0; i < pAssetBucket->Count(); ++i )
-		{
-			flCurrentPosition += (*pAssetBucket)[ i ].flRarity / flSelectionTotal;
-
-			if ( flRand <= flCurrentPosition )
-			{
-				// We landed on this random asset
-				return (*pAssetBucket)[ i ].szImage;
-			}
-		}
-	}
-
-	// Something went wrong... just return the first choice
-	return (*pAssetBucket)[ 0 ].szImage;
-}
-
 
 // global instance
 CTFTips g_TFTips;

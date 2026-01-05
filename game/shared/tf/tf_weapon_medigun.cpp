@@ -167,15 +167,6 @@ END_PREDICTION_DATA()
 extern ConVar tf_max_health_boost;
 
 //-----------------------------------------------------------------------------
-// Purpose: For HUD auto medic callers
-//-----------------------------------------------------------------------------
-#ifdef CLIENT_DLL
-ConVar hud_medicautocallers( "hud_medicautocallers", "0", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX );
-ConVar hud_medicautocallersthreshold( "hud_medicautocallersthreshold", "75", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX );
-ConVar hud_medichealtargetmarker ( "hud_medichealtargetmarker", "0", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX );
-#endif
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 CWeaponMedigun::CWeaponMedigun( void )
@@ -202,8 +193,6 @@ CWeaponMedigun::~CWeaponMedigun()
 	{
 		CSoundEnvelopeController::GetController().SoundDestroy( m_pHealSound );
 	}
-
-	m_flAutoCallerCheckTime = 0.0f;
 #endif
 }
 
@@ -280,10 +269,8 @@ void CWeaponMedigun::Precache()
 	PrecacheParticleSystem( "medicgun_invulnstatus_fullcharge_red" );
 	PrecacheParticleSystem( "medicgun_beam_red_invun" );
 	PrecacheParticleSystem( "medicgun_beam_red" );
-	PrecacheParticleSystem( "medicgun_beam_red_targeted" );
 	PrecacheParticleSystem( "medicgun_beam_blue_invun" );
 	PrecacheParticleSystem( "medicgun_beam_blue" );
-	PrecacheParticleSystem( "medicgun_beam_blue_targeted" );
 	PrecacheParticleSystem( "drain_effect" );
 	PrecacheScriptSound( "WeaponMedigun.Healing" );
 	// PrecacheParticleSystem( "medicgun_beam_machinery" );
@@ -1445,11 +1432,6 @@ void CWeaponMedigun::OnDataChanged( DataUpdateType_t updateType )
 		{
 			return;
 		}
-
-		if ( pLocalPlayer == GetOwner() && hud_medicautocallers.GetBool() )
-		{
-			UpdateMedicAutoCallers();
-		}
 	}
 }
 
@@ -1580,8 +1562,6 @@ void CWeaponMedigun::UpdateEffects( void )
 		if ( m_hHealingTargetEffect.pTarget == m_hHealingTarget )
 			return;
 
-		bool bHealTargetMarker = hud_medichealtargetmarker.GetBool();
-
 		const char *pszEffectName;
 		if ( IsAttachedToBuilding() )
 		{
@@ -1595,14 +1575,7 @@ void CWeaponMedigun::UpdateEffects( void )
 			}
 			else
 			{
-				if ( bHealTargetMarker && pFiringPlayer == pLocalPlayer )
-				{
-					pszEffectName = "medicgun_beam_red_targeted";
-				}
-				else
-				{
-					pszEffectName = "medicgun_beam_red";
-				}
+				pszEffectName = "medicgun_beam_red";
 			}
 		}
 		else
@@ -1613,14 +1586,7 @@ void CWeaponMedigun::UpdateEffects( void )
 			}
 			else
 			{
-				if ( bHealTargetMarker && pFiringPlayer == pLocalPlayer )
-				{
-					pszEffectName = "medicgun_beam_blue_targeted";
-				}
-				else
-				{
-					pszEffectName = "medicgun_beam_blue";
-				}
+				pszEffectName = "medicgun_beam_blue";
 			}
 		}
 
@@ -1635,87 +1601,6 @@ void CWeaponMedigun::UpdateEffects( void )
 		m_hHealingTargetEffect.pTarget = m_hHealingTarget;
 		m_hHealingTargetEffect.pEffect = pEffect;
 		m_hHealingTargetEffect.pOwner  = pEffectOwner;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Look for teammates that need healing
-//-----------------------------------------------------------------------------
-void CWeaponMedigun::UpdateMedicAutoCallers( void )
-{
-	// Find teammates that need healing
-	if ( gpGlobals->curtime > m_flAutoCallerCheckTime )
-	{
-		if ( !g_TF_PR )
-		{
-			return;
-		}
-
-		C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-
-		for( int playerIndex = 1; playerIndex <= MAX_PLAYERS; playerIndex++ )
-		{
-			C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( playerIndex ) );
-			if ( pPlayer )
-			{
-				// Don't do this for the local player
-				if ( pPlayer == pLocalPlayer )
-					continue;
-
-				if ( ( pPlayer->GetTeamNumber() == GetLocalPlayerTeam() ) ||
-					 ( pPlayer->GetPlayerClass() && ( pPlayer->GetPlayerClass()->GetClassIndex() == TF_CLASS_SPY ) && pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && ( pPlayer->m_Shared.GetDisguiseTeam() == GetLocalPlayerTeam() ) ) )
-				{
-					if ( m_hHealingTarget != NULL )
-					{
-						// Don't do this for players the medic is healing
-						if ( pPlayer == m_hHealingTarget )
-							continue;
-					}
-
-					if ( pPlayer->IsAlive() )
-					{
-						int iHealth = float( pPlayer->GetHealth() ) / float( pPlayer->GetMaxHealth() ) * 100;
-						int iHealthThreshold = hud_medicautocallersthreshold.GetInt();
-
-						// If it's a healthy teammate....
-						if ( iHealth > iHealthThreshold )
-						{
-							// Make sure we don't have them in our list if previously hurt
-							if ( m_iAutoCallers.Find( playerIndex ) != m_iAutoCallers.InvalidIndex() )
-							{
-								m_iAutoCallers.FindAndRemove( playerIndex );
-								continue;
-							}
-						}
-
-						// If it's a hurt teammate....
-						if ( iHealth <= iHealthThreshold )
-						{
-
-							// Make sure we're not already tracking this
-							if ( m_iAutoCallers.Find( playerIndex ) != m_iAutoCallers.InvalidIndex() )
-								continue;
-
-							// Distance check
-							float flDistSq = pPlayer->GetAbsOrigin().DistToSqr( pLocalPlayer->GetAbsOrigin() );
-							if ( flDistSq >= 1000000 )
-							{
-								continue;
-							}
-
-							// Now add auto-caller
-							pPlayer->CreateSaveMeEffect( CALLER_TYPE_AUTO );
-
-							// And track the player so we don't re-add them
-							m_iAutoCallers.AddToTail( playerIndex );
-						}
-					}
-				}
-			}
-		}
-
-		// Throttle this check
-		m_flAutoCallerCheckTime = gpGlobals->curtime + 0.25f;
 	}
 }
 #endif

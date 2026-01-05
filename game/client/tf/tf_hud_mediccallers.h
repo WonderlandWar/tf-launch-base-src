@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class CTFMedicCallerPanel : public vgui::EditablePanel, public CGameEventListener
+class CTFMedicCallerPanel : public vgui::EditablePanel
 {
 	DECLARE_CLASS_SIMPLE( CTFMedicCallerPanel, vgui::EditablePanel );
 public:
@@ -38,10 +38,7 @@ public:
 	
 	void	GetCallerPosition( const Vector &vecDelta, float flRadius, float *xpos, float *ypos, float *flRotation );
 	void	SetEntity( C_BaseEntity *pEntity, float flDuration, Vector &vecOffset );
-	void	SetMedicCallerType( MedicCallerType nType );
-	static void AddMedicCaller( C_BaseEntity *pEntity, float flDuration, Vector &vecOffset, MedicCallerType nType = CALLER_TYPE_NORMAL );
-	
-	virtual void FireGameEvent( IGameEvent *event );
+	static void AddMedicCaller( C_BaseEntity *pEntity, float flDuration, Vector &vecOffset );
 
 protected:
 	C_BaseEntity	*GetEntity() const { return m_hEntity; }

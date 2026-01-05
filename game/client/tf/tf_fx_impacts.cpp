@@ -17,8 +17,6 @@
 //-----------------------------------------------------------------------------
 // Purpose: Handle weapon impacts
 //-----------------------------------------------------------------------------
-static int g_MvMRobotImpactCount = 0;
-static int g_MvMTankImpactCount = 0;
 void ImpactCallback( const CEffectData &data )
 {
 	trace_t tr;
@@ -58,7 +56,6 @@ void ImpactCallback( const CEffectData &data )
 		}
 
 		bool bPlaySound = (MainViewOrigin() - vecOrigin).LengthSqr() < (1024*1024);
-		bool bIsRobotImpact = false;
 		
 		// If we hit, perform our custom effects and play the sound
 		if ( Impact( vecOrigin, vecStart, iMaterial, iDamageType, iHitbox, pEntity, tr ) )
@@ -76,25 +73,7 @@ void ImpactCallback( const CEffectData &data )
 
 		if ( bPlaySound )
 		{
-			// every other one of the mvm impacts are emitted from the world to allow for ~2 impacts playing at a time
-			if ( bIsRobotImpact )
-			{
-				//pEntity->EmitSound( "MVM_Robot.BulletImpact" );
-				CLocalPlayerFilter filter;
-				if ( g_MvMRobotImpactCount % 4 == 0 )
-				{
-					C_BaseEntity::EmitSound( filter, pEntity->entindex(), "MVM_Robot.BulletImpact", &vecOrigin );
-				}
-				else
-				{
-					C_BaseEntity::EmitSound( filter, SOUND_FROM_WORLD, "MVM_Robot.BulletImpact", &vecOrigin );
-				}
-				g_MvMRobotImpactCount++;
-			}
-			else
-			{
-				PlayImpactSound( pEntity, tr, vecOrigin, nSurfaceProp );
-			}
+			PlayImpactSound( pEntity, tr, vecOrigin, nSurfaceProp );
 		}
 	}
 }
