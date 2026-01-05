@@ -922,9 +922,6 @@ void CTFPlayer::CheckForIdle( void )
 		if ( IsFakeClient() )
 			return;
 
-		if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-			return;
-
 		if ( TFGameRules()->State_Get() == GR_STATE_BETWEEN_RNDS )
 			return;
 
@@ -1417,8 +1414,7 @@ void CTFPlayer::Spawn()
 	}
 
 	// If they're spawning into the world as fresh meat, give them items and stuff.
-	bool bMatchSummary = TFGameRules() && TFGameRules()->ShowMatchSummary();
-	if ( m_Shared.InState( TF_STATE_ACTIVE ) || bMatchSummary )
+	if ( m_Shared.InState( TF_STATE_ACTIVE ) )
 	{
 		// remove our disguise each time we spawn
 		if ( m_Shared.InCond( TF_COND_DISGUISED ) )
@@ -1426,10 +1422,8 @@ void CTFPlayer::Spawn()
 			m_Shared.RemoveDisguise();
 		}
 
-		if ( !bMatchSummary )
-		{
-			EmitSound( "Player.Spawn" );
-		}
+		EmitSound( "Player.Spawn" );
+		
 		InitClass();
 		m_Shared.RemoveAllCond(); // Remove conc'd, burning, rotting, hallucinating, etc.
 
@@ -2181,10 +2175,8 @@ CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 	CBaseEntity *pSpot = g_pLastSpawnPoints[ GetTeamNumber() ];
 	const char *pSpawnPointName = "";
 
-	bool bMatchSummary = TFGameRules() && TFGameRules()->ShowMatchSummary();
-
 	// See if the map is asking to force this player to spawn at a specific location
-	if ( GetRespawnLocationOverride() && !bMatchSummary )
+	if ( GetRespawnLocationOverride() )
 	{
 		if ( SelectSpawnSpotByName( GetRespawnLocationOverride(), pSpot ) )
 		{
@@ -2241,9 +2233,6 @@ CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 //-----------------------------------------------------------------------------
 bool CTFPlayer::SelectSpawnSpotByType( const char *pEntClassName, CBaseEntity* &pSpot )
 {
-	bool bMatchSummary = TFGameRules()->ShowMatchSummary();
-	CBaseEntity *pMatchSummaryFallback = NULL;
-
 	// Get an initial spawn point.
 	pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
 	if ( !pSpot )
@@ -2290,19 +2279,6 @@ bool CTFPlayer::SelectSpawnSpotByType( const char *pEntClassName, CBaseEntity* &
 
 	next_spawn_point:;
 
-		// Let's save off a fallback spot for competitive mode
-		if ( bMatchSummary && !pMatchSummaryFallback )
-		{
-			CTFTeamSpawn *pCTFSpawn = dynamic_cast<CTFTeamSpawn*>( pSpot );
-			if ( pCTFSpawn )
-			{
-				if ( ( pCTFSpawn->GetTeamNumber() == pCTFSpawn->GetTeamNumber() ) && ( pCTFSpawn->GetMatchSummaryType() == PlayerTeamSpawn_MatchSummary_None ) )
-				{
-					pMatchSummaryFallback = pCTFSpawn;
-				}
-			}
-		}
-
 		// Get the next spawning point to check.
 		pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
 
@@ -2325,13 +2301,6 @@ bool CTFPlayer::SelectSpawnSpotByType( const char *pEntClassName, CBaseEntity* &
 	} 
 	// Continue until a valid spawn point is found or we hit the start.
 	while ( pSpot != pFirstSpot );
-
-	// Return a fallback spot for competitive mode
-	if ( bMatchSummary && pMatchSummaryFallback )
-	{
-		pSpot = pMatchSummaryFallback;
-		return true;
-	}
 
 	return false;
 }
@@ -4527,9 +4496,6 @@ void CTFPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fals
 		return;
 	}
 
-	if ( TFGameRules()->ShowMatchSummary() )
-		return;
-
 	m_bSuicideExplode = bExplode;
 	m_iSuicideCustomKillFlags = TF_DMG_CUSTOM_SUICIDE;
 
@@ -6235,9 +6201,6 @@ bool CTFPlayer::SetObserverMode(int mode)
 	if ( mode < OBS_MODE_NONE || mode >= NUM_OBSERVER_MODES )
 		return false;
 
-	if ( TFGameRules()->ShowMatchSummary() )
-		return false;
-
 	// Skip over OBS_MODE_POI if we're not in Passtime mode
 	if ( mode == OBS_MODE_POI )
 	{
@@ -7576,7 +7539,6 @@ static ConCommand dropitem( "dropitem", CC_DropItem, "Drop the flag." );
 //-----------------------------------------------------------------------------
 CObserverPoint::CObserverPoint()
 {
-	m_bMatchSummary = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -7585,12 +7547,6 @@ CObserverPoint::CObserverPoint()
 void CObserverPoint::Activate( void )
 {
 	BaseClass::Activate();
-
-	if ( m_bMatchSummary )
-	{
-		// sanity check to make sure the competitive match summary target is disabled until we're ready for it
-		SetDisabled( true );
-	}
 
 	if ( m_iszAssociateTeamEntityName != NULL_STRING )
 	{
@@ -7665,7 +7621,6 @@ DEFINE_KEYFIELD( m_bDisabled, FIELD_BOOLEAN, "StartDisabled" ),
 DEFINE_KEYFIELD( m_bDefaultWelcome, FIELD_BOOLEAN, "defaultwelcome" ),
 DEFINE_KEYFIELD( m_iszAssociateTeamEntityName, FIELD_STRING, "associated_team_entity" ),
 DEFINE_KEYFIELD( m_flFOV, FIELD_FLOAT, "fov" ),
-DEFINE_KEYFIELD( m_bMatchSummary, FIELD_BOOLEAN, "match_summary" ),
 
 DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),

@@ -32,7 +32,6 @@ public:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 	virtual void Reset();
 	virtual void Think();
-	virtual bool ShouldDraw() OVERRIDE;
 
 	virtual int GetRenderGroupPriority( void ) { return 60; }	// higher than build menus
 

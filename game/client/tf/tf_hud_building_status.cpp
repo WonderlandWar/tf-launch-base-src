@@ -983,9 +983,6 @@ bool CHudBuildingStatusContainer_Engineer::ShouldDraw( void )
 	if ( pPlayer->GetTeamNumber() <= TEAM_SPECTATOR )
 		return false;
 
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return false;
-
 	return CHudElement::ShouldDraw();
 }
 

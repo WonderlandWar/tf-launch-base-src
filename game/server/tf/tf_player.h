@@ -967,7 +967,6 @@ public:
 	void InputDisable( inputdata_t &inputdata );
 
 	bool IsDefaultWelcome( void ) { return m_bDefaultWelcome; }
-	bool IsMatchSummary( void ) { return m_bMatchSummary; }
 
 	void SetDisabled( bool bDisabled ){ m_bDisabled = bDisabled; }
 
@@ -977,7 +976,6 @@ public:
 	EHANDLE		m_hAssociatedTeamEntity;
 	string_t	m_iszAssociateTeamEntityName;
 	float		m_flFOV;
-	bool		m_bMatchSummary;
 };
 
 #endif	// TF_PLAYER_H

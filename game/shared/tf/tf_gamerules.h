@@ -399,19 +399,12 @@ public:
 
 	bool IsDefaultGameMode( void );		// The absence of arena, mvm, tournament mode, etc
 
-	virtual bool AllowThirdPersonCamera( void ) { return ( ShowMatchSummary() ); }
-
 	int		GetStatsMinimumPlayers( void );
 	int		GetStatsMinimumPlayedTime( void );
 
 	float GetGravityMultiplier(  void ){ return m_flGravityMultiplier; }
 
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
-
-	bool MapHasMatchSummaryStage( void ){ return m_bMapHasMatchSummaryStage; }
-	bool PlayersAreOnMatchSummaryStage( void ){ return m_bPlayersAreOnMatchSummaryStage; }
-
-	bool ShowMatchSummary( void ){ return m_bShowMatchSummary; }
 
 #ifdef GAME_DLL
 	void KickPlayersNewMatchIDRequestFailed();
@@ -599,10 +592,6 @@ private:
 	CNetworkVar( float, m_flGravityMultiplier );
 
 	CNetworkVar( bool, m_bTeamsSwitched );
-
-	CNetworkVar( bool, m_bShowMatchSummary );
-	CNetworkVar( bool, m_bMapHasMatchSummaryStage );
-	CNetworkVar( bool, m_bPlayersAreOnMatchSummaryStage );
 
 	float		m_flCTFCaptureBonusTime;
 public:

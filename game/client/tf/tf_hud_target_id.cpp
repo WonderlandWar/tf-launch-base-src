@@ -282,11 +282,6 @@ bool CTargetID::ShouldDraw( void )
 		return false;
 	}
 
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-	{
-		return false;
-	}
-
 	C_TFPlayer *pLocalTFPlayer = C_TFPlayer::GetLocalTFPlayer();
 	if ( !pLocalTFPlayer )
 	{

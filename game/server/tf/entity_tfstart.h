@@ -24,13 +24,6 @@ enum PlayerTeamSpawnMode_t
 	PlayerTeamSpawnMode_Triggered = 1,
 };
 
-enum PlayerTeamSpawn_MatchSummary_t
-{
-	PlayerTeamSpawn_MatchSummary_None = 0,
-	PlayerTeamSpawn_MatchSummary_Loser = 1,
-	PlayerTeamSpawn_MatchSummary_Winner = 2,
-};
-
 DECLARE_AUTO_LIST( ITFTeamSpawnAutoList );
 
 class CTFTeamSpawn : public CServerOnlyPointEntity, public ITFTeamSpawnAutoList
@@ -58,10 +51,6 @@ public:
 	CHandle<CTeamControlPointRound> GetRoundBlueSpawn( void ) { return m_hRoundBlueSpawn; }
 	CHandle<CTeamControlPointRound> GetRoundRedSpawn( void ) { return m_hRoundRedSpawn; }
 
-	PlayerTeamSpawn_MatchSummary_t GetMatchSummaryType( void ){ return m_nMatchSummaryType; }
-	bool AlreadyUsedForMatchSummary( void ){ return m_bAlreadyUsedForMatchSummary; }
-	void SetAlreadyUsedForMatchSummary( void ){ m_bAlreadyUsedForMatchSummary = true; }
-
 private:
 	bool							m_bDisabled;		// Enabled/Disabled?
 	PlayerTeamSpawnMode_t			m_nSpawnMode;		// How are players allowed to spawn here?
@@ -73,9 +62,6 @@ private:
 	CHandle<CTeamControlPoint>		m_hControlPoint;
 	CHandle<CTeamControlPointRound>	m_hRoundBlueSpawn;
 	CHandle<CTeamControlPointRound>	m_hRoundRedSpawn;
-
-	PlayerTeamSpawn_MatchSummary_t	m_nMatchSummaryType;		// is this a spawn location for a match summary?
-	bool m_bAlreadyUsedForMatchSummary;
 
 	DECLARE_DATADESC();
 };

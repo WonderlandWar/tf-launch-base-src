@@ -62,9 +62,6 @@ CHudTFCrosshair::~CHudTFCrosshair( void )
 //-----------------------------------------------------------------------------
 bool CHudTFCrosshair::ShouldDraw( void )
 {
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return false;
-
 	// turn off if the local player is a ghost
 	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
 	if ( pPlayer )

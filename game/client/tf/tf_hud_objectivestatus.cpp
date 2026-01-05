@@ -177,7 +177,7 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 			}
 		}
 
-		if ( bDisplayTimer && !TFGameRules()->ShowMatchSummary() )
+		if ( bDisplayTimer )
 		{
 			if ( !m_pTimePanel->IsVisible() )
 			{
@@ -209,16 +209,4 @@ void CTFHudObjectiveStatus::Think()
 		return;
 
 	SetVisiblePanels();
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFHudObjectiveStatus::ShouldDraw()
-{
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return false;
-
-	return CHudElement::ShouldDraw();
 }

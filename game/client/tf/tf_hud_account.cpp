@@ -181,9 +181,6 @@ public:
 			m_AccountDeltaItems.RemoveAll();
 			return false;
 		}
-		
-		if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-			return false;
 
 		return CHudElement::ShouldDraw();
 	}

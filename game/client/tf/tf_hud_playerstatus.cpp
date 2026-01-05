@@ -648,17 +648,6 @@ void CTFHudPlayerStatus::ApplySchemeSettings( IScheme *pScheme )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFHudPlayerStatus::ShouldDraw( void )
-{
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return false;
-
-	return CHudElement::ShouldDraw();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFHudPlayerStatus::Reset()
 {
 	if ( m_pHudPlayerClass )

@@ -52,9 +52,6 @@ bool CHudCloakMeter::ShouldDraw( void )
 	if ( !pPlayer->IsPlayerClass( TF_CLASS_SPY ) )
 		return false;
 
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return false;
-
 	return CHudElement::ShouldDraw();
 }
 

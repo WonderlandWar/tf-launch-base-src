@@ -2508,9 +2508,6 @@ void C_TFPlayer::TurnOnTauntCam( void )
 	if ( !IsLocalPlayer() )
 		return;
 
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return;
-
 	m_flTauntCamTargetDist = ( m_flTauntCamTargetDist != 0.0f ) ? m_flTauntCamTargetDist : tf_tauntcam_dist.GetFloat();
 	m_flTauntCamTargetDistUp = ( m_flTauntCamTargetDistUp != 0.0f ) ? m_flTauntCamTargetDistUp : 0.f;
 
@@ -2561,9 +2558,6 @@ void C_TFPlayer::TurnOnTauntCam_Finish( void )
 //-----------------------------------------------------------------------------
 void C_TFPlayer::TurnOffTauntCam( void )
 {
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return;
-
 	// We want to interpolate back into the guy's head.
 	if ( g_ThirdPersonManager.GetForcedThirdPerson() == false )
 	{
@@ -2586,9 +2580,6 @@ void C_TFPlayer::TurnOffTauntCam_Finish( void )
 {
 	if ( !IsLocalPlayer() )
 		return;	
-
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return;
 
 	const Vector& vecOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
 	tf_tauntcam_pitch.SetValue( vecOffset[PITCH] - m_angTauntPredViewAngles[PITCH] );
@@ -4390,9 +4381,6 @@ void C_TFPlayer::CreateSaveMeEffect( MedicCallerType nType /*= CALLER_TYPE_NORMA
 	if ( IsLocalPlayer() && InFirstPersonView() )
 		return;
 
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return;
-
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 
 	// If I'm disguised as the enemy, play to all players
@@ -5426,12 +5414,6 @@ bool C_TFPlayer::IsAllowedToSwitchWeapons( void )
 {
 	if ( IsWeaponLowered() == true )
 		return false;
-
-	if ( TFGameRules() )
-	{
-		if ( TFGameRules()->ShowMatchSummary() )
-			return false;
-	}
 
 	// Can't weapon switch during a taunt.
 	if( m_Shared.InCond( TF_COND_TAUNTING ) && tf_allow_taunt_switch.GetInt() <= 1 )

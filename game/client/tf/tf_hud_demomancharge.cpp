@@ -85,9 +85,6 @@ bool CHudDemomanChargeMeter::ShouldDraw( void )
 	if ( !pWpn || !pChargeupWeapon || !pChargeupWeapon->CanCharge() )
 		return false;
 
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return false;
-
 	return CHudElement::ShouldDraw();
 }
 

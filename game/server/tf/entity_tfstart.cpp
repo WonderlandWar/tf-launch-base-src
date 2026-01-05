@@ -25,7 +25,6 @@ BEGIN_DATADESC( CTFTeamSpawn )
 	DEFINE_KEYFIELD( m_iszRoundBlueSpawn, FIELD_STRING, "round_bluespawn" ),
 	DEFINE_KEYFIELD( m_iszRoundRedSpawn, FIELD_STRING, "round_redspawn" ),
 	DEFINE_KEYFIELD( m_nSpawnMode, FIELD_INTEGER, "SpawnMode" ),
-	DEFINE_KEYFIELD( m_nMatchSummaryType, FIELD_INTEGER, "MatchSummary" ),
 
 	// Inputs.
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
@@ -46,8 +45,6 @@ LINK_ENTITY_TO_CLASS( info_player_teamspawn, CTFTeamSpawn );
 CTFTeamSpawn::CTFTeamSpawn()
 {
 	m_bDisabled = false;
-	m_nMatchSummaryType = PlayerTeamSpawn_MatchSummary_None;
-	m_bAlreadyUsedForMatchSummary = false;
 
 	AddEFlags( EFL_FORCE_ALLOW_MOVEPARENT );
 }

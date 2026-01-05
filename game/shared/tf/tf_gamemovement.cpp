@@ -2273,7 +2273,7 @@ void CTFGameMovement::Duck( void )
 	//
 	// If the player is still alive and not an observer, check to make sure that
 	// his view height is at the standing height.
-	else if ( bFirstTimePredicted && !IsDead() && !player->IsObserver() && !player->IsInAVehicle() && !( TFGameRules() && TFGameRules()->ShowMatchSummary() ) )
+	else if ( bFirstTimePredicted && !IsDead() && !player->IsObserver() && !player->IsInAVehicle() )
 	{
 		float flOffsetDelta = player->GetViewOffset().z - GetPlayerViewOffset( false ).z;
 		if ( ( fabs( flOffsetDelta ) > 0.1 ) )

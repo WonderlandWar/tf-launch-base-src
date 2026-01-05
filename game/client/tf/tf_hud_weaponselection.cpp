@@ -286,11 +286,6 @@ bool CHudWeaponSelection::ShouldDraw()
 		m_pActiveWeaponBG->SetVisible( false );
 	}
 
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-	{
-		bShouldDraw = false;
-	}
-
 	return bShouldDraw;
 }
 

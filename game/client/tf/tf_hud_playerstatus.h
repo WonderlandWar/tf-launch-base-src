@@ -164,7 +164,6 @@ public:
 	CTFHudPlayerStatus( const char *pElementName );
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 	virtual void Reset();
-	virtual bool ShouldDraw( void ) OVERRIDE;
 
 private:
 

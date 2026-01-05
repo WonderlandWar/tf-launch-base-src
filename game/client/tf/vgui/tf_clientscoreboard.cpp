@@ -299,12 +299,6 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 //-----------------------------------------------------------------------------
 void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 {
-	if ( bShow )
-	{
-		if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-			return;
-	}
-
 	// Catch the case where we call ShowPanel before ApplySchemeSettings, eg when
 	// going from windowed <-> fullscreen
 	if ( m_pImageList == NULL )

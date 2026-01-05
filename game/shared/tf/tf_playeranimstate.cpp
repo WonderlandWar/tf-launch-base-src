@@ -305,11 +305,6 @@ void CTFPlayerAnimState::Update( float eyeYaw, float eyePitch )
 			Taunt_ComputePoseParam_MoveX( pStudioHdr );
 			Taunt_ComputePoseParam_MoveY( pStudioHdr );
 		}
-		else if ( TFGameRules()->PlayersAreOnMatchSummaryStage() )
-		{
-			m_bForceAimYaw = true;
-			m_flEyeYaw = pTFPlayer->GetTauntYaw();
-		}
 		
 		if ( !bIsImmobilized || bInTaunt )
 		{

@@ -570,69 +570,6 @@ const CViewVectors *CTFGameRules::GetViewVectors() const
 
 REGISTER_GAMERULES_CLASS( CTFGameRules );
 
-#ifdef CLIENT_DLL
-void RecvProxy_MatchSummary( const CRecvProxyData *pData, void *pStruct, void *pOut )
-{
-	bool bMatchSummary = ( pData->m_Value.m_Int > 0 );
-	if ( bMatchSummary && !(*(bool*)(pOut)))
-	{
-		C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-		if ( pLocalPlayer )
-		{
-			pLocalPlayer->TurnOffTauntCam();
-			pLocalPlayer->TurnOffTauntCam_Finish();
-		}
-	}
-
-	*(bool*)(pOut) = bMatchSummary;
-}
-
-void RecvProxy_CompetitiveMode( const CRecvProxyData *pData, void *pStruct, void *pOut )
-{
-	*(bool*)(pOut) = ( pData->m_Value.m_Int > 0 );
-
-	IGameEvent *event = gameeventmanager->CreateEvent( "competitive_state_changed" );
-	if ( event )
-	{
-		// Client-side once it's actually happened
-		gameeventmanager->FireEventClientSide( event );
-	}
-}
-
-void RecvProxy_PlayerVotedForMap( const CRecvProxyData *pData, void *pStruct, void *pOut )
-{
-	if ( *(int*)(pOut) != pData->m_Value.m_Int )
-	{
-		*(int*)(pOut) = pData->m_Value.m_Int;
-
-		IGameEvent *event = gameeventmanager->CreateEvent( "player_next_map_vote_change" );
-		if ( event )
-		{
-			event->SetInt( "map_index", pData->m_Value.m_Int );
-			event->SetInt( "vote", pData->m_Value.m_Int );
-			// Client-side once it's actually happened
-			gameeventmanager->FireEventClientSide( event );
-		}
-	}
-}
-
-void RecvProxy_NewMapVoteStateChanged( const CRecvProxyData *pData, void *pStruct, void *pOut )
-{
-	bool bChange = *(int*)(pOut) != pData->m_Value.m_Int;
-	*(int*)(pOut) = pData->m_Value.m_Int;
-
-	if ( bChange )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "vote_maps_changed" );
-		if ( event )
-		{
-			// Client-side once it's actually happened
-			gameeventmanager->FireEventClientSide( event );
-		}
-	}
-}
-#endif
-
 BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 #ifdef CLIENT_DLL
 
@@ -643,11 +580,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 
 	RecvPropBool( RECVINFO( m_bHaveMinPlayersToEnableReady ) ),
 
-	RecvPropBool( RECVINFO( m_bShowMatchSummary ), 0, RecvProxy_MatchSummary ),
-	RecvPropBool( RECVINFO_NAME( m_bShowMatchSummary, "m_bShowCompetitiveMatchSummary" ), 0, RecvProxy_MatchSummary ),     // Renamed
 	RecvPropBool( RECVINFO( m_bTeamsSwitched ) ),
-	RecvPropBool( RECVINFO( m_bMapHasMatchSummaryStage ) ),
-	RecvPropBool( RECVINFO( m_bPlayersAreOnMatchSummaryStage ) ),
 #else
 
 	SendPropInt( SENDINFO( m_nGameType ), 4, SPROP_UNSIGNED ),
@@ -657,10 +590,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 
 	SendPropBool( SENDINFO( m_bHaveMinPlayersToEnableReady ) ),
 
-	SendPropBool( SENDINFO( m_bShowMatchSummary ) ),
 	SendPropBool( SENDINFO( m_bTeamsSwitched ) ),
-	SendPropBool( SENDINFO( m_bMapHasMatchSummaryStage ) ),
-	SendPropBool( SENDINFO( m_bPlayersAreOnMatchSummaryStage ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -1396,10 +1326,6 @@ CTFGameRules::CTFGameRules()
 
 	m_flGravityMultiplier.Set( 1.0 );
 
-	m_bShowMatchSummary.Set( false );
-	m_bMapHasMatchSummaryStage.Set( false );
-	m_bPlayersAreOnMatchSummaryStage.Set( false );
-
 	m_bUseMatchHUD = false;
 	m_bUsePreRoundDoors = false;
 
@@ -1694,12 +1620,6 @@ void CTFGameRules::Activate()
 	if ( tf_gamemode_tc.GetBool() )
 	{
 		tf_gamemode_misc.SetValue( 1 );
-	}
-
-	CBaseEntity *pStageLogic = gEntList.FindEntityByName( NULL, "competitive_stage_logic_case" );
-	if ( pStageLogic )
-	{
-		m_bMapHasMatchSummaryStage.Set( true );
 	}
 }
 
@@ -3614,15 +3534,10 @@ CBaseEntity *CTFGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer, bool bIgnorePlayers, PlayerTeamSpawnMode_t nSpawnMode /* = 0*/ )
 {
-	bool bMatchSummary = ShowMatchSummary();
-
 	// Check the team.
 	// In Item Testing mode, bots all use the Red team spawns, and the player uses Blue
-	if ( !bMatchSummary )
-	{
-		if ( pSpot->GetTeamNumber() != pPlayer->GetTeamNumber() )
-			return false;
-	}
+	if ( pSpot->GetTeamNumber() != pPlayer->GetTeamNumber() )
+		return false;
 
 	if ( !pSpot->IsTriggered( pPlayer ) )
 		return false;
@@ -3635,38 +3550,12 @@ bool CTFGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer, 
 
 		if ( pCTFSpawn->GetTeamSpawnMode() && pCTFSpawn->GetTeamSpawnMode() != nSpawnMode )
 			return false;
-
-		if ( bMatchSummary )
-		{
-			if ( pCTFSpawn->AlreadyUsedForMatchSummary() )
-				return false; 
-
-			if ( pCTFSpawn->GetMatchSummaryType() == PlayerTeamSpawn_MatchSummary_Winner )
-			{
-				if ( pPlayer->GetTeamNumber() != GetWinningTeam() )
-					return false;
-			}
-			else if ( pCTFSpawn->GetMatchSummaryType() == PlayerTeamSpawn_MatchSummary_Loser )
-			{
-				if ( pPlayer->GetTeamNumber() == GetWinningTeam() )
-					return false;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		else
-		{
-			if ( pCTFSpawn->GetMatchSummaryType() != PlayerTeamSpawn_MatchSummary_None )
-				return false;
-		}
 	}
 
 	Vector mins = VEC_HULL_MIN_SCALED( pPlayer );
 	Vector maxs = VEC_HULL_MAX_SCALED( pPlayer );
 
-	if ( !bIgnorePlayers && !bMatchSummary )
+	if ( !bIgnorePlayers )
 	{
 		Vector vTestMins = pSpot->GetAbsOrigin() + mins;
 		Vector vTestMaxs = pSpot->GetAbsOrigin() + maxs;
@@ -3677,14 +3566,6 @@ bool CTFGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer, 
 	UTIL_TraceHull( pSpot->GetAbsOrigin(), pSpot->GetAbsOrigin(), mins, maxs, MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
 	if ( trace.fraction == 1 && trace.allsolid != 1 && (trace.startsolid != 1) )
 	{
-		if ( bMatchSummary )
-		{
-			if ( pCTFSpawn )
-			{
-				pCTFSpawn->SetAlreadyUsedForMatchSummary();
-			}
-		}
-
 		return true;
 	}
 
@@ -7542,8 +7423,6 @@ bool	ScriptIsDefaultGameMode()									{ return TFGameRules()->IsDefaultGameMode
 bool	ScriptAllowThirdPersonCamera()								{ return TFGameRules()->AllowThirdPersonCamera(); }
 void	ScriptSetGravityMultiplier( float flMultiplier )			{ return TFGameRules()->SetGravityMultiplier( flMultiplier ); }
 float	ScriptGetGravityMultiplier()								{ return TFGameRules()->GetGravityMultiplier(); }
-bool	ScriptMapHasMatchSummaryStage()								{ return TFGameRules()->MapHasMatchSummaryStage(); }
-bool	ScriptPlayersAreOnMatchSummaryStage()						{ return TFGameRules()->PlayersAreOnMatchSummaryStage(); }
 void	ScriptSetOvertimeAllowedForCTF( bool bAllowed )				{ TFGameRules()->SetOvertimeAllowedForCTF( bAllowed ); }
 bool	ScriptGetOvertimeAllowedForCTF()							{ return TFGameRules()->GetOvertimeAllowedForCTF(); }
 
@@ -7567,8 +7446,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( AllowThirdPersonCamera,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetGravityMultiplier,						"" );
 	TF_GAMERULES_SCRIPT_FUNC( GetGravityMultiplier,						"" );
-	TF_GAMERULES_SCRIPT_FUNC( MapHasMatchSummaryStage,					"" );
-	TF_GAMERULES_SCRIPT_FUNC( PlayersAreOnMatchSummaryStage,			"" );
 	TF_GAMERULES_SCRIPT_FUNC( GetOvertimeAllowedForCTF,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetOvertimeAllowedForCTF,					"" );
 
