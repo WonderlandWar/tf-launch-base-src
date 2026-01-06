@@ -32,7 +32,6 @@
 #include "takedamageinfo.h"
 #include "tf_team.h"
 #include "physics_collisionevent.h"
-#include "tf_weapon_medigun.h"
 #endif
 
 #define TF_WEAPON_PIPEBOMB_TIMER		3.0f //Seconds
@@ -46,16 +45,6 @@
 extern ConVar tf_grenadelauncher_max_chargetime;
 ConVar tf_grenadelauncher_chargescale( "tf_grenadelauncher_chargescale", "1.0", FCVAR_CHEAT | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_grenadelauncher_livetime( "tf_grenadelauncher_livetime", "0.8", FCVAR_CHEAT | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
-extern ConVar tf_sticky_radius_ramp_time;
-extern ConVar tf_sticky_airdet_radius;
-
-#ifndef CLIENT_DLL
-
-ConVar tf_grenadelauncher_min_contact_speed( "tf_grenadelauncher_min_contact_speed", "100", FCVAR_DEVELOPMENTONLY );
-extern ConVar tf_obj_gib_velocity_min;
-extern ConVar tf_obj_gib_velocity_max;
-extern ConVar tf_obj_gib_maxspeed;
-#endif
 
 IMPLEMENT_NETWORKCLASS_ALIASED( TFGrenadePipebombProjectile, DT_TFProjectile_Pipebomb )
 

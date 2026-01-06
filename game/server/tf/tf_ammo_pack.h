@@ -44,8 +44,6 @@ public:
 	void  SetInitialVelocity( Vector &vecVelocity );
 	void  SetHealthInstead( bool bHealth ) { m_bHealthInstead = bHealth; }
 
-	const char* MakeHolidayAmmoPack( const char* inModelName, CBaseEntity *pOwner, const CTakeDamageInfo &info );
-
 	bool m_bObjGib;
 
 private:

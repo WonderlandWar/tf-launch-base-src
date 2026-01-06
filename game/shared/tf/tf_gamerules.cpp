@@ -221,17 +221,10 @@ bool IsValveMap( const char *pMapName )
 extern ConVar mp_capstyle;
 extern ConVar sv_turbophysics;
 
-extern ConVar tf_vaccinator_small_resist;
-extern ConVar tf_vaccinator_uber_resist;
-
-extern ConVar tf_teleporter_fov_time;
-extern ConVar tf_teleporter_fov_start;
-
 #ifdef GAME_DLL
 extern ConVar tf_debug_damage;
 extern ConVar tf_damage_range;
 extern ConVar tf_damage_disablespread;
-extern ConVar tf_populator_damage_multiplier;
 extern ConVar tf_weapon_criticals;
 extern ConVar tf_weapon_criticals_melee;
 extern ConVar mp_idledealmethod;
@@ -239,59 +232,14 @@ extern ConVar mp_idlemaxtime;
 
 extern ConVar mp_autoteambalance;
 
-// STAGING_SPY
-ConVar tf_feign_death_activate_damage_scale( "tf_feign_death_activate_damage_scale", "0.25", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar tf_feign_death_damage_scale( "tf_feign_death_damage_scale", "0.35", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar tf_stealth_damage_reduction( "tf_stealth_damage_reduction", "0.8", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-
-ConVar tf_birthday_ball_chance( "tf_birthday_ball_chance", "100", FCVAR_REPLICATED, "Percent chance of a birthday beach ball spawning at each round start" );
-
 ConVar tf_allow_player_name_change( "tf_allow_player_name_change", "1", FCVAR_NOTIFY, "Allow player name changes." );
 
 ConVar tf_weapon_criticals_distance_falloff( "tf_weapon_criticals_distance_falloff", "0", FCVAR_CHEAT, "Critical weapon damage will take distance into account." );
 
 ConVar mp_spectators_restricted( "mp_spectators_restricted", "0", FCVAR_NONE, "Prevent players on game teams from joining team spectator if it would unbalance the teams." );
-
-ConVar tf_test_special_ducks( "tf_test_special_ducks", "1", FCVAR_DEVELOPMENTONLY );
-
-ConVar tf_mm_abandoned_players_per_team_max( "tf_mm_abandoned_players_per_team_max", "1", FCVAR_DEVELOPMENTONLY );
-#endif // GAME_DLL
-ConVar tf_mm_next_map_vote_time( "tf_mm_next_map_vote_time", "15", FCVAR_REPLICATED );
-
-
-static float g_fEternaweenAutodisableTime = 0.0f;
-
-ConVar tf_spec_xray( "tf_spec_xray", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allows spectators to see player glows. 1 = same team, 2 = both teams" );
-
-#ifdef GAME_DLL
-void cc_tf_forced_holiday_changed( IConVar *pConVar, const char *pOldString, float flOldValue )
-{
-	// Tell the listeners to recalculate the holiday
-	IGameEvent *event = gameeventmanager->CreateEvent( "recalculate_holidays" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
-	}
-}
 #endif // GAME_DLL
 
-ConVar tf_forced_holiday( "tf_forced_holiday", "0", FCVAR_REPLICATED, "Forced holiday, \n   Birthday = 1\n   Halloween = 2\n" //  Christmas = 3\n   Valentines = 4\n   MeetThePyro = 5\n   FullMoon=6
-#ifdef GAME_DLL
-, cc_tf_forced_holiday_changed
-#endif // GAME_DLL
-);
-ConVar tf_item_based_forced_holiday( "tf_item_based_forced_holiday", "0", FCVAR_REPLICATED, "" 	// like a clone of tf_forced_holiday, but controlled by client consumable item use
-#ifdef GAME_DLL
-	, cc_tf_forced_holiday_changed
-#endif // GAME_DLL
-);
-ConVar tf_force_holidays_off( "tf_force_holidays_off", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, ""
-#ifdef GAME_DLL
-, cc_tf_forced_holiday_changed
-#endif // GAME_DLL
-);
 ConVar tf_birthday( "tf_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
-ConVar tf_spells_enabled( "tf_spells_enabled", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable to Allow Halloween Spells to be dropped and used by players" );
 
 ConVar tf_caplinear( "tf_caplinear", "1", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "If set to 1, teams must capture control points linearly." );
 ConVar tf_stalematechangeclasstime( "tf_stalematechangeclasstime", "20", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "Amount of time that players are allowed to change class in stalemates." );
@@ -353,10 +301,6 @@ ConVar tf_medieval( "tf_medieval", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Enable
 				   , cc_tf_medieval_changed
 #endif 
 				    );
-
-ConVar tf_sticky_radius_ramp_time( "tf_sticky_radius_ramp_time", "2.0", FCVAR_DEVELOPMENTONLY | FCVAR_CHEAT | FCVAR_REPLICATED, "Amount of time to get full radius after arming" );
-ConVar tf_sticky_airdet_radius( "tf_sticky_airdet_radius", "0.85", FCVAR_DEVELOPMENTONLY | FCVAR_CHEAT | FCVAR_REPLICATED, "Radius Scale if detonated in the air" );
-
 
 #ifndef GAME_DLL
 extern ConVar cl_burninggibs;
@@ -2567,15 +2511,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 
 		// Stomp flRealDamage with resist adjusted values
 		flRealDamage = flDamageBase + flDamageBonus;
-
-		if ( pVictim && pVictim->IsPlayerClass( TF_CLASS_SPY ) && !pVictim->IsTaunting() )
-		{
-			// Reduce damage taken if we have recently feigned death.
-			if ( pVictim->m_Shared.InCond( TF_COND_STEALTHED ) )
-			{
-				flRealDamage *= tf_stealth_damage_reduction.GetFloat();
-			}
-		}
 
 		if ( sv_cheats && !sv_cheats->GetBool() )
 		{

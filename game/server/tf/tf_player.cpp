@@ -3451,10 +3451,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 
 			char pszWelcome[128];
 			Q_snprintf( pszWelcome, sizeof(pszWelcome), "#TF_Welcome" );
-			if ( UTIL_GetActiveHolidayString() )
-			{
-				Q_snprintf( pszWelcome, sizeof(pszWelcome), "#TF_Welcome_%s", UTIL_GetActiveHolidayString() );
-			}
 
 			KeyValues *data = new KeyValues( "data" );
 			data->SetString( "title", pszWelcome );		// info panel title
@@ -5992,10 +5988,6 @@ void CTFPlayer::StateEnterWELCOME( void )
 		{
 			char pszWelcome[128];
 			Q_snprintf( pszWelcome, sizeof(pszWelcome), "#TF_Welcome" );
-			if ( UTIL_GetActiveHolidayString() )
-			{
-				Q_snprintf( pszWelcome, sizeof(pszWelcome), "#TF_Welcome_%s", UTIL_GetActiveHolidayString() );
-			}
 
 			KeyValues *data = new KeyValues( "data" );
 			data->SetString( "title", pszWelcome );		// info panel title
