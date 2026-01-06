@@ -48,21 +48,6 @@ CTFPlayerResource::CTFPlayerResource( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerResource::FireGameEvent( IGameEvent * event )
-{
-	const char *pszEvent = event->GetName();
-
-	if ( !Q_strcmp( pszEvent, "mvm_wave_complete" ) )
-	{
-		// Force a re-send on wave complete
-		m_flNextDamageAndHealingSend = 0.f;
-		UpdatePlayerData();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayerResource::UpdatePlayerData( void )
 {
 	m_vecRedPlayers.RemoveAll();

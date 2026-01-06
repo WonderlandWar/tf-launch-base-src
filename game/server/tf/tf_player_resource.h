@@ -13,7 +13,7 @@
 
 #include "tf_player_shared.h"
 
-class CTFPlayerResource : public CPlayerResource, public CGameEventListener
+class CTFPlayerResource : public CPlayerResource
 {
 	DECLARE_CLASS( CTFPlayerResource, CPlayerResource );
 
@@ -21,8 +21,6 @@ public:
 	DECLARE_SERVERCLASS();
 
 	CTFPlayerResource();
-
-	virtual void FireGameEvent( IGameEvent *event );
 
 	virtual void UpdatePlayerData( void );
 	virtual void Spawn( void );

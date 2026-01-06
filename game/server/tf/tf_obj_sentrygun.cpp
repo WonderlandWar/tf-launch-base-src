@@ -1649,7 +1649,6 @@ void CObjectSentrygun::SetModel( const char *pModel )
 //-----------------------------------------------------------------------------
 void CObjectSentrygun::SetBuildingSize()
 {
-	// Mini's do NOT need to have their size set here, SetModelScale already handles scaling for hulls (change from MvM)
 	UTIL_SetSize( this, SENTRYGUN_MINS, SENTRYGUN_MAXS );
 }
 

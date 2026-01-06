@@ -81,16 +81,6 @@ void CTFWeaponBaseMelee::WeaponReset( void )
 // -----------------------------------------------------------------------------
 // Purpose:
 // -----------------------------------------------------------------------------
-void CTFWeaponBaseMelee::Precache()
-{
-	BaseClass::Precache();
-
-	CBaseEntity::PrecacheScriptSound("MVM_Weapon_Default.HitFlesh");
-}
-
-// -----------------------------------------------------------------------------
-// Purpose:
-// -----------------------------------------------------------------------------
 void CTFWeaponBaseMelee::Spawn()
 {
 	Precache();

@@ -162,7 +162,6 @@ BEGIN_DATADESC( CCaptureFlag )
 	DEFINE_KEYFIELD( m_nUseTrailEffect, FIELD_INTEGER, "trail_effect" ),
 	DEFINE_KEYFIELD( m_nNeutralType, FIELD_INTEGER, "NeutralType" ),
 	DEFINE_KEYFIELD( m_nScoringType, FIELD_INTEGER, "ScoringType" ),
-	DEFINE_KEYFIELD( m_bReturnBetweenWaves, FIELD_BOOLEAN, "ReturnBetweenWaves" ),
 	DEFINE_KEYFIELD( m_bVisibleWhenDisabled, FIELD_BOOLEAN, "VisibleWhenDisabled" ),
 	DEFINE_KEYFIELD( m_bUseShotClockMode, FIELD_BOOLEAN, "ShotClockMode" ),
 	DEFINE_KEYFIELD( m_nPointValue, FIELD_INTEGER, "PointValue" ),
@@ -239,7 +238,6 @@ CCaptureFlag::CCaptureFlag()
 
 	m_nNeutralType = INVADE_NEUTRAL_TYPE_DEFAULT;
 	m_nScoringType = INVADE_SCORING_TEAM_SCORE;
-	m_bReturnBetweenWaves = true;
 	m_bVisibleWhenDisabled = false;
 	m_bUseShotClockMode = false;
 		
@@ -539,7 +537,6 @@ CCaptureFlag &CCaptureFlag::operator=( const CCaptureFlag& rhs )
 	m_nUseTrailEffect = rhs.m_nUseTrailEffect;
 	m_nNeutralType = rhs.m_nNeutralType;
 	m_nScoringType = rhs.m_nScoringType;
-	m_bReturnBetweenWaves = rhs.m_bReturnBetweenWaves;
 	m_bVisibleWhenDisabled = rhs.m_bVisibleWhenDisabled;
 	m_iszModel = rhs.m_iszModel;
 	m_iszHudIcon = rhs.m_iszHudIcon;

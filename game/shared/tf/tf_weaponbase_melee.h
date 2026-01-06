@@ -39,7 +39,6 @@ public:
 	// We say yes to this so the weapon system lets us switch to it.
 	virtual bool	HasPrimaryAmmo()								{ return true; }
 	virtual bool	CanBeSelected()									{ return true; }
-	virtual void	Precache();
 	virtual void	ItemPostFrame();
 	virtual void	Spawn();
 	virtual void	PrimaryAttack();

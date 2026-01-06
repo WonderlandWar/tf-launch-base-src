@@ -3899,7 +3899,6 @@ void CTFPlayer::FireBullet( CTFWeaponBase *pWpn, const FireBulletsInfo_t &info, 
 	Vector vecEnd = vecStart + info.m_vecDirShooting * info.m_flDistance;
 	trace_t trace;
 
-	// Ignore teammates and their (physical) upgrade items when shooting in MvM
 	CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
 	UTIL_PlayerBulletTrace( vecStart, vecEnd, info.m_vecDirShooting, MASK_SOLID, &traceFilter, &trace );
 	

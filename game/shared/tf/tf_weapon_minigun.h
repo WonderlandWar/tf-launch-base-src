@@ -50,7 +50,6 @@ public:
 	CTFMinigun();
 	~CTFMinigun();
 
-	virtual void	Precache( void );
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_MINIGUN; }
 	virtual void	ItemPostFrame( void );
 	virtual void	PrimaryAttack();

@@ -62,16 +62,6 @@ extern ConVar	tf_ctf_bonus_time;
 extern ConVar mp_tournament_prevent_team_switch_on_readyup;
 #endif
 
-//extern ConVar tf_populator_health_multiplier;
-//extern ConVar tf_populator_damage_multiplier;
-
-extern ConVar tf_mvm_defenders_team_size;
-extern ConVar tf_mvm_max_invaders;
-
-const int kLadder_TeamSize_6v6 = 6;
-const int kLadder_TeamSize_9v9 = 9;
-const int kLadder_TeamSize_12v12 = 12;
-
 // How many achievements we show in the summary screen.
 #define MAX_SHOWN_ACHIEVEMENTS 6
 //=============================================================================
@@ -641,7 +631,6 @@ private:
 
 	static bool m_bIsBirthday;
 
-// MvM Helpers
 #ifdef GAME_DLL
 public:
 

@@ -1606,17 +1606,6 @@ void CTFGameRules::Activate()
 	m_bServerVoteOnReset = false;
 	m_flVoteCheckThrottle = 0;
 
-// 	if ( !IsInTournamentMode() )
-// 	{
-// 		CExtraMapEntity::SpawnExtraModel();
-// 	}
-
-	// If leaving MvM for any other game mode, clean up any sticky UI/state
-	if ( IsInTournamentMode() && false )
-	{
-		mp_tournament.SetValue( false );
-	}
-
 	if ( tf_gamemode_tc.GetBool() )
 	{
 		tf_gamemode_misc.SetValue( 1 );
@@ -2569,7 +2558,7 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 		{
 			bool bReduceBlast = false;
 
-			// If someone else shot us or we're in MvM
+			// If someone else shot us
 			if( pAttacker != pVictimBaseEntity )
 			{
 				bReduceBlast = true;
@@ -6920,71 +6909,7 @@ const char *CTFGameRules::FormatVideoName( const char *videoName, bool bWithExte
 #endif
 
 	Q_strncpy( strFullpath, "media/", MAX_PATH );	// Assume we must play out of the media directory
-
-	if ( Q_strstr( videoName, "arena_" ) )
-	{
-		char strTempPath[MAX_PATH];
-		Q_strncpy( strTempPath, "media/", MAX_PATH );
-		Q_strncat( strTempPath, videoName, MAX_PATH );
-		Q_strncat( strTempPath, FILE_EXTENSION_ANY_MATCHING_VIDEO, MAX_PATH );	
-
-		VideoSystem_t vSystem = VideoSystem::NONE;
-
-		// default to arena_intro video if we can't find the specified video
-		if ( !g_pVideo || g_pVideo->LocatePlayableVideoFile( strTempPath, "GAME", &vSystem, strFullpath, sizeof(strFullpath), VideoSystemFeature::PLAY_VIDEO_FILE_IN_MATERIAL ) != VideoResult::SUCCESS )
-		{
-			V_strncpy( strFullpath, "media/" "arena_intro", MAX_PATH );
-		}
-	}
-	else if ( Q_strstr( videoName, "mvm_" ) )
-	{
-		char strTempPath[MAX_PATH];
-		Q_strncpy( strTempPath, "media/", MAX_PATH );
-		Q_strncat( strTempPath, videoName, MAX_PATH );
-		Q_strncat( strTempPath, FILE_EXTENSION_ANY_MATCHING_VIDEO, MAX_PATH );	
-
-		VideoSystem_t vSystem = VideoSystem::NONE;
-
-		// default to mvm_intro video if we can't find the specified video
-		if ( !g_pVideo || g_pVideo->LocatePlayableVideoFile( strTempPath, "GAME", &vSystem, strFullpath, sizeof(strFullpath), VideoSystemFeature::PLAY_VIDEO_FILE_IN_MATERIAL ) != VideoResult::SUCCESS )
-		{
-			V_strncpy( strFullpath, "media/" "mvm_intro", MAX_PATH );
-		}
-	}
-	else if ( Q_strstr( videoName, "zi_" ) )
-	{
-		char strTempPath[ MAX_PATH ];
-		Q_strncpy( strTempPath, "media/", MAX_PATH );
-		Q_strncat( strTempPath, videoName, MAX_PATH );
-		Q_strncat( strTempPath, FILE_EXTENSION_ANY_MATCHING_VIDEO, MAX_PATH );
-
-		VideoSystem_t vSystem = VideoSystem::NONE;
-
-		// default to zi_intro video if we can't find the specified video
-		if ( !g_pVideo || g_pVideo->LocatePlayableVideoFile( strTempPath, "GAME", &vSystem, strFullpath, sizeof( strFullpath ), VideoSystemFeature::PLAY_VIDEO_FILE_IN_MATERIAL ) != VideoResult::SUCCESS )
-		{
-			V_strncpy( strFullpath, "media/" "zi_intro", MAX_PATH );
-		}
-	}
-	else if ( Q_strstr( videoName, "vsh_" ) )
-	{
-		char strTempPath[ MAX_PATH ];
-		Q_strncpy( strTempPath, "media/", MAX_PATH );
-		Q_strncat( strTempPath, videoName, MAX_PATH );
-		Q_strncat( strTempPath, FILE_EXTENSION_ANY_MATCHING_VIDEO, MAX_PATH );
-
-		VideoSystem_t vSystem = VideoSystem::NONE;
-
-		// default to vsh_intro video if we can't find the specified video
-		if ( !g_pVideo || g_pVideo->LocatePlayableVideoFile( strTempPath, "GAME", &vSystem, strFullpath, sizeof( strFullpath ), VideoSystemFeature::PLAY_VIDEO_FILE_IN_MATERIAL ) != VideoResult::SUCCESS )
-		{
-			V_strncpy( strFullpath, "media/" "vsh_intro", MAX_PATH );
-		}
-	}
-	else
-	{
-		Q_strncat( strFullpath, videoName, MAX_PATH );
-	}
+	Q_strncat( strFullpath, videoName, MAX_PATH );
 
 	if ( bWithExtension )
 	{

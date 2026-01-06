@@ -166,22 +166,6 @@ int CTFMinigun::UpdateTransmitState( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFMinigun::Precache( void )
-{
-	PrecacheScriptSound( "Halloween.HeadlessBossAxeHitWorld" );
-
-	// FIXME: Do we still need these??
-	PrecacheScriptSound( "MVM.GiantHeavyGunWindUp" );
-	PrecacheScriptSound( "MVM.GiantHeavyGunWindDown" );
-	PrecacheScriptSound( "MVM.GiantHeavyGunFire" );
-	PrecacheScriptSound( "MVM.GiantHeavyGunSpin" );
-
-	BaseClass::Precache();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFMinigun::ItemPostFrame( void )
 {
 	// Prevent base code from ever playing empty sounds, minigun handles them manually.
