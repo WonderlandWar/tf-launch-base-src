@@ -1598,7 +1598,11 @@ const char *CTFWeaponBase::GetTracerType( void )
 	{
 		if ( pszTracerEffect && pszTracerEffect[0] )
 		{
-			if ( !m_szTracerName[0] )
+			// TF2007: The IsCurrentAttackACrit() check fixes a bug caused by the game changing
+			// the player's team after a round and the player never changes classes or dies.
+			// The weapon never gets deleted so the cached tracer particle name still has
+			// _red or _blue in it even though the player may be on a different team.
+			if ( !m_szTracerName[0] || IsCurrentAttackACrit() )
 			{
 				Q_snprintf( m_szTracerName, MAX_TRACER_NAME, "%s_%s", pszTracerEffect, 
 					(GetOwner() && GetOwner()->GetTeamNumber() == TF_TEAM_RED ) ? "red" : "blue" );
