@@ -1593,29 +1593,38 @@ float CTFWeaponBase::GetMuzzleFlashModelLifetime( void )
 //-----------------------------------------------------------------------------
 const char *CTFWeaponBase::GetTracerType( void )
 { 
-	const char* pszTracerEffect = GetTFWpnData().m_szTracerEffect;
 	if ( tf_useparticletracers.GetBool() )
 	{
-		if ( pszTracerEffect && pszTracerEffect[0] )
+		if ( !m_szTracerName[0] )
 		{
-			// TF2007: The IsCurrentAttackACrit() check fixes a bug caused by the game changing
-			// the player's team after a round and the player never changes classes or dies.
-			// The weapon never gets deleted so the cached tracer particle name still has
-			// _red or _blue in it even though the player may be on a different team.
-			if ( !m_szTracerName[0] || IsCurrentAttackACrit() )
-			{
-				Q_snprintf( m_szTracerName, MAX_TRACER_NAME, "%s_%s", pszTracerEffect, 
-					(GetOwner() && GetOwner()->GetTeamNumber() == TF_TEAM_RED ) ? "red" : "blue" );
-			}
-
-			return m_szTracerName;
+			UpdateTracerName();
 		}
+
+		return m_szTracerName;
 	}
 
 	if ( GetWeaponID() == TF_WEAPON_MINIGUN )
 		return "BrightTracer";
 
 	return BaseClass::GetTracerType();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: (TF2007 Fix) Updates the team tracer name
+//-----------------------------------------------------------------------------
+void CTFWeaponBase::UpdateTracerName( void )
+{
+	const char* pszTracerEffect = GetTFWpnData().m_szTracerEffect;
+
+	if ( !pszTracerEffect || !pszTracerEffect[0] )
+	{
+		//memset( m_szTracerName, 0, sizeof( m_szTracerName ) );
+		m_szTracerName[0];
+		return;
+	}
+
+	Q_snprintf( m_szTracerName, MAX_TRACER_NAME, "%s_%s", pszTracerEffect, 
+		(GetOwner() && GetOwner()->GetTeamNumber() == TF_TEAM_RED ) ? "red" : "blue" );
 }
 
 //=============================================================================
@@ -1716,16 +1725,6 @@ void CTFWeaponBase::SetDieThink( bool bDie )
 void CTFWeaponBase::Die( void )
 {
 	UTIL_Remove( this );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// ----------------------------------------------------------------------------
-void CTFWeaponBase::WeaponReset( void )
-{
-	m_iReloadMode.Set( TF_RELOAD_START );
-
-	m_bResetParity = !m_bResetParity;
 }
 
 //-----------------------------------------------------------------------------
@@ -2024,14 +2023,6 @@ bool CTFWeaponBase::ShouldPredict()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
-// ----------------------------------------------------------------------------
-void CTFWeaponBase::WeaponReset( void )
-{
-	UpdateVisibility();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : updateType - 
 //-----------------------------------------------------------------------------
@@ -2217,6 +2208,29 @@ void CTFWeaponBase::Redraw()
 }
 
 #endif
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// ----------------------------------------------------------------------------
+void CTFWeaponBase::WeaponReset( void )
+{
+#ifdef GAME_DLL
+	m_iReloadMode.Set( TF_RELOAD_START );
+
+	m_bResetParity = !m_bResetParity;
+#else
+	UpdateVisibility();
+#endif
+
+	// This is a weird way to check if the wpn data has been setup, but it's better
+	// to check here instead of in UpdateTracerName() because most places have
+	// the weapon data setup already
+	const CTFWeaponInfo *pTFInfo = dynamic_cast< const CTFWeaponInfo* >( &GetWpnData() );
+	if ( pTFInfo )
+	{
+		UpdateTracerName();
+	}
+}
 
 acttable_t s_acttablePrimary[] = 
 {

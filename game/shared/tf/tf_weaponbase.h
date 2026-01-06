@@ -358,6 +358,7 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	virtual const char *GetMuzzleFlashParticleEffect( void );
 
 	virtual const char	*GetTracerType( void );
+	void				UpdateTracerName( void );
 
 	virtual void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
 
