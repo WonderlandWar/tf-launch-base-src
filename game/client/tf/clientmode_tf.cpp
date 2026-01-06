@@ -1349,7 +1349,9 @@ void PlayStartupMusic()
 
 	char szMusic[32];
 	memset( szMusic, 0, sizeof( szMusic ) );
-	V_snprintf( szMusic, sizeof( szMusic ), "ui/gamestartup%i.mp3", nSongIndex );
-#undef PlaySound
-	vgui::surface()->PlaySound( szMusic );
+	V_snprintf( szMusic, sizeof( szMusic ), "play #ui/gamestartup%i.mp3\n", nSongIndex );
+
+	engine->ClientCmd_Unrestricted( szMusic );
+//#undef PlaySound
+//	vgui::surface()->PlaySound( szMusic );
 }
