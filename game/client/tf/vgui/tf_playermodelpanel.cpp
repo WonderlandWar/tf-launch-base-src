@@ -364,6 +364,13 @@ void CTFPlayerModelPanel::FireEvent( const char *pszEventName, const char *pszEv
 			m_aMergeMDLs[nWeaponIndex].m_bDisabled = false;
 		}
 	}
+	else if ( V_strcmp( pszEventName, "AE_CL_PLAYSOUND" ) == 0 )
+	{
+		CLocalPlayerFilter filter;
+		C_BaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, pszEventOptions );
+	}
+
+	//BaseClass::FireEvent( pszEventName, pszEventOptions );
 }
 
 //-----------------------------------------------------------------------------

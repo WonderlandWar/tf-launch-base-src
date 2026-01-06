@@ -773,7 +773,11 @@ void CMDLPanel::DoAnimationEvents( CStudioHdr *pStudioHdr, int nSeqNum, float fl
 	{
 		for (int i = 0; i < (int)seqdesc.numevents; i++)
 		{
-			if ( pevent[i].cycle <= pEventState->m_flPrevEventCycle )
+			if ( pevent[i].cycle <= pEventState->m_flPrevEventCycle
+				// TF2007: This hack fixes all of the events playing at the beginning of the animation.
+				// The ideal solution would be fixing the fact that all events want to play at the start, but this is good enough
+				|| pEventState->m_flPrevEventCycle == 0
+				)
 				continue;
 
 			FireEvent( pevent[ i ].pszEventName(), pevent[ i ].pszOptions() );
