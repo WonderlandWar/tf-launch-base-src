@@ -117,7 +117,6 @@ void CHudTournament::Init( void )
 	ListenForGameEvent( "teams_changed" );
 	ListenForGameEvent( "localplayer_respawn" );
 	ListenForGameEvent( "restart_timer_time" );
-	ListenForGameEvent( "competitive_victory" );
 
 	m_bShouldBeVisible = false;
 	SetVisible( false );
@@ -447,10 +446,6 @@ void CHudTournament::FireGameEvent( IGameEvent * event )
 	{
 		PlaySounds( event->GetInt( "time" ) );
 	}
-	else if ( FStrEq( "competitive_victory", pEventName ) )
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( this, "HudTournament_DoorsCloseEndRound", false );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -632,7 +627,6 @@ void CHudTournament::PerformLayout( void )
 		}
 	}
 
-	// Hide some elements when in competitive mode
 	if ( m_pTournamentConditionLabel )
 	{
 		m_pTournamentConditionLabel->SetVisible( true );
@@ -1132,8 +1126,6 @@ CHudStopWatch::CHudStopWatch( const char *pElementName ) : CHudElement( pElement
 	m_pStopWatchPointsLabel = new CTFLabel( this, "StopWatchPointsLabel", "" );
 	m_pStopWatchImage = new ImagePanel( this, "StopWatchImageCaptureTime" );
 	m_pStopWatchDescriptionLabel = new CTFLabel( this, "StopWatchDescriptionLabel", "" );
-
-	ListenForGameEvent( "competitive_state_changed" );
 }
 
 //-----------------------------------------------------------------------------
@@ -1207,17 +1199,6 @@ void CHudStopWatch::OnTick( void )
 	{
 		m_bShouldBeVisible = true;
 	}
-}
-
-void CHudStopWatch::FireGameEvent( IGameEvent * event )
-{
-	if ( FStrEq( event->GetName(), "competitive_state_changed" ) )
-	{
-		InvalidateLayout( false, true );
-		return;
-	}
-
-	CHudElement::FireGameEvent( event );
 }
 
 //-----------------------------------------------------------------------------

@@ -40,7 +40,6 @@
 	#include "tf_objective_resource.h"
 	#include "tf_player_resource.h"
 	#include "team_control_point_master.h"
-	#include "team_train_watcher.h"
 	#include "playerclass_info_parse.h"
 	#include "team_control_point_master.h"
 	#include "coordsize.h"
@@ -319,16 +318,6 @@ extern ConVar mp_tournament_post_match_period;
 extern ConVar tf_flag_return_on_touch;
 extern ConVar tf_flag_return_time_credit_factor;
 
-static bool BIsCvarIndicatingHolidayIsActive( int iCvarValue, /*EHoliday*/ int eHoliday )
-{
-	return false;
-}
-
-#ifdef TF_CREEP_MODE
-ConVar tf_gamemode_creep_wave( "tf_gamemode_creep_wave", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
-ConVar tf_creep_wave_player_respawn_time( "tf_creep_wave_player_respawn_time", "10", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_CHEAT, "How long it takes for a player to respawn with his team after death." );
-#endif
-
 #ifdef GAME_DLL
 // TF overrides the default value of this convar
 
@@ -355,11 +344,7 @@ ConVar tf_bot_count( "tf_bot_count", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY )
 ConVar tf_debug_ammo_and_health( "tf_debug_ammo_and_health", "0", FCVAR_CHEAT );
 #endif // _DEBUG
 
-static Vector s_BotSpawnPosition;
-
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Allows living players to hear dead players using text/voice chat.", true, 0, true, 1 );
-
-ConVar tf_ctf_bonus_time ( "tf_ctf_bonus_time", "10", FCVAR_NOTIFY, "Length of team crit time for CTF capture." );
 
 #ifdef _DEBUG
 ConVar mp_scrambleteams_debug( "mp_scrambleteams_debug", "0", FCVAR_NONE, "Debug spew." );
@@ -368,23 +353,6 @@ ConVar mp_scrambleteams_debug( "mp_scrambleteams_debug", "0", FCVAR_NONE, "Debug
 
 extern ConVar tf_mm_servermode;
 extern ConVar tf_flag_caps_per_round;
-
-void cc_competitive_mode( IConVar *pConVar, const char *pOldString, float flOldValue )
-{
-	IGameEvent *event = gameeventmanager->CreateEvent( "competitive_state_changed" );
-	if ( event )
-	{
-		// Server-side here.  Client-side down below in the RecvProxy
-		gameeventmanager->FireEvent( event, true );
-	}
-}
-ConVar tf_competitive_preround_duration( "tf_competitive_preround_duration", "3", FCVAR_REPLICATED, "How long we stay in pre-round when in competitive games." );
-ConVar tf_competitive_preround_countdown_duration( "tf_competitive_preround_countdown_duration", "10.5", FCVAR_HIDDEN, "How long we stay in countdown when in competitive games." );
-ConVar tf_competitive_abandon_method( "tf_competitive_abandon_method", "0", FCVAR_HIDDEN );
-ConVar tf_competitive_required_late_join_timeout( "tf_competitive_required_late_join_timeout", "120", FCVAR_DEVELOPMENTONLY,
-                                                  "How long to wait for late joiners in matches requiring full player counts before canceling the match" );
-ConVar tf_competitive_required_late_join_confirm_timeout( "tf_competitive_required_late_join_confirm_timeout", "30", FCVAR_DEVELOPMENTONLY,
-                                                          "How long to wait for the GC to confirm we're in the late join pool before canceling the match" );
 #endif // GAME_DLL
 
 ConVar tf_voice_command_suspension_mode( "tf_voice_command_suspension_mode", "2", FCVAR_REPLICATED, "0 = None | 1 = No Voice Commands | 2 = Rate Limited" );
@@ -1239,8 +1207,6 @@ CTFGameRules::CTFGameRules()
 	// @todo Tom Bui: game_newmap doesn't seem to be used...
 	ListenForGameEvent( "game_newmap" );
 	ListenForGameEvent( "overtime_nag" );
-	ListenForGameEvent( "recalculate_holidays" );
-	
 #endif
 
 	// Initialize the game type
@@ -1350,20 +1316,6 @@ bool CTFGameRules::ShouldDrawHeadLabels()
 }
 
 #ifdef GAME_DLL
-void CTFGameRules::KickPlayersNewMatchIDRequestFailed()
-{
-	// The GC failed to get a new MatchID for us.  Let's clear out and reset.
-	engine->ServerCommand( "kickall #TF_Competitive_Disconnect\n" );
-
-	// Prepare for next match
-	g_fGameOver = false;
-	m_bAllowBetweenRounds = true;
-	State_Transition( GR_STATE_RESTART );
-	SetInWaitingForPlayers( true );
-}
-
-#ifdef GAME_DLL
-
 //-----------------------------------------------------------------------------
 // Purpose: remove all projectiles in the world
 //-----------------------------------------------------------------------------
@@ -1436,8 +1388,6 @@ void CTFGameRules::RemoveAllProjectilesAndBuildings( bool bExplodeBuildings /*= 
 	RemoveAllProjectiles();
 	RemoveAllBuildings( bExplodeBuildings );
 }
-#endif // GAME_DLL
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Determines whether we should allow mp_timelimit to trigger a map change
@@ -1792,13 +1742,6 @@ void CTFGameRules::SetupOnRoundStart( void )
 	}
 
 	m_szMostRecentCappers[0] = 0;
-
-	// Tell the clients to recalculate the holiday
-	IGameEvent *event = gameeventmanager->CreateEvent( "recalculate_holidays" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
-	}
 
 	// cache off teleport locations and remove entities to save edicts
 	m_mapTeleportLocations.PurgeAndDeleteElements();
@@ -3253,45 +3196,7 @@ void CTFGameRules::SetWinningTeam( int team, int iWinReason, bool bForceMapReset
 		}
 	}
 
-#ifdef GAME_DLL
-	if ( HasMultipleTrains() )
-	{
-		for ( int i = 0 ; i < ITFTeamTrainWatcher::AutoList().Count() ; ++i )
-		{
-			CTeamTrainWatcher *pTrainWatcher = static_cast< CTeamTrainWatcher* >( ITFTeamTrainWatcher::AutoList()[i] );
-			if ( !pTrainWatcher->IsDisabled() )
-			{
-				if ( pTrainWatcher->GetTeamNumber() == TF_TEAM_RED )
-				{
-					GetGlobalTFTeam( TF_TEAM_RED )->AddPLRTrack( pTrainWatcher->GetTrainProgress() );
-				}
-				else
-				{
-					GetGlobalTFTeam( TF_TEAM_BLUE )->AddPLRTrack( pTrainWatcher->GetTrainProgress() );
-				}
-			}
-		}
-	}
-#endif
-
 	CTeamplayRoundBasedRules::SetWinningTeam( team, iWinReason, bForceMapReset, bSwitchTeams, bDontAddScore, bFinal );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::SetStalemate( int iReason, bool bForceMapReset /* = true */, bool bSwitchTeams /* = false */ )
-{
-	BaseClass::SetStalemate( iReason, bForceMapReset, bSwitchTeams );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-float CTFGameRules::GetPreMatchEndTime() const
-{
-	//TFTODO: implement this.
-	return gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------
@@ -3308,6 +3213,7 @@ void CTFGameRules::GoToIntermission( void )
 
 	BaseClass::GoToIntermission();
 }
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -7258,7 +7164,6 @@ bool	ScriptIsInWaitingForPlayers()								{ return TFGameRules()->IsInWaitingFor
 int		ScriptGetWinningTeam()										{ return TFGameRules()->GetWinningTeam(); }
 bool	ScriptInOvertime()											{ return TFGameRules()->InOvertime(); }
 bool	ScriptIsBirthday()											{ return TFGameRules()->IsBirthday(); }
-bool	ScriptIsHolidayActive( int eHoliday )						{ return TFGameRules()->IsHolidayActive( eHoliday ); }
 bool	ScriptPointsMayBeCaptured()									{ return TFGameRules()->PointsMayBeCaptured(); }
 int		ScriptGetClassLimit( int iClass )							{ return TFGameRules()->GetClassLimit( iClass ); }
 bool	ScriptFlagsMayBeCapped()									{ return TFGameRules()->FlagsMayBeCapped(); }
@@ -7283,7 +7188,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( InOvertime,								"Currently in overtime?" );
 
 	TF_GAMERULES_SCRIPT_FUNC( IsBirthday,								"Are we in birthday mode?" );
-	TF_GAMERULES_SCRIPT_FUNC( IsHolidayActive,							"Is the given holiday active? See Constants.EHoliday" );
 	TF_GAMERULES_SCRIPT_FUNC( PointsMayBeCaptured,						"Are points able to be captured?" );
 	TF_GAMERULES_SCRIPT_FUNC( GetClassLimit,							"Get class limit for class. See Constants.ETFClass" );
 	TF_GAMERULES_SCRIPT_FUNC( FlagsMayBeCapped,							"May a flag be captured?" );

@@ -396,10 +396,6 @@ public:
 
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
 
-#ifdef GAME_DLL
-	void KickPlayersNewMatchIDRequestFailed();
-#endif // GAME_DLL
-
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes data tables able to access our private vars.
@@ -440,7 +436,6 @@ public:
 	virtual void CheckRespawnWaves();
 
 	virtual void SetWinningTeam( int team, int iWinReason, bool bForceMapReset = true, bool bSwitchTeams = false, bool bDontAddScore = false, bool bFinal = false ) OVERRIDE;
-	virtual void SetStalemate( int iReason, bool bForceMapReset = true, bool bSwitchTeams = false );
 
 	void CheckTauntAchievement( CTFPlayer *pAchiever, int nGibs, int *pTauntCamAchievements );
 
@@ -461,7 +456,6 @@ public:
 
 	virtual VoiceCommandMenuItem_t *VoiceCommand( CBaseMultiplayerPlayer *pPlayer, int iMenu, int iItem ); 
 
-	float GetPreMatchEndTime() const;	// Returns the time at which the prematch will be over.
 	void GoToIntermission( void );
 
 	virtual int GetAutoAimMode()	{ return AUTOAIM_NONE; }
