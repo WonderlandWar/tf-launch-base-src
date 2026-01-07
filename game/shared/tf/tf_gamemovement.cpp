@@ -1132,14 +1132,7 @@ void CTFGameMovement::AirMove( void )
 
 	float flAirAccel = sv_airaccelerate.GetFloat();
 	float flWallSlideCoeff = 0.f;
-/*
-#ifdef STAGING_ONLY
-	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_SPACE_GRAVITY ) )
-	{
-		flAirAccel *= tf_space_aircontrol.GetFloat();
-	}
-#endif
-*/
+
 	AirAccelerate( wishdir, wishspeed, flAirAccel );
 
 	// Add in any base velocity to the current velocity.
@@ -1822,15 +1815,6 @@ void CTFGameMovement::PlayerRoughLandingEffects( float fvol )
 {
 	if ( m_pTFPlayer )
 	{
-/*
-#ifdef STAGING_ONLY
-		// No impact effects if we're in space low-grav
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_SPACE_GRAVITY  ) )
-		{
-			return;
-		}
-#endif // STAGING_ONLY
-*/
 		if ( m_pTFPlayer->IsPlayerClass(TF_CLASS_SCOUT) )
 		{
 			// Scouts don't play rumble unless they take damage.
