@@ -296,27 +296,6 @@ void CTFWeaponBuilder::PrimaryAttack( void )
 				}
 				StartBuilding();
 
-				if ( m_iObjectType == OBJ_ATTACHMENT_SAPPER )
-				{
-					// if we just placed a sapper on a teleporter...try to sap the match, too?
-					if ( pBuiltOnObject )
-					{
-						CObjectTeleporter *pTeleporter = dynamic_cast<CObjectTeleporter*>( pBuiltOnObject );
-						if ( pTeleporter && pTeleporter->GetMatchingTeleporter() && !pTeleporter->GetMatchingTeleporter()->HasSapper() )
-						{
-							// Start placing another
-							SetCurrentState( BS_PLACING );
-							StartPlacement(); 
-	
-							if ( m_hObjectBeingBuilt.Get() )
-							{
-								m_hObjectBeingBuilt->UpdateAttachmentPlacement( pTeleporter->GetMatchingTeleporter() );
-								StartBuilding();
-							}
-						}
-					}
-				}
-
 				// Should we switch away?
 				if ( iFlags & OF_ALLOW_REPEAT_PLACEMENT )
 				{

@@ -307,29 +307,6 @@ int CObjectSapper::OnTakeDamage( const CTakeDamageInfo &info )
 		{
 			CTakeDamageInfo localDamageInfo = info;
 			localDamageInfo.AddDamageType( DMG_FROM_OTHER_SAPPER );
-
-			// If there's a matching teleporter with a sapper then have that sapper take damage, too.
-			CObjectTeleporter *pParentTeleporter = dynamic_cast< CObjectTeleporter * >( GetParentObject() );
-			if ( pParentTeleporter )
-			{
-				// GetMatchingTeleporter is set when a matching teleporter is ACTIVE
-				// if we don't find the cache matching teleporter, try to find with a more expensive FindMatch func
-				CObjectTeleporter *pMatchingTeleporter = pParentTeleporter->GetMatchingTeleporter() ? pParentTeleporter->GetMatchingTeleporter() : pParentTeleporter->FindMatch();
-				if ( pMatchingTeleporter && pMatchingTeleporter->HasSapper() )
-				{
-					// Do damage to any attached buildings
-					IHasBuildPoints *pBPInterface = dynamic_cast< IHasBuildPoints * >( pMatchingTeleporter );
-					int iNumObjects = pBPInterface->GetNumObjectsOnMe();
-					for ( int iPoint = 0 ; iPoint < iNumObjects ; iPoint++ )
-					{
-						CBaseObject *pObject = pMatchingTeleporter->GetBuildPointObject( iPoint );
-						if ( pObject && pObject->IsHostileUpgrade() )
-						{
-							pObject->TakeDamage( localDamageInfo );
-						}
-					}
-				}
-			}
 		}
 	}
 
