@@ -13,7 +13,7 @@
 
 #include "abuse_report.h"
 #include <vgui_controls/EditablePanel.h>
-#if defined ( USES_ECON_ITEMS ) && 0 // TF2007: Remove the "&& 0"
+#if defined ( USES_ECON_ITEMS )
 class CAvatarImagePanel;
 class CCustomTextureImagePanel;
 class CAbuseReportScreenShotPanel;

@@ -15,7 +15,7 @@
 #include <GameEventListener.h>
 #include <bitmap/bitmap.h>
 #include <netadr.h>
-#if defined ( USES_ECON_ITEMS ) && 0 // TF2007: Remove the "&& 0"
+#if defined ( USES_ECON_ITEMS )
 /// Different content types that can be reported as abusive.
 ///
 /// WARNING: These enum values MUST MATCH the values in Steam's

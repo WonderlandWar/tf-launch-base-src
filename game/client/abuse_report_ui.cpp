@@ -14,7 +14,7 @@
 #include <vgui_controls/RadioButton.h>
 #include "vgui_bitmappanel.h"
 #include "vgui_avatarimage.h"
-#if defined ( USES_ECON_ITEMS ) && 0 // TF2007: Remove the "&& 0"
+#if defined ( USES_ECON_ITEMS )
 #include "econ/econ_controls.h"
 #include "gc_clientsystem.h"
 #include "econ/tool_items/tool_items.h"

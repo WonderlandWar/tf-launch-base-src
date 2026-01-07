@@ -10,7 +10,7 @@
 #include "abuse_report_ui.h"
 #include "filesystem.h"
 #include "imageutils.h"
-#if defined ( USES_ECON_ITEMS ) && 0 // TF2007: Remove the "&& 0"
+#if defined ( USES_ECON_ITEMS )
 #include "econ/confirm_dialog.h"
 #include "econ/econ_notifications.h"
 
