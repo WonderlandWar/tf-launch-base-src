@@ -688,7 +688,19 @@ void CObjectDispenser::StartHealing( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 void CObjectDispenser::StopHealing( CBaseEntity *pOther )
 {
-	RemoveHealingTarget( pOther );
+	if ( RemoveHealingTarget( pOther ) )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( pOther );
+
+		if ( pPlayer )
+		{
+			float flHealingDone = pPlayer->m_Shared.StopHealing( this );
+			if ( GetBuilder() && pOther != GetBuilder() && flHealingDone > 0 )
+			{
+				GetBuilder()->AwardAchievement( ACHIEVEMENT_TF_ENGINEER_DISPENSER_HEAL_GRIND, floor( flHealingDone ) );
+			}
+		}
+	}
 }
 
 // Josh: Basically everything except grating.
