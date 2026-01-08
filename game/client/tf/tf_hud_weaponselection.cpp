@@ -44,6 +44,9 @@
 ConVar tf_weapon_select_demo_start_delay( "tf_weapon_select_demo_start_delay", "1.0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Delay after spawning to start the weapon bucket demo." );
 ConVar tf_weapon_select_demo_time( "tf_weapon_select_demo_time", "0.5", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Time to pulse each weapon bucket upon spawning as a new class. 0 to turn off." );
 
+// TF2007: The code added the #ifdefs are a good start, but the panels' positionings need tweaking
+// For now this is disabled, but it should be improved upon eventually (it would also be ideal to remove USE_OLD_SELECTION_PANELS mentions too)
+//#define USE_OLD_SELECTION_PANELS
 //-----------------------------------------------------------------------------
 // Purpose: tf weapon selection hud element
 //-----------------------------------------------------------------------------
@@ -176,7 +179,11 @@ private:
 
 	CTFImagePanel *m_pActiveWeaponBG;
 
-	vgui::EditablePanel	*m_pPanels[MAX_WEAPON_SLOTS];
+#ifdef USE_OLD_SELECTION_PANELS
+	vgui::ScalableImagePanel *m_pPanels[MAX_WEAPON_SLOTS];
+#else
+	vgui::EditablePanel *m_pPanels[MAX_WEAPON_SLOTS];
+#endif
 
 
 	float m_flDemoStartTime;
@@ -229,7 +236,12 @@ CHudWeaponSelection::CHudWeaponSelection( const char *pElementName ) : CBaseHudW
 
 	for ( int i = 0; i < MAX_WEAPON_SLOTS; i++ )
 	{
+#ifdef USE_OLD_SELECTION_PANELS
+		m_pPanels[i] = new vgui::ScalableImagePanel( this, VarArgs( "modelpanel%d", i ) );
+		m_pPanels[i]->SetImage( "../hud/weapon_selection_unselected" );
+#else
 		m_pPanels[i] = new vgui::EditablePanel( this, VarArgs( "modelpanel%d", i ) );
+#endif
 	}
 }
 
@@ -507,7 +519,9 @@ void CHudWeaponSelection::PerformLayout( void )
 	// iterate over all the weapon slots
 	for ( int i = 0; i < m_iMaxSlots; i++ )
 	{
+#ifndef USE_OLD_SELECTION_PANELS
 		m_pPanels[i]->SetVisible( false );
+#endif
 
 		if ( i == iActiveSlot )
 		{
@@ -522,6 +536,7 @@ void CHudWeaponSelection::PerformLayout( void )
 
 				m_pPanels[i]->SetSize( rSlot[i].wide, rSlot[ i ].tall );
 
+#ifndef USE_OLD_SELECTION_PANELS
 				vgui::IScheme *pScheme = vgui::scheme()->GetIScheme( GetScheme() );
 				if ( pPlayer->GetTeamNumber() == TF_TEAM_BLUE )
 				{
@@ -531,9 +546,15 @@ void CHudWeaponSelection::PerformLayout( void )
 				{
 					m_pPanels[i]->SetBorder( pScheme->GetBorder("TFFatLineBorderRedBG") );
 				}
+#endif
 
 				m_pPanels[i]->SetPos( rSlot[i].x, rSlot[ i ].y );
+#ifndef USE_OLD_SELECTION_PANELS
 				m_pPanels[i]->SetVisible( true );
+#else
+				m_pPanels[i]->SetVisible( false );
+				m_pActiveWeaponBG->SetPos( rSlot[i].x, rSlot[ i ].y );
+#endif
 			}
 		}
 		else
@@ -546,8 +567,10 @@ void CHudWeaponSelection::PerformLayout( void )
 					continue;
 
 				m_pPanels[i]->SetSize( rSlot[i].wide, rSlot[ i ].tall );
+#ifndef USE_OLD_SELECTION_PANELS
 				vgui::IScheme *pScheme = vgui::scheme()->GetIScheme( GetScheme() );
 				m_pPanels[i]->SetBorder( pScheme->GetBorder("TFFatLineBorder") );
+#endif
 				m_pPanels[i]->SetVisible( true );
 				m_pPanels[i]->SetPos( rSlot[i].x, rSlot[ i ].y );
 			}
