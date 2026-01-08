@@ -328,7 +328,7 @@ C_LocalTempEntity *ClientsideProjectileCallback( const CEffectData &data, float 
 		//
 		// No check is needed anymore given the needles come from inside the player's head
 		// and that cannot be obstructed.
-#if 0
+#if 1	// TF2007: Re-enabling
 		else
 		{
 			C_BaseEntity *pViewModel = pLocalPlayer->GetViewModel();
@@ -349,6 +349,10 @@ C_LocalTempEntity *ClientsideProjectileCallback( const CEffectData &data, float 
 				if ( trace.fraction != 1.0 )
 				{
 					vecSrc = trace.endpos;
+				}
+				else
+				{
+					vecSrc = vecMuzzleOrigin;
 				}
 			}
 		}
