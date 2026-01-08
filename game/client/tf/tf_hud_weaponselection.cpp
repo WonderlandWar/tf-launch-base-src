@@ -44,7 +44,7 @@
 ConVar tf_weapon_select_demo_start_delay( "tf_weapon_select_demo_start_delay", "1.0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Delay after spawning to start the weapon bucket demo." );
 ConVar tf_weapon_select_demo_time( "tf_weapon_select_demo_time", "0.5", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Time to pulse each weapon bucket upon spawning as a new class. 0 to turn off." );
 
-// TF2007: The code added the #ifdefs are a good start, but the panels' positionings need tweaking
+// TF2007: The code added in the #ifdefs is a good start, but the panels' positionings need tweaking
 // For now this is disabled, but it should be improved upon eventually (it would also be ideal to remove USE_OLD_SELECTION_PANELS mentions too)
 //#define USE_OLD_SELECTION_PANELS
 //-----------------------------------------------------------------------------
