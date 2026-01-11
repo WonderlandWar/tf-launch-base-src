@@ -86,33 +86,11 @@ private:
 	vgui::ImagePanel			*m_pClassImage;
 	vgui::Menu					*m_pRightClickMenu;
 
-	CTFLabel					*m_pKillsLabel;
-	CTFLabel					*m_pDeathsLabel;
-	CTFLabel					*m_pAssistLabel;
-	CTFLabel					*m_pDestructionLabel;
-	CTFLabel					*m_pCapturesLabel;
-	CTFLabel					*m_pDefensesLabel;
-	CTFLabel					*m_pDominationsLabel;
-	CTFLabel					*m_pRevengeLabel;
-	CTFLabel					*m_pHealingLabel;
-	CTFLabel					*m_pInvulnsLabel;
-	CTFLabel					*m_pTeleportsLabel;
-	CTFLabel					*m_pHeadshotsLabel;
-	CTFLabel					*m_pBackstabsLabel;
-	CTFLabel					*m_pBonusLabel;
-	CTFLabel					*m_pSupportLabel;
-	CTFLabel					*m_pDamageLabel;
-
-	vgui::HFont					m_pFontTimeLeftNumbers;
-	vgui::HFont					m_pFontTimeLeftString;
-	
 	int							m_iImageDominated;
 	int							m_iImageDominatedDead;
 	int							m_iImageNemesis;
 	int							m_iImageNemesisDead;
 
-	int							m_iImageDom[SCOREBOARD_DOMINATION_ICONS];
-	int							m_iImageDomDead[SCOREBOARD_DOMINATION_ICONS];
 	int							m_iImageClass[SCOREBOARD_CLASS_ICONS];
 
 //	bool						m_bDisplayLevel;

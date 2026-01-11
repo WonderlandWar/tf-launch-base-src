@@ -449,7 +449,6 @@ enum ProjectileType_t
 extern const char *g_szProjectileNames[];
 
 #ifdef TF_CLIENT_DLL
-#define SCOREBOARD_DOMINATION_ICONS		17
 #define SCOREBOARD_CLASS_ICONS			19
 
 extern const char *g_pszClassIcons[];

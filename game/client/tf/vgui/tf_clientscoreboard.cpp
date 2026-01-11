@@ -103,60 +103,6 @@ static const char *g_szRedClassImages[] =
 	"../hud/class_scoutred",
 };
 
-//......................................................
-enum
-{
-	PING_LOW,
-	PING_MED,
-	PING_HIGH,
-	PING_VERY_HIGH,
-	PING_BOT_RED,
-	PING_BOT_BLUE,
-
-	PING_MAX_TYPES
-};
-//......................................................
-
-static const char *pszDominationIcons[SCOREBOARD_DOMINATION_ICONS] = {
-	"",
-	"../hud/leaderboard_dom1",
-	"../hud/leaderboard_dom2",
-	"../hud/leaderboard_dom3",
-	"../hud/leaderboard_dom4",
-	"../hud/leaderboard_dom5",
-	"../hud/leaderboard_dom6",
-	"../hud/leaderboard_dom7",
-	"../hud/leaderboard_dom8",
-	"../hud/leaderboard_dom9",
-	"../hud/leaderboard_dom10",
-	"../hud/leaderboard_dom11",
-	"../hud/leaderboard_dom12",
-	"../hud/leaderboard_dom13",
-	"../hud/leaderboard_dom14",
-	"../hud/leaderboard_dom15",
-	"../hud/leaderboard_dom16",
-};
-
-static const char *pszDominationIconsDead[SCOREBOARD_DOMINATION_ICONS] = {
-	"",
-	"../hud/leaderboard_dom1_d",
-	"../hud/leaderboard_dom2_d",
-	"../hud/leaderboard_dom3_d",
-	"../hud/leaderboard_dom4_d",
-	"../hud/leaderboard_dom5_d",
-	"../hud/leaderboard_dom6_d",
-	"../hud/leaderboard_dom7_d",
-	"../hud/leaderboard_dom8_d",
-	"../hud/leaderboard_dom9_d",
-	"../hud/leaderboard_dom10_d",
-	"../hud/leaderboard_dom11_d",
-	"../hud/leaderboard_dom12_d",
-	"../hud/leaderboard_dom13_d",
-	"../hud/leaderboard_dom14_d",
-	"../hud/leaderboard_dom15_d",
-	"../hud/leaderboard_dom16_d",
-};
-
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -172,9 +118,6 @@ CTFClientScoreBoardDialog::CTFClientScoreBoardDialog( IViewPort *pViewPort ) : C
 	m_pImagePanelHorizLine = new ImagePanel( this, "HorizontalLine" );
 	m_pClassImage = new ImagePanel( this, "ClassImage" );
 
-	m_pFontTimeLeftNumbers = vgui::INVALID_FONT;
-	m_pFontTimeLeftString = vgui::INVALID_FONT;
-
 	m_pRightClickMenu = NULL;
 
 	m_iImageDominated = 0;
@@ -186,8 +129,6 @@ CTFClientScoreBoardDialog::CTFClientScoreBoardDialog( IViewPort *pViewPort ) : C
 	m_bMouseActivated = true;
 
 	Q_memset( m_iImageClass, NULL, sizeof( m_iImageClass ) );
-	Q_memset( m_iImageDom, NULL, sizeof( m_iImageDom ) );
-	Q_memset( m_iImageDomDead, NULL, sizeof( m_iImageDomDead ) );
 	
 	ListenForGameEvent( "server_spawn" );
 
@@ -240,11 +181,6 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 		m_iImageNemesis = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_nemesis", true ) );
 		m_iImageNemesisDead = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_nemesis_d", true ) );
 
-		for(int i = 1 ; i < SCOREBOARD_DOMINATION_ICONS ; i++)
-		{
-			m_iImageDom[i] = m_pImageList->AddImage( scheme()->GetImage( pszDominationIcons[i], true ) );
-			m_iImageDomDead[i] = m_pImageList->AddImage( scheme()->GetImage( pszDominationIconsDead[i], true ) );
-		}
 		for( int i = 1 ; i < SCOREBOARD_CLASS_ICONS ; i++ )
 		{
 			m_iImageClass[i] = m_pImageList->AddImage( scheme()->GetImage( g_pszClassIcons[i], true ) );
@@ -264,26 +200,6 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 	SetBgColor( Color( 0, 0, 0, 0) );
 	SetBorder( NULL );
 	SetVisible( false );
-
-	m_pKillsLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Kills" ) );
-	m_pDeathsLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Deaths" ) );
-	m_pAssistLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Assists" ) );
-	m_pDestructionLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Destruction" ) );
-	m_pCapturesLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Captures" ) );
-	m_pDefensesLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Defenses" ) );
-	m_pDominationsLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Domination" ) );
-	m_pRevengeLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Revenge" ) );
-	m_pHealingLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Healing" ) );
-	m_pInvulnsLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Invuln" ) );
-	m_pTeleportsLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Teleports" ) );
-	m_pHeadshotsLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Headshots" ) );
-	m_pBackstabsLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Backstabs" ) );
-	m_pBonusLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Bonus" ) );
-	m_pSupportLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Support" ) );
-	m_pDamageLabel = dynamic_cast< CTFLabel* >( FindChildByName( "Damage" ) );
-
-	m_pFontTimeLeftNumbers = pScheme->GetFont( "ScoreboardMediumSmall", true );
-	m_pFontTimeLeftString = pScheme->GetFont( "ScoreboardVerySmall", true );
 
 	Reset();
 }
@@ -750,6 +666,7 @@ void CTFClientScoreBoardDialog::InitPlayerList( SectionedListPanel *pPlayerList 
 	m_nExtraSpace = pPlayerList->GetWide() - m_iAvatarWidth - m_iNameWidth - m_iNemesisWidth - m_iNemesisWidth - m_iScoreWidth - m_iClassWidth - m_iPingWidth - ( 2 * SectionedListPanel::COLUMN_DATA_INDENT ); // the SectionedListPanel will indent the columns on either end by SectionedListPanel::COLUMN_DATA_INDENT 
 
 	pPlayerList->AddColumnToSection( 0, "name", "#TF_Scoreboard_Name", 0, m_iNameWidth + m_nExtraSpace );
+	// TF2007: This needs an entry for the "DOMINATING" and "NEMESIS" text the launch era had.
 	pPlayerList->AddColumnToSection( 0, "dominating", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, m_iNemesisWidth );
 	pPlayerList->AddColumnToSection( 0, "nemesis", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, m_iNemesisWidth );
 	pPlayerList->AddColumnToSection( 0, "class", "", 0, m_iClassWidth );
@@ -960,12 +877,6 @@ void CTFClientScoreBoardDialog::UpdatePlayerList()
 				iActiveDominations = MAX_PLAYERS - 1;
 			}
 
-			// Now limit based on the number of images we have
-			if ( iActiveDominations >= SCOREBOARD_DOMINATION_ICONS )
-			{
-				iActiveDominations = SCOREBOARD_DOMINATION_ICONS - 1;
-			}
-
 			bool bDominating;
 			if ( iActiveDominations > 0 )
 			{
@@ -978,16 +889,9 @@ void CTFClientScoreBoardDialog::UpdatePlayerList()
 
 			bool bAlive = g_TF_PR->IsAlive( playerIndex );
 
-			int iDominationIndex = ( bDominating ? ( m_iImageDom[iActiveDominations] ) : 0 );
-			if ( !bAlive )
-			{
-				iDominationIndex = ( bDominating ? ( m_iImageDomDead[iActiveDominations] ) : 0 );
-			}
-
 			KeyValues *pKeyValues = new KeyValues( "data" );
 			pKeyValues->SetInt( "playerIndex", playerIndex );
 			pKeyValues->SetString( "name", g_TF_PR->GetPlayerName( playerIndex ) );
-			pKeyValues->SetInt( "dominating", iDominationIndex );
 			pKeyValues->SetInt( "score", g_TF_PR->GetTotalScore( playerIndex ) );
 			pKeyValues->SetInt( "connected", 2 );
 
@@ -1065,7 +969,6 @@ void CTFClientScoreBoardDialog::UpdatePlayerList()
 			if ( tf_show_all_scoreboard_elements.GetBool() )
 			{
 				pKeyValues->SetString( "name", g_TF_PR->GetPlayerName( playerIndex ) );
-				pKeyValues->SetInt( "dominating", m_iImageDom[1] );
 				pKeyValues->SetInt( "score", 9999 );
 				pKeyValues->SetInt( "connected", 2 );
 				pKeyValues->SetInt( "nemesis", bAlive ? m_iImageNemesis : m_iImageNemesisDead );
@@ -1239,94 +1142,26 @@ void CTFClientScoreBoardDialog::UpdatePlayerDetails()
 		return;
 	}
 
-
-	Color cGreen = Color( 0, 255, 0, 255 );
-	Color cWhite = Color( 255, 255, 255, 255 );
-
 	SetDialogVariable( "playerscore", GetPointsString( g_TF_PR->GetPlayerScore( playerIndex ) ) );
 
 	SetDialogVariable( "kills", g_TF_PR->GetPlayerScore( playerIndex ) );
-	if ( m_pKillsLabel )
-	{
-		m_pKillsLabel->SetFgColor( g_TF_PR->GetPlayerScore( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "deaths", g_TF_PR->GetDeaths( playerIndex ) );
-	if ( m_pDeathsLabel )
-	{
-		m_pDeathsLabel->SetFgColor( g_TF_PR->GetDeaths( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "assists", pSelectedPlayer->m_Shared.GetKillAssists( playerIndex ) );
-	if ( m_pAssistLabel )
-	{
-		m_pAssistLabel->SetFgColor( pSelectedPlayer->m_Shared.GetKillAssists( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "destruction", pSelectedPlayer->m_Shared.GetBuildingsDestroyed( playerIndex ) );
-	if ( m_pDestructionLabel )
-	{
-		m_pDestructionLabel->SetFgColor( pSelectedPlayer->m_Shared.GetBuildingsDestroyed( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "captures", pSelectedPlayer->m_Shared.GetCaptures( playerIndex ) );
-	if ( m_pCapturesLabel )
-	{
-		m_pCapturesLabel->SetFgColor( pSelectedPlayer->m_Shared.GetCaptures( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "defenses", pSelectedPlayer->m_Shared.GetDefenses( playerIndex ) );
-	if ( m_pDefensesLabel )
-	{
-		m_pDefensesLabel->SetFgColor( pSelectedPlayer->m_Shared.GetDefenses( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "dominations", pSelectedPlayer->m_Shared.GetDominations( playerIndex ) );
-	if ( m_pDominationsLabel )
-	{
-		m_pDominationsLabel->SetFgColor( pSelectedPlayer->m_Shared.GetDominations( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "revenge", pSelectedPlayer->m_Shared.GetRevenge( playerIndex ) );
-	if ( m_pRevengeLabel )
-	{
-		m_pRevengeLabel->SetFgColor( pSelectedPlayer->m_Shared.GetRevenge( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "healing", pSelectedPlayer->m_Shared.GetHealPoints( playerIndex ) );
-	if ( m_pHealingLabel )
-	{
-		m_pHealingLabel->SetFgColor( pSelectedPlayer->m_Shared.GetHealPoints( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "invulns", pSelectedPlayer->m_Shared.GetInvulns( playerIndex ) );
-	if ( m_pInvulnsLabel )
-	{
-		m_pInvulnsLabel->SetFgColor( pSelectedPlayer->m_Shared.GetInvulns( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "teleports", pSelectedPlayer->m_Shared.GetTeleports( playerIndex ) );
-	if ( m_pTeleportsLabel )
-	{
-		m_pTeleportsLabel->SetFgColor( pSelectedPlayer->m_Shared.GetTeleports( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "headshots", pSelectedPlayer->m_Shared.GetHeadshots( playerIndex ) );
-	if ( m_pHeadshotsLabel )
-	{
-		m_pHeadshotsLabel->SetFgColor( pSelectedPlayer->m_Shared.GetHeadshots( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "backstabs", pSelectedPlayer->m_Shared.GetBackstabs( playerIndex ) );
-	if ( m_pBackstabsLabel )
-	{
-		m_pBackstabsLabel->SetFgColor( pSelectedPlayer->m_Shared.GetBackstabs( playerIndex ) ? cGreen : cWhite );
-	}
 	SetDialogVariable( "bonus", pSelectedPlayer->m_Shared.GetBonusPoints( playerIndex ) );
-	if ( m_pBonusLabel )
-	{
-		m_pBonusLabel->SetFgColor( pSelectedPlayer->m_Shared.GetBonusPoints( playerIndex ) ? cGreen : cWhite );
-	}
 
 	int nSupport = TFGameRules() ? TFGameRules()->CalcPlayerSupportScore( NULL, playerIndex ) : 0;
 	SetDialogVariable( "support", nSupport );
-	if ( m_pSupportLabel )
-	{
-		m_pSupportLabel->SetFgColor( nSupport ? cGreen : cWhite );
-	}
 	SetDialogVariable( "damage", g_TF_PR->GetDamage( playerIndex ) );
-	if ( m_pDamageLabel )
-	{
-		m_pDamageLabel->SetFgColor( g_TF_PR->GetDamage( playerIndex ) ? cGreen : cWhite );
-	}
 
 	SetDialogVariable( "playername", g_TF_PR->GetPlayerName( playerIndex ) );
 
