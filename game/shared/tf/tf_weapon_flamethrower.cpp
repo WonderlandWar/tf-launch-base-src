@@ -180,7 +180,6 @@ CTFFlameThrower::CTFFlameThrower()
 #endif
 
 	m_flSecondaryAnimTime = 0.f;
-	m_flMinPrimaryAttackBurstTime = 0.f;
 }
 
 //-----------------------------------------------------------------------------
@@ -281,7 +280,6 @@ void CTFFlameThrower::WeaponReset( void )
 	m_bCritFire = false;
 	m_bHitTarget = false;
 	m_flStartFiringTime = 0.f;
-	m_flMinPrimaryAttackBurstTime = 0.f;
 	m_flAmmoUseRemainder = 0.f;
 	m_flSpinupBeginTime = 0.f;
 	ResetFlameHitCount();
@@ -357,23 +355,9 @@ void CTFFlameThrower::ItemPostFrame()
 		SecondaryAttack();
 	}
 
-	if ( !( pOwner->m_nButtons & IN_ATTACK ) )
-	{
-		// We were forced to fire, but time's up
-		if ( m_flMinPrimaryAttackBurstTime > 0.f && gpGlobals->curtime > m_flMinPrimaryAttackBurstTime )
-		{
-			m_flMinPrimaryAttackBurstTime = 0.f;
-			//DevMsg( "Stop Firing\n" );
-		}
-	}
-
-	// Force a min window of emission to prevent a case where
-	// tap-spamming +attack can create invisible flame points.
-	bool bForceFire = ( m_flMinPrimaryAttackBurstTime > 0.f && gpGlobals->curtime < m_flMinPrimaryAttackBurstTime );
-
 	bool bSpinDown = m_flSpinupBeginTime > 0.0f;
 
-	if ( pOwner->IsAlive() && ( ( pOwner->m_nButtons & IN_ATTACK ) || bForceFire ) && iAmmo > 0 )
+	if ( pOwner->IsAlive() && ( ( pOwner->m_nButtons & IN_ATTACK ) ) && iAmmo > 0 )
 	{
 		PrimaryAttack();
 		bSpinDown = false;
@@ -401,7 +385,7 @@ void CTFFlameThrower::ItemPostFrame()
 #endif
 	}
 
-	if ( !( ( pOwner->m_nButtons & IN_ATTACK ) || ( pOwner->m_nButtons & IN_RELOAD ) || ( pOwner->m_nButtons & IN_ATTACK2 ) ) && !bForceFire )
+	if ( !( ( pOwner->m_nButtons & IN_ATTACK ) || ( pOwner->m_nButtons & IN_RELOAD ) || ( pOwner->m_nButtons & IN_ATTACK2 ) ) )
 	{
 		// no fire buttons down or reloading
 		if ( !ReloadOrSwitchWeapons() && ( m_bInReload == false ) && m_flSecondaryAnimTime < gpGlobals->curtime )
@@ -469,13 +453,6 @@ void CTFFlameThrower::PrimaryAttack()
 			SendWeaponAnim( ACT_VM_PRIMARYATTACK );
 
 			m_flStartFiringTime = gpGlobals->curtime + 0.16;	// 5 frames at 30 fps
-			
-			// Force a min window of emission to prevent a case where
-			// tap-spamming +attack can create invisible flame points.
-			if ( m_flMinPrimaryAttackBurstTime == 0.f )
-			{
-				m_flMinPrimaryAttackBurstTime = gpGlobals->curtime + 0.2f;
-			}
 
 			SetWeaponState( FT_STATE_STARTFIRING );
 		}
@@ -616,23 +593,6 @@ void CTFFlameThrower::SetWeaponState( int nWeaponState )
 {
 	if ( m_iWeaponState == nWeaponState )
 		return;
-
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-
-	switch ( nWeaponState )
-	{
-	case FT_STATE_IDLE:
-		if ( pOwner )
-		{
-			m_flMinPrimaryAttackBurstTime = 0.f;
-		}
-
-		break;
-
-	case FT_STATE_STARTFIRING:
-
-		break;
-	}
 
 	m_iWeaponState = nWeaponState;
 }

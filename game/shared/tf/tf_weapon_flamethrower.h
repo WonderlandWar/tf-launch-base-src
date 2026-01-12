@@ -126,7 +126,6 @@ private:
 	float m_flStartFiringTime;
 	float m_flNextPrimaryAttackAnim;
 	float m_flSecondaryAnimTime;
-	float m_flMinPrimaryAttackBurstTime;
 
 	int			m_iParticleWaterLevel;
 	float		m_flAmmoUseRemainder;
