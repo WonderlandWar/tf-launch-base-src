@@ -133,8 +133,6 @@ public:
 	virtual bool		ShouldGainInstantSpawn( void );
 	virtual void		ResetScores( void );
 
-	virtual void		ResetPerRoundStats( void );
-
 	void				HandleCommand_JoinTeam( const char *pTeamName );
 	void				HandleCommand_JoinClass( const char *pClassName, bool bAllowSpawn = true );
 	void				HandleCommand_JoinTeam_NoMenus( const char *pTeamName );

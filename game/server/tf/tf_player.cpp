@@ -40,11 +40,6 @@
 #include "fmtstr.h"
 #include "tf_weapon_sniperrifle.h"
 #include "tf_weapon_minigun.h"
-#include "tf_weapon_fists.h"
-#include "tf_weapon_shotgun.h"
-#include "tf_weapon_knife.h"
-#include "tf_weapon_bottle.h"
-#include "tf_weapon_grenade_pipebomb.h"
 #include "tf_weapon_flamethrower.h"
 #include "trigger_area_capture.h"
 #include "triggers.h"
@@ -1619,10 +1614,6 @@ void CTFPlayer::Regenerate( bool bRefillHealthAndAmmo /*= true*/ )
 		}
 	}
 
-	// Reset our first allowed fire time. This allows honorbound weapons to be switched away
-	// from for a bit.
-	m_Shared.m_flFirstPrimaryAttack = MAX( m_Shared.m_flFirstPrimaryAttack, gpGlobals->curtime + 1.0f );
-
 	if ( bRefillHealthAndAmmo )
 	{
 		for ( int iAmmo = 0; iAmmo < TF_AMMO_COUNT; ++iAmmo )
@@ -1639,12 +1630,6 @@ void CTFPlayer::Regenerate( bool bRefillHealthAndAmmo /*= true*/ )
 		{
 			SetAmmoCount( nAmmo[ iAmmo ], iAmmo );
 		}
-	}
-
-	IGameEvent *event = gameeventmanager->CreateEvent( "player_regenerate" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
 	}
 }
 
@@ -8337,12 +8322,6 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 
 	// Number of rounds played
 	criteriaSet.AppendCriteria( "RoundsPlayed", UTIL_VarArgs( "%d", TFGameRules()->GetRoundsPlayed() ) );
-
-	criteriaSet.AppendCriteria( "IsComp6v6", "0" );
-
-	criteriaSet.AppendCriteria( "IsCompWinner", "0" );
-
-	criteriaSet.AppendCriteria( "IsInHell", "0" );
 }
 
 //-----------------------------------------------------------------------------
@@ -9023,15 +9002,6 @@ void CTFPlayer::HandleAchievement_Pyro_BurnFromBehind( CTFPlayer *pBurner )
 	{
 		m_aBurnFromBackAttackers.AddToTail( pBurner );
 	}	
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::ResetPerRoundStats( void )
-{
-	m_Shared.ResetArenaNumChanges();
-	BaseClass::ResetPerRoundStats();
 }
 
 //-----------------------------------------------------------------------------

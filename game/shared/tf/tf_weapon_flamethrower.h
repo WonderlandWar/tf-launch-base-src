@@ -32,10 +32,7 @@ enum FlameThrowerState_t
 	FT_STATE_IDLE = 0,
 	FT_STATE_STARTFIRING,
 	FT_STATE_FIRING,
-	FT_STATE_SECONDARY,
 };
-
-#define MAX_PARTICLE_EFFECT_NAME_LENGTH 128
 
 //=========================================================
 // Flamethrower Weapon

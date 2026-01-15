@@ -44,8 +44,6 @@ public:
 	virtual void ChangeTeam( int iTeamNum ) OVERRIDE;
 
 	virtual void RespawnRoomTouch( CBaseEntity *pOther ) OVERRIDE;
-	virtual void StartTouch(CBaseEntity *pOther) OVERRIDE;
-	virtual void EndTouch(CBaseEntity *pOther) OVERRIDE;
 
 	// Inputs
 	void	InputSetActive( inputdata_t &inputdata );

@@ -312,14 +312,9 @@ public:
 	EHANDLE	GetFirstHealer();
 	void	CheckForAchievement( int iAchievement );
 
-	void	IncrementArenaNumChanges( void ) { m_nArenaNumChanges++; }
-	void	ResetArenaNumChanges( void ) { m_nArenaNumChanges = 0; }
-
 	void	SetTeamTeleporterUsed( int nTeam ){ m_nTeamTeleporterUsed.Set( nTeam ); }
 
 #endif	// GAME_DLL
-
-	int		GetArenaNumChanges( void ) { return m_nArenaNumChanges; }
 
 	CBaseEntity *GetHealerByIndex( int index );
 	bool HealerIsDispenser( int index );
@@ -430,10 +425,6 @@ public:
 
 	int GetSequenceForDeath( CBaseAnimating* pRagdoll, bool bBurning, int nCustomDeath );
 
-	void IncrementRespawnTouchCount() { ++m_iSpawnRoomTouchCount; }
-	void DecrementRespawnTouchCount() { m_iSpawnRoomTouchCount = Max( m_iSpawnRoomTouchCount - 1, 0 ); }
-	int GetRespawnTouchCount() const { return m_iSpawnRoomTouchCount; }
-
 #ifdef GAME_DLL
 	void SetBestOverhealDecayMult( float fValue )	{ m_flBestOverhealDecayMult = fValue; }
 	float GetBestOverhealDecayMult() const			{ return m_flBestOverhealDecayMult; }
@@ -513,10 +504,6 @@ private:
 	// Vars that are networked.
 	CNetworkVar( int, m_nPlayerState );			// Player state.
 	CNetworkVar( int, m_nPlayerCond );			// Player condition flags.
-	CNetworkVar( int, m_nPlayerCondEx );		// Player condition flags (extended -- we overflowed 32 bits).
-	CNetworkVar( int, m_nPlayerCondEx2 );		// Player condition flags (extended -- we overflowed 64 bits).
-	CNetworkVar( int, m_nPlayerCondEx3 );		// Player condition flags (extended -- we overflowed 96 bits).
-	CNetworkVar( int, m_nPlayerCondEx4 );		// Player condition flags (extended -- we overflowed 128 bits).
 
 	CNetworkVarEmbedded( CTFConditionList, m_ConditionList );
 
@@ -594,16 +581,8 @@ private:
 
 	// conditions
 	int	m_nOldConditions;
-	int m_nOldConditionsEx;
-	int m_nOldConditionsEx2;
-	int m_nOldConditionsEx3;
-	int m_nOldConditionsEx4;
 
 	int	m_nForceConditions;
-	int m_nForceConditionsEx;
-	int m_nForceConditionsEx2;
-	int m_nForceConditionsEx3;
-	int m_nForceConditionsEx4;
 
 	int	m_nOldDisguiseClass;
 	int	m_nOldDisguiseTeam;
@@ -630,8 +609,6 @@ private:
 
 	CHandle<CTFPlayer>	m_hAssist;
 
-	CNetworkVar( int, m_nArenaNumChanges );			// number of times a player has re-rolled their class
-
 	CNetworkVar( int, m_iWeaponKnockbackID );
 
 	CNetworkVar( int,	m_iItemFindBonus );
@@ -642,13 +619,6 @@ private:
 	int m_iOldKillStreakWepSlot;
 
 	CNetworkVar( int,  m_iDisguiseBody );
-
-	CNetworkVar( int,  m_iSpawnRoomTouchCount );
-
-public:
-	CNetworkVar( float, m_flFirstPrimaryAttack );
-
-	CNetworkVar( float, m_flSpyTranqBuffDuration );
 
 private:
 

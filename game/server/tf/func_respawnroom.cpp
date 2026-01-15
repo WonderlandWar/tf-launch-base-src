@@ -126,34 +126,6 @@ void CFuncRespawnRoom::RespawnRoomTouch(CBaseEntity *pOther)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CFuncRespawnRoom::StartTouch(CBaseEntity *pOther)
-{
-	CTFPlayer *pTFPlayer = ToTFPlayer( pOther );
-	if ( pTFPlayer )
-	{
-		pTFPlayer->m_Shared.IncrementRespawnTouchCount();
-	}
-	
-	BaseClass::StartTouch( pOther );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CFuncRespawnRoom::EndTouch(CBaseEntity *pOther)
-{
-	CTFPlayer *pTFPlayer = ToTFPlayer( pOther );
-	if ( pTFPlayer )
-	{
-		pTFPlayer->m_Shared.DecrementRespawnTouchCount();
-	}
-	
-	BaseClass::EndTouch( pOther );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CFuncRespawnRoom::InputSetActive( inputdata_t &inputdata )
 {
 	SetActive( true );

@@ -15,13 +15,7 @@
 #include "tf_weapon_pipebomblauncher.h"
 #include "tf_weapon_invis.h"
 #include "tf_weapon_sniperrifle.h"
-#include "tf_weapon_shovel.h"
-#include "tf_weapon_shotgun.h"
 #include "in_buttons.h"
-#include "tf_weapon_wrench.h"
-#include "tf_weapon_knife.h"
-#include "tf_weapon_syringegun.h"
-#include "tf_weapon_flamethrower.h"
 #include <functional>
 
 // Client specific.
@@ -282,12 +276,9 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropFloat( RECVINFO( m_flDuckTimer ) ),
 	RecvPropInt( RECVINFO( m_nPlayerState ) ),
 	RecvPropInt( RECVINFO( m_iDesiredPlayerClass ) ),
-	RecvPropInt( RECVINFO( m_nArenaNumChanges ) ),
 	RecvPropInt( RECVINFO( m_iWeaponKnockbackID ) ),
 	RecvPropInt( RECVINFO( m_iItemFindBonus ) ),
 	RecvPropInt( RECVINFO( m_iDisguiseBody ) ),
-	RecvPropInt( RECVINFO( m_iSpawnRoomTouchCount ) ),
-	RecvPropFloat( RECVINFO( m_flFirstPrimaryAttack ) ),
 
 	// Spy.
 	RecvPropTime( RECVINFO( m_flInvisChangeCompleteTime ) ),
@@ -300,20 +291,12 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropEHandle( RECVINFO( m_hDisguiseWeapon ) ),
 	RecvPropInt( RECVINFO( m_nTeamTeleporterUsed ) ),
 	RecvPropFloat( RECVINFO( m_flCloakMeter ) ),
-	RecvPropFloat( RECVINFO( m_flSpyTranqBuffDuration ) ),
 
 	// Local Data.
 	RecvPropDataTable( "tfsharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_TFPlayerSharedLocal) ),
 	RecvPropDataTable( RECVINFO_DT(m_ConditionList),0, &REFERENCE_RECV_TABLE(DT_TFPlayerConditionListExclusive) ),
 
-	RecvPropInt( RECVINFO( m_nPlayerCondEx ) ),
-
-	RecvPropInt( RECVINFO( m_nPlayerCondEx2 ) ),
-	RecvPropInt( RECVINFO( m_nPlayerCondEx3 ) ),
-
 	RecvPropUtlVectorDataTable( m_ConditionData, TF_COND_LAST, DT_TFPlayerConditionSource ),
-
-	RecvPropInt( RECVINFO( m_nPlayerCondEx4 ) ),
 
 	RecvPropEHandle( RECVINFO( m_hSwitchTo ) ),
 END_RECV_TABLE()
@@ -334,10 +317,6 @@ BEGIN_PREDICTION_DATA_NO_BASE( CTFPlayerShared )
 	DEFINE_PRED_FIELD( m_nDesiredDisguiseTeam, FIELD_INTEGER, FTYPEDESC_INSENDTABLE  ),
 	DEFINE_PRED_FIELD( m_nDesiredDisguiseClass, FIELD_INTEGER, FTYPEDESC_INSENDTABLE  ),
 	DEFINE_PRED_FIELD( m_bLastDisguisedAsOwnTeam, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE  ),
-	DEFINE_PRED_FIELD( m_nPlayerCondEx, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_nPlayerCondEx2, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_nPlayerCondEx3, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_nPlayerCondEx4, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 //	DEFINE_PRED_FIELD( m_hDisguiseWeapon, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 	DEFINE_FIELD( m_flDisguiseCompleteTime, FIELD_FLOAT ),
 	DEFINE_PRED_FIELD( m_bScattergunJump, FIELD_BOOLEAN, 0 ),
@@ -399,12 +378,9 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropFloat( SENDINFO( m_flDuckTimer )  ),
 	SendPropInt( SENDINFO( m_nPlayerState ), Q_log2( TF_STATE_COUNT )+1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iDesiredPlayerClass ), Q_log2( TF_CLASS_COUNT_ALL )+1, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_nArenaNumChanges ), 5, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iWeaponKnockbackID ) ),
 	SendPropInt( SENDINFO( m_iItemFindBonus ) ),
 	SendPropInt( SENDINFO( m_iDisguiseBody ) ),
-	SendPropInt( SENDINFO( m_iSpawnRoomTouchCount ) ),
-	SendPropFloat( SENDINFO( m_flFirstPrimaryAttack ) ),
 
 	// Spy
 	SendPropTime( SENDINFO( m_flInvisChangeCompleteTime ) ),
@@ -417,21 +393,13 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropEHandle( SENDINFO( m_hDisguiseWeapon ) ),
 	SendPropInt( SENDINFO( m_nTeamTeleporterUsed ), 3, SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_flCloakMeter ), 16, SPROP_NOSCALE, 0.0, 100.0 ),
-	SendPropFloat( SENDINFO( m_flSpyTranqBuffDuration ), 16, SPROP_NOSCALE, 0.0, 100.0 ),
 	
 	// Local Data.
 	SendPropDataTable( "tfsharedlocaldata", 0, &REFERENCE_SEND_TABLE( DT_TFPlayerSharedLocal ), SendProxy_SendLocalDataTable ),	
 	SendPropDataTable( SENDINFO_DT(m_ConditionList), &REFERENCE_SEND_TABLE(DT_TFPlayerConditionListExclusive) ),
 
-	SendPropInt( SENDINFO( m_nPlayerCondEx ), -1, SPROP_VARINT | SPROP_UNSIGNED ),
-	
-	SendPropInt( SENDINFO( m_nPlayerCondEx2 ), -1, SPROP_VARINT | SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_nPlayerCondEx3 ), -1, SPROP_VARINT | SPROP_UNSIGNED ),
-
 	SendPropUtlVectorDataTable( m_ConditionData, TF_COND_LAST, DT_TFPlayerConditionSource ),
 
-	SendPropInt( SENDINFO( m_nPlayerCondEx4 ), -1, SPROP_VARINT | SPROP_UNSIGNED ),
-	
 	SendPropEHandle( SENDINFO( m_hSwitchTo ) ),
 END_SEND_TABLE()
 
@@ -530,10 +498,6 @@ CTFPlayerShared::CTFPlayerShared()
 	m_iOldKillStreak = 0;
 	m_iOldKillStreakWepSlot = 0;
 
-	m_iSpawnRoomTouchCount = 0;
-
-	m_flFirstPrimaryAttack = 0.0f;
-
 #ifdef GAME_DLL
 	m_flBestOverhealDecayMult = -1;
 
@@ -541,10 +505,6 @@ CTFPlayerShared::CTFPlayerShared()
 #endif
 
 	m_nForceConditions = 0;
-	m_nForceConditionsEx = 0;
-	m_nForceConditionsEx2 = 0;
-	m_nForceConditionsEx3 = 0;
-	m_nForceConditionsEx4 = 0;
 
 	m_flLastNoMovementTime = -1.f;
 
@@ -582,7 +542,6 @@ void CTFPlayerShared::Init( CTFPlayer *pPlayer )
 void CTFPlayerShared::Spawn( void )
 {
 #ifdef GAME_DLL
-	m_iSpawnRoomTouchCount = 0;
 	
 #else
 	m_bSyncingConditions = false;
@@ -592,61 +551,6 @@ void CTFPlayerShared::Spawn( void )
 	// again that checks this (getting slapped with a fish)
 	SetAssist( NULL );
 }
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-template < typename tIntType >
-class CConditionVars
-{
-public:
-	CConditionVars( tIntType& nPlayerCond, tIntType& nPlayerCondEx, tIntType& nPlayerCondEx2, tIntType& nPlayerCondEx3, tIntType& nPlayerCondEx4, ETFCond eCond )
-	{
-		if ( eCond >= 128 )
-		{
-			Assert( eCond < 128 + 32 );
-			m_pnCondVar = &nPlayerCondEx4;
-			m_nCondBit = eCond - 128; 
-		}
-		else if ( eCond >= 96 )
-		{
-			Assert( eCond < 96 + 32 );
-			m_pnCondVar = &nPlayerCondEx3;
-			m_nCondBit = eCond - 96;
-		}
-		else if( eCond >= 64 )
-		{
-			Assert( eCond < (64 + 32) );
-			m_pnCondVar = &nPlayerCondEx2;
-			m_nCondBit = eCond - 64;
-		}
-		else if ( eCond >= 32 )
-		{
-			Assert( eCond < (32 + 32) );
-			m_pnCondVar = &nPlayerCondEx;
-			m_nCondBit = eCond - 32;
-		}
-		else
-		{
-			m_pnCondVar = &nPlayerCond;
-			m_nCondBit = eCond;
-		}
-	}
-
-	tIntType& CondVar() const
-	{
-		return *m_pnCondVar;
-	}
-
-	int CondBit() const
-	{
-		return 1 << m_nCondBit;
-	}
-
-private:
-	tIntType *m_pnCondVar;
-	int m_nCondBit;
-};
 
 //-----------------------------------------------------------------------------
 // Purpose: Add a condition and duration
@@ -670,16 +574,12 @@ void CTFPlayerShared::AddCond( ETFCond eCond, float flDuration /* = PERMANENT_CO
 	}
 #endif
 
-	// Which bitfield are we tracking this condition variable in? Which bit within
-	// that variable will we track it as?
-	CConditionVars<int> cPlayerCond( m_nPlayerCond.m_Value, m_nPlayerCondEx.m_Value, m_nPlayerCondEx2.m_Value, m_nPlayerCondEx3.m_Value, m_nPlayerCondEx4.m_Value, eCond );
-
 	// See if there is an object representation of the condition.
 	bool bAddedToExternalConditionList = m_ConditionList.Add( eCond, flDuration, m_pOuter, pProvider );
 	if ( !bAddedToExternalConditionList )
 	{
 		// Set the condition bit for this condition.
-		cPlayerCond.CondVar() |= cPlayerCond.CondBit();
+		m_nPlayerCond |= (1 << eCond);
 
 		// Flag for gamecode to query
 		m_ConditionData[eCond].m_bPrevActive = ( m_ConditionData[eCond].m_flExpireTime != 0.f ) ? true : false;
@@ -714,14 +614,12 @@ void CTFPlayerShared::RemoveCond( ETFCond eCond, bool ignore_duration )
 	if ( !InCond( eCond ) )
 		return;
 
-	CConditionVars<int> cPlayerCond( m_nPlayerCond.m_Value, m_nPlayerCondEx.m_Value, m_nPlayerCondEx2.m_Value, m_nPlayerCondEx3.m_Value, m_nPlayerCondEx4.m_Value, eCond );
-
 	// If this variable is handled by the condition list, abort before doing the
 	// work for the condition flags.
 	if ( m_ConditionList.Remove( eCond, ignore_duration ) )
 		return;
 
-	cPlayerCond.CondVar() &= ~cPlayerCond.CondBit();
+	m_nPlayerCond &= ~(1 << eCond);
 	OnConditionRemoved( eCond );
 
 	if ( m_ConditionData[ eCond ].m_nPreventedDamageFromCondition )
@@ -757,8 +655,7 @@ bool CTFPlayerShared::InCond( ETFCond eCond ) const
 	if ( eCond < 32 && m_ConditionList.InCond( eCond ) )
 		return true;
 
-	CConditionVars<const int> cPlayerCond( m_nPlayerCond.m_Value, m_nPlayerCondEx.m_Value, m_nPlayerCondEx2.m_Value, m_nPlayerCondEx3.m_Value, m_nPlayerCondEx4.m_Value, eCond );
-	return (cPlayerCond.CondVar() & cPlayerCond.CondBit()) != 0;
+	return (m_nPlayerCond & (1 << eCond)) != 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -771,8 +668,7 @@ bool CTFPlayerShared::WasInCond( ETFCond eCond ) const
 	// assert. And this comment).
 	Assert( eCond >= 32 && eCond < TF_COND_LAST );
 
-	CConditionVars<const int> cPlayerCond( m_nOldConditions, m_nOldConditionsEx, m_nOldConditionsEx2, m_nOldConditionsEx3, m_nOldConditionsEx4, eCond );
-	return (cPlayerCond.CondVar() & cPlayerCond.CondBit()) != 0;
+	return (m_nOldConditions & (1 << eCond)) != 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -784,8 +680,7 @@ void CTFPlayerShared::ForceRecondNextSync( ETFCond eCond )
 	// Please check if you hit the assert. (And then remove the assert. And this comment).
 	Assert(eCond >= 32 && eCond < TF_COND_LAST);
 
-	CConditionVars<int> playerCond( m_nForceConditions, m_nForceConditionsEx, m_nForceConditionsEx2, m_nForceConditionsEx3, m_nForceConditionsEx4, eCond );
-	playerCond.CondVar() |= playerCond.CondBit();
+	m_nForceConditions |= (1 << eCond);
 }
 
 //-----------------------------------------------------------------------------
@@ -890,10 +785,6 @@ void CTFPlayerShared::OnPreDataChanged( void )
 	m_ConditionList.OnPreDataChanged();
 
 	m_nOldConditions = m_nPlayerCond;
-	m_nOldConditionsEx = m_nPlayerCondEx;
-	m_nOldConditionsEx2 = m_nPlayerCondEx2;
-	m_nOldConditionsEx3 = m_nPlayerCondEx3;
-	m_nOldConditionsEx4 = m_nPlayerCondEx4;
 	m_nOldDisguiseClass = GetDisguiseClass();
 	m_nOldDisguiseTeam = GetDisguiseTeam();
 
@@ -909,24 +800,12 @@ void CTFPlayerShared::OnDataChanged( void )
 
 	// Update conditions from last network change
 	SyncConditions( m_nOldConditions, m_nPlayerCond, m_nForceConditions, 0 );
-	SyncConditions( m_nOldConditionsEx, m_nPlayerCondEx, m_nForceConditionsEx, 32 );
-	SyncConditions( m_nOldConditionsEx2, m_nPlayerCondEx2, m_nForceConditionsEx2, 64 );
-	SyncConditions( m_nOldConditionsEx3, m_nPlayerCondEx3, m_nForceConditionsEx3, 96 );
-	SyncConditions( m_nOldConditionsEx4, m_nPlayerCondEx4, m_nForceConditionsEx4, 128 );
 
 	// Make sure these items are present
 	m_nPlayerCond		|= m_nForceConditions;
-	m_nPlayerCondEx		|= m_nForceConditionsEx;
-	m_nPlayerCondEx2	|= m_nForceConditionsEx2;
-	m_nPlayerCondEx3	|= m_nForceConditionsEx3;
-	m_nPlayerCondEx4	|= m_nForceConditionsEx4;
 
 	// Clear our force bits now that we've used them.
 	m_nForceConditions = 0;
-	m_nForceConditionsEx = 0;
-	m_nForceConditionsEx2 = 0;
-	m_nForceConditionsEx3 = 0;
-	m_nForceConditionsEx4 = 0;
 
 	if ( m_nOldDisguiseClass != GetDisguiseClass() || m_nOldDisguiseTeam != GetDisguiseTeam() )
 	{
@@ -1000,10 +879,6 @@ void CTFPlayerShared::RemoveAllCond()
 
 	// Now remove all the rest
 	m_nPlayerCond = 0;
-	m_nPlayerCondEx = 0;
-	m_nPlayerCondEx2 = 0;
-	m_nPlayerCondEx3 = 0;
-	m_nPlayerCondEx4 = 0;
 }
 
 
@@ -1710,10 +1585,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 
 		// also clear the disguise weapon list
 		m_pOuter->ClearDisguiseWeaponList();
-	}
-
-	{
-		m_flSpyTranqBuffDuration = 0;
 	}
 #endif // GAME_DLL
 }
@@ -3465,10 +3336,6 @@ void CTFPlayerShared::CheckForAchievement( int iAchievement )
 void CTFPlayerShared::GetConditionsBits( CBitVec< TF_COND_LAST >& vbConditions ) const
 {
 	vbConditions.Set( 0u, (uint32)m_nPlayerCond );
-	vbConditions.Set( 1u, (uint32)m_nPlayerCondEx );
-	vbConditions.Set( 2u, (uint32)m_nPlayerCondEx2 );
-	vbConditions.Set( 3u, (uint32)m_nPlayerCondEx3 );
-	vbConditions.Set( 4u, (uint32)m_nPlayerCondEx4 );
 }
 
 //-----------------------------------------------------------------------------

@@ -362,7 +362,7 @@ void CTFFlameThrower::ItemPostFrame()
 		PrimaryAttack();
 		bSpinDown = false;
 	}
-	else if ( m_iWeaponState > FT_STATE_IDLE && m_iWeaponState != FT_STATE_SECONDARY )
+	else if ( m_iWeaponState > FT_STATE_IDLE )
 	{
 		SendWeaponAnim( ACT_MP_ATTACK_STAND_POSTFIRE );
 		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_POST );
@@ -766,10 +766,7 @@ void CTFFlameThrower::OnDataChanged(DataUpdateType_t updateType)
 	{
 		if ( m_iWeaponState > FT_STATE_IDLE )
 		{
-			if ( ( m_iWeaponState == FT_STATE_SECONDARY && GetPlayerOwner() != C_BasePlayer::GetLocalPlayer() ) || m_iWeaponState != FT_STATE_SECONDARY )
-			{
-				StartFlame();
-			}
+			StartFlame();
 		}
 		else
 		{
@@ -860,16 +857,6 @@ void CTFFlameThrower::SetDormant( bool bDormant )
 //-----------------------------------------------------------------------------
 void CTFFlameThrower::StartFlame()
 {
-	if ( m_iWeaponState == FT_STATE_SECONDARY )
-	{
-		GetAppropriateWorldOrViewModel()->ParticleProp()->Create( "pyro_blast", PATTACH_POINT_FOLLOW, "muzzle" );
-		CLocalPlayerFilter filter;
-		const char *shootsound = GetShootSound( WPN_DOUBLE );
-		EmitSound( filter, entindex(), shootsound );
-
-		return;
-	}
-
 	CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
 
 	// normally, crossfade between start sound & firing loop in 3.5 sec
