@@ -407,8 +407,6 @@ void CTFWeaponBase::Precache()
 		PrecacheParticleSystem( pTracerEffect );
 		PrecacheParticleSystem( pTracerEffectCrit );
 	}
-
-	PrecacheModel( "models/weapons/c_models/stattrack.mdl" );
 }
 
 // -----------------------------------------------------------------------------
