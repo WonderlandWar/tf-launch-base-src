@@ -298,7 +298,7 @@ public:
 
 	int		CalculateObjectCost( CTFPlayer* pBuilder, int iObjectType );
 
-	// Pickup effects, including putting out fires, updating HUD, etc.
+	// Pickup effects, including putting out fires
 	void	HealthKitPickupEffects( int iHealthGiven = 0 );
 
 #ifdef GAME_DLL
@@ -421,8 +421,6 @@ public:
 	void ResetRoundScores( void ) { m_RoundScoreData.Reset(); }
 	localplayerscoring_t *GetRoundScoringData( void ) { return &m_RoundScoreData; }
 
-	int GetLastDuckStreakIncrement( void ) const	{ return m_nLastDuckStreakIncrement; }
-
 	int GetSequenceForDeath( CBaseAnimating* pRagdoll, bool bBurning, int nCustomDeath );
 
 #ifdef GAME_DLL
@@ -431,17 +429,6 @@ public:
 
 	void  SetChargeEffectOffTime( float flTime ) { m_flChargeEffectOffTime = flTime; }
 #endif
-
-	int	GetItemFindBonus( void ) //{ return m_iItemFindBonus; }
-	{
-#ifdef GAME_DLL
-		if ( !m_iItemFindBonus )
-		{
-			m_iItemFindBonus = RandomInt( 1, 300 );
-		}
-#endif
-		return m_iItemFindBonus;
-	}
 	
 	void	RecalculatePlayerBodygroups( void );
 	
@@ -610,10 +597,6 @@ private:
 	CHandle<CTFPlayer>	m_hAssist;
 
 	CNetworkVar( int, m_iWeaponKnockbackID );
-
-	CNetworkVar( int,	m_iItemFindBonus );
-
-	int m_nLastDuckStreakIncrement;
 
 	int m_iOldKillStreak;
 	int m_iOldKillStreakWepSlot;

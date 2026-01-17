@@ -238,24 +238,6 @@ void CTFAmmoPack::PackTouch( CBaseEntity *pOther )
 		// Scouts get a little more, as a reference to the scout movie
 		int iAmount = ( pPlayer->IsPlayerClass(TF_CLASS_SCOUT) ) ? 75 : 50;
 		pPlayer->TakeHealth( iAmount, DMG_GENERIC );
-		IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
-		if ( event )
-		{
-			event->SetInt( "amount", iAmount );
-			event->SetInt( "entindex", pPlayer->entindex() );
-			gameeventmanager->FireEvent( event );
-		}
-
-		event = gameeventmanager->CreateEvent( "player_stealsandvich" );
-		if ( event )
-		{
-			if ( ToTFPlayer( GetOwnerEntity() ) )
-			{
-				event->SetInt( "owner", ToTFPlayer( GetOwnerEntity() )->GetUserID() );
-			}
-			event->SetInt( "target", pPlayer->GetUserID() );
-			gameeventmanager->FireEvent( event );
-		}
 
 		UTIL_Remove( this );
 		return;

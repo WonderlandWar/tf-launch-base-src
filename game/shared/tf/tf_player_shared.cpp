@@ -277,7 +277,6 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropInt( RECVINFO( m_nPlayerState ) ),
 	RecvPropInt( RECVINFO( m_iDesiredPlayerClass ) ),
 	RecvPropInt( RECVINFO( m_iWeaponKnockbackID ) ),
-	RecvPropInt( RECVINFO( m_iItemFindBonus ) ),
 	RecvPropInt( RECVINFO( m_iDisguiseBody ) ),
 
 	// Spy.
@@ -379,7 +378,6 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropInt( SENDINFO( m_nPlayerState ), Q_log2( TF_STATE_COUNT )+1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iDesiredPlayerClass ), Q_log2( TF_CLASS_COUNT_ALL )+1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iWeaponKnockbackID ) ),
-	SendPropInt( SENDINFO( m_iItemFindBonus ) ),
 	SendPropInt( SENDINFO( m_iDisguiseBody ) ),
 
 	// Spy
@@ -490,8 +488,6 @@ CTFPlayerShared::CTFPlayerShared()
 	m_iWeaponKnockbackID = -1;
 
 	m_nMaskClass = 0;
-
-	m_iItemFindBonus = 0;
 
 	m_nTeamTeleporterUsed = TEAM_UNASSIGNED;
 
@@ -4224,19 +4220,6 @@ void CTFPlayerShared::HealthKitPickupEffects( int iHealthGiven /*= 0*/ )
 	if ( InCond( TF_COND_BURNING ) )
 	{
 		RemoveCond( TF_COND_BURNING );		
-	}
-
-	// Spawns a number on the player's health bar in the HUD, and also
-	// spawns a "+" particle over their head for enemies to see
-	if ( iHealthGiven && !IsStealthed() && m_pOuter )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
-		if ( event )
-		{
-			event->SetInt( "amount", iHealthGiven );
-			event->SetInt( "entindex", m_pOuter->entindex() );
-			gameeventmanager->FireEvent( event ); 
-		}
 	}
 }
 

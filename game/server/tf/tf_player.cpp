@@ -772,17 +772,6 @@ void CTFPlayer::RegenThink( void )
 		TakeDamage( CTakeDamageInfo( this, this, NULL, vec3_origin, WorldSpaceCenter(), nHealAmount * -1, DMG_GENERIC ) );
 	}
 
-	if ( GetHealth() < GetMaxHealth() && nHealAmount != 0 && bShowRegen )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
-		if ( event )
-		{
-			event->SetInt( "amount", nHealAmount );
-			event->SetInt( "entindex", entindex() );
-			gameeventmanager->FireEvent( event ); 
-		}
-	}
-
 	m_flAccumulatedHealthRegen -= nHealAmount;
 	m_flLastHealthRegenAt = gpGlobals->curtime;
 }
